@@ -1,0 +1,3 @@
+Username: pallevinayreddy18_db_user
+Password: ZfgS5gnn34E2EU1u
+mongodb+srv://pallevinayreddy18_db_user:ZfgS5gnn34E2EU1u@agrispine.j5fexn4.mongodb.net/?appName=AgriSpine
