@@ -20,7 +20,9 @@ const userSchema = new mongoose.Schema({
     default: 'farmer' 
   },
   village: { type: String },
-  district: { type: String }
+  district: { type: String },
+  bio: { type: String, default: "" }
+
 }, { timestamps: true });
 
 export default mongoose.model("User", userSchema);

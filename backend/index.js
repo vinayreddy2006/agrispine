@@ -10,6 +10,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js"; 
 import cropRoutes from "./routes/crops.js";
 import machineRoutes from "./routes/machines.js";
+import postRoutes from "./routes/posts.js";
 
 const app = express();
 
@@ -42,6 +43,7 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/crops", cropRoutes);
 app.use("/api/machines", machineRoutes);
+app.use("/api/community", postRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -4,7 +4,7 @@ import Machine from "../models/Machine.js";
 export const addMachine = async (req, res) => {
   try {
 
-    const { name, type, price, priceUnit, description } = req.body;
+    const { name, type, price, priceUnit, description ,image} = req.body;
 
     const newMachine = new Machine({
       user: req.user.id, 
@@ -12,7 +12,8 @@ export const addMachine = async (req, res) => {
       type,
       price,      // e.g., 1200
       priceUnit,  // e.g., "hour" or "acre"
-      description
+      description,
+      image
     });
 
     const savedMachine = await newMachine.save();
@@ -35,5 +36,31 @@ export const getAllMachines = async (req, res) => {
   } catch (error) {
     console.error("Error fetching machines:", error);
     res.status(500).json({ message: "Server Error" });
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/* DELETE MACHINE (Owner Only)                                                */
+/* -------------------------------------------------------------------------- */
+export const deleteMachine = async (req, res) => {
+  try {
+    // 1. Find the machine
+    let machine = await Machine.findById(req.params.id);
+    if (!machine) {
+      return res.status(404).send("Not Found");
+    }
+
+    // 2. Check if the logged-in user is the Owner
+    if (machine.user.toString() !== req.user.id) {
+      return res.status(401).send("Not Allowed");
+    }
+
+    // 3. Delete it
+    await Machine.findByIdAndDelete(req.params.id);
+    res.json({ success: "Machine deleted successfully" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error");
   }
 };

@@ -89,3 +89,48 @@ export const login = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+/* -------------------------------------------------------------------------- */
+/* GET USER DETAILS (POST /api/auth/getuser) - Login Required                 */
+/* -------------------------------------------------------------------------- */
+export const getUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Select everything EXCEPT the password
+    const user = await User.findById(userId).select("-password");
+    res.send(user);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+
+/* -------------------------------------------------------------------------- */
+/* UPDATE USER PROFILE                                                        */
+/* -------------------------------------------------------------------------- */
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, village, district, bio } = req.body;
+    
+    // Create a new object with only the fields that were sent
+    const newDetails = {};
+    if (name) newDetails.name = name;
+    if (village) newDetails.village = village;
+    if (district) newDetails.district = district;
+    if (bio) newDetails.bio = bio;
+
+    // Find user by ID and update
+    let user = await User.findByIdAndUpdate(
+      req.user.id, 
+      { $set: newDetails }, 
+      { new: true } // Returns the updated user
+    );
+
+    res.json({ success: true, user });
+
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).send("Server Error");
+  }
+};

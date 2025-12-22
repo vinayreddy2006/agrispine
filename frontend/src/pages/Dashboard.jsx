@@ -3,14 +3,14 @@ import api from "../utils/api";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User, Sprout, Tractor, CloudSun, Users, PlusCircle, Trash2, Droplets, Wind } from "lucide-react";
+import { LogOut, User, Sprout, Tractor, CloudSun, Users, PlusCircle, Trash2, Droplets, Wind, Landmark, TrendingUp } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [weather, setWeather] = useState(null); // Weather State
+  const [weather, setWeather] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,7 +37,7 @@ const Dashboard = () => {
         setLoading(false);
       }
 
-      // 2. Fetch Weather (Force "Hyderabad" if district is missing)
+      // 2. Fetch Weather
       const district = parsedUser.district || "Hyderabad";
       fetchWeather(district);
     };
@@ -47,10 +47,8 @@ const Dashboard = () => {
 
   const fetchWeather = async (district) => {
     try {
-      // Use your key (Make sure this matches your .env or hardcode it here to test)
       const API_KEY = "35e669987b8f3f982e649b224ed22c0c";
       const url = `https://api.openweathermap.org/data/2.5/weather?q=${district}&units=metric&appid=${API_KEY}`;
-
       const response = await axios.get(url);
 
       setWeather({
@@ -62,7 +60,6 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error("Weather Error:", error);
-      // If Key is invalid/inactive, show a friendly error
       setWeather({ temp: "--", condition: "Key Inactive" });
     }
   };
@@ -73,7 +70,6 @@ const Dashboard = () => {
   };
 
   const handleDelete = async (id) => {
-    // ... (Keep your delete logic here) ...
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -102,6 +98,8 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+
+      {/* --- UPDATED NAVBAR --- */}
       <nav className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <div className="bg-green-100 p-2 rounded-lg">
@@ -109,11 +107,20 @@ const Dashboard = () => {
           </div>
           <span className="text-xl font-bold text-gray-800">AgriSpine</span>
         </div>
+
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
+
+          {/* 👇 THIS IS THE CLICKABLE PROFILE BUTTON NOW 👇 */}
+          <div
+            onClick={() => navigate("/profile")}
+            className="hidden md:flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full cursor-pointer hover:bg-green-100 hover:text-green-700 transition border border-transparent hover:border-green-200"
+            title="Edit Profile"
+          >
             <User className="w-4 h-4" />
             <span className="text-sm font-medium">{user.name}</span>
           </div>
+          {/* ----------------------------------------------- */}
+
           <button onClick={handleLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition" title="Logout">
             <LogOut className="w-5 h-5" />
           </button>
@@ -121,6 +128,7 @@ const Dashboard = () => {
       </nav>
 
       <main className="max-w-6xl mx-auto p-6 space-y-8">
+
         {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-green-700 to-green-600 rounded-2xl p-8 text-white shadow-lg">
           <h1 className="text-3xl font-bold mb-2">Namaste, {user.name}! 🙏</h1>
@@ -129,7 +137,6 @@ const Dashboard = () => {
 
         {/* Crops Section */}
         <div>
-          {/* ... (Keep your Crops Section Code) ... */}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               <Sprout className="text-green-600" /> My Crops
@@ -149,7 +156,9 @@ const Dashboard = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {crops.map((crop) => (
-                <div key={crop._id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                <div key={crop._id} 
+                  onClick={() => navigate(`/crop/${crop._id}`)}
+                  className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
                       <div className="bg-green-50 p-3 rounded-lg">
@@ -183,17 +192,15 @@ const Dashboard = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            {/* REAL WEATHER CARD */}
+            {/* Weather Card */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden group">
               <div className="absolute right-0 top-0 w-24 h-24 bg-orange-100 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition"></div>
-
               <div className="flex items-center gap-3 mb-4 relative z-10">
                 <div className="bg-orange-100 p-2 rounded-lg text-orange-600">
                   <CloudSun className="w-6 h-6" />
                 </div>
                 <h3 className="font-bold text-gray-700">Weather</h3>
               </div>
-
               {weather ? (
                 <div className="relative z-10">
                   <div className="flex items-end gap-2 mb-2">
@@ -214,8 +221,21 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* ... Other Cards ... */}
-            {/* Machinery Card - Now Active! */}
+            {/* Market Prices Card */}
+            <div
+              onClick={() => navigate("/market")}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer group"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-green-100 p-2 rounded-lg text-green-600 group-hover:bg-green-600 group-hover:text-white transition">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-gray-700">Mandi Rates</h3>
+              </div>
+              <p className="text-sm text-gray-500">Check daily market prices</p>
+            </div>
+
+            {/* Machinery Card */}
             <div
               onClick={() => navigate("/rent-machinery")}
               className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer group"
@@ -229,12 +249,32 @@ const Dashboard = () => {
               <p className="text-sm text-gray-500">Find tractors & harvesters nearby</p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 opacity-60 cursor-not-allowed">
+            {/* Community Card */}
+            <div
+              onClick={() => navigate("/community")}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer group"
+            >
               <div className="flex items-center gap-3 mb-2">
-                <Users className="text-purple-500" />
+                <div className="bg-purple-100 p-2 rounded-lg text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition">
+                  <Users className="w-6 h-6" />
+                </div>
                 <h3 className="font-bold text-gray-700">Community</h3>
               </div>
-              <p className="text-sm text-gray-500">Coming Soon...</p>
+              <p className="text-sm text-gray-500">Ask questions & help others</p>
+            </div>
+
+            {/* Government Schemes Card */}
+            <div
+              onClick={() => navigate("/schemes")}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer group"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-orange-100 p-2 rounded-lg text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition">
+                  <Landmark className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-gray-700">Govt Schemes</h3>
+              </div>
+              <p className="text-sm text-gray-500">Subsidies & financial aid</p>
             </div>
 
           </div>

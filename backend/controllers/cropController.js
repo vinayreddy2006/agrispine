@@ -64,3 +64,47 @@ export const deleteCrop = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* GET SINGLE CROP DETAILS                                                    */
+/* -------------------------------------------------------------------------- */
+export const getCropById = async (req, res) => {
+  try {
+    const crop = await CropCycle.findById(req.params.id);
+    
+    // Security: Ensure the user owns this crop
+    if (!crop) return res.status(404).send("Not Found");
+    if (crop.user.toString() !== req.user.id) return res.status(401).send("Not Allowed");
+
+    res.json(crop);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error");
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/* ADD EXPENSE TO CROP                                                        */
+/* -------------------------------------------------------------------------- */
+export const addExpense = async (req, res) => {
+  try {
+    const { type, amount, date } = req.body;
+    
+    // Find crop
+    const crop = await CropCycle.findById(req.params.id);
+    if (!crop) return res.status(404).send("Not Found");
+    
+    // Security check
+    if (crop.user.toString() !== req.user.id) return res.status(401).send("Not Allowed");
+
+    // Add new expense to the array
+    crop.expenses.push({ type, amount, date });
+    
+    await crop.save();
+    res.json(crop); // Return updated crop
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error");
+  }
+};

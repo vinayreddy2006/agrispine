@@ -32,7 +32,7 @@ const cropSchema = new mongoose.Schema({
   // Track expenses for this specific crop
   expenses: [
     {
-      type: { type: String }, // e.g., "Fertilizer", "Labor", "Seeds"
+      type: { type: String }, 
       amount: { type: Number },
       date: { type: Date, default: Date.now }
     }
