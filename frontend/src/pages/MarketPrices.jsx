@@ -75,7 +75,7 @@ const MarketPrices = () => {
     const districts = ["All", ...new Set(prices.map(p => p.market))].sort();
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="w-full">
 
             {/* --- HEADER (Kept exactly as requested) --- */}
             <div className="bg-gradient-to-r from-green-700 to-green-600 pb-10 pt-6 px-6 shadow-md sticky top-0 z-30">
@@ -121,7 +121,7 @@ const MarketPrices = () => {
 
             {/* --- TABLE CONTENT (New Styling) --- */}
             {/* Removed negative margin (-mt) to fix content hiding behind header */}
-            <div className="max-w-6xl mx-auto w-full px-4 mt-6 pb-10 relative z-10 flex-1">
+            <div className="max-w-6xl mx-auto w-full px-4 mt-6 pb-32 relative z-10 flex-1">
 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
                     {loading ? (

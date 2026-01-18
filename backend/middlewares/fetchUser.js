@@ -11,10 +11,6 @@ const fetchUser = (req, res, next) => {
   try {
     // 2. Verify the token
     const data = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // --- DEBUG LOGGING (Remove later) ---
-    console.log("decoded token data:", data); 
-    // ------------------------------------
 
     // 3. Attach user ID to the request object
     // Try to handle both common token structures

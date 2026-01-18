@@ -29,15 +29,20 @@ const cropSchema = new mongoose.Schema({
     default: 'active'
   },
 
-  // Track expenses for this specific crop
+  yieldQty: { type: Number, default: 0 }, 
+  revenue: { type: Number, default: 0 },  
+
   expenses: [
     {
       type: { type: String }, 
       amount: { type: Number },
       date: { type: Date, default: Date.now }
     }
-  ]
-
+  ],
+  isListed: { type: Boolean, default: false }, // Is it visible to buyers?
+  expectedPrice: { type: Number, default: 0 }, // Per Quintal
+  quantityAvailable: { type: Number, default: 0 }, // How much they want to sell
+  description: { type: String, default: "" }
 }, { timestamps: true });
 
 export default mongoose.model("CropCycle", cropSchema);

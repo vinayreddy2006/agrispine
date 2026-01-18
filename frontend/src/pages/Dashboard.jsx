@@ -3,7 +3,7 @@ import api from "../utils/api";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User, Sprout, Tractor, CloudSun, Users, PlusCircle, Trash2, Droplets, Wind, Landmark, TrendingUp } from "lucide-react";
+import { LogOut, User, Sprout, Tractor, CloudSun, Users, PlusCircle, Trash2, Droplets, Wind, Landmark, TrendingUp, BarChart3, Stethoscope, ShoppingBag, MessageCircle } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -97,7 +97,7 @@ const Dashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="w-full">
 
       {/* --- UPDATED NAVBAR --- */}
       <nav className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
@@ -116,7 +116,16 @@ const Dashboard = () => {
             className="hidden md:flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full cursor-pointer hover:bg-green-100 hover:text-green-700 transition border border-transparent hover:border-green-200"
             title="Edit Profile"
           >
-            <User className="w-4 h-4" />
+            {/* Check if user has a profile image */}
+            {user.profileImage ? (
+              <img
+                src={user.profileImage}
+                alt="Profile"
+                className="w-5 h-5 rounded-full object-cover"
+              />
+            ) : (
+              <User className="w-4 h-4" />
+            )}
             <span className="text-sm font-medium">{user.name}</span>
           </div>
           {/* ----------------------------------------------- */}
@@ -192,6 +201,20 @@ const Dashboard = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
+            {/* Reports Card */}
+            <div
+              onClick={() => navigate("/reports")}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer group"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-purple-100 p-2 rounded-lg text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-gray-700">Analytics</h3>
+              </div>
+              <p className="text-sm text-gray-500">Track profits & costs</p>
+            </div>
+
             {/* Weather Card */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden group">
               <div className="absolute right-0 top-0 w-24 h-24 bg-orange-100 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition"></div>
@@ -221,6 +244,34 @@ const Dashboard = () => {
               )}
             </div>
 
+            {/* Village Chat Card */}
+            <div
+              onClick={() => navigate("/village-chat")}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer group"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-green-100 p-2 rounded-lg text-green-600 group-hover:bg-green-600 group-hover:text-white transition">
+                  <MessageCircle className="w-6 h-6" /> {/* Import MessageCircle from lucide-react */}
+                </div>
+                <h3 className="font-bold text-gray-700">Village Talk</h3>
+              </div>
+              <p className="text-sm text-gray-500">Live chat with your neighbors</p>
+            </div>
+
+            {/* Buyer Market Card */}
+            <div
+              onClick={() => navigate("/buyer-market")}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer group"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-orange-100 p-2 rounded-lg text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition">
+                  <ShoppingBag className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-gray-700">Buyer Market</h3>
+              </div>
+              <p className="text-sm text-gray-500">Buy crops directly from farmers</p>
+            </div>
+
             {/* Market Prices Card */}
             <div
               onClick={() => navigate("/market")}
@@ -233,6 +284,20 @@ const Dashboard = () => {
                 <h3 className="font-bold text-gray-700">Mandi Rates</h3>
               </div>
               <p className="text-sm text-gray-500">Check daily market prices</p>
+            </div>
+
+            {/* Plant Doctor Card */}
+            <div
+              onClick={() => navigate("/doctor")}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer group"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-teal-100 p-2 rounded-lg text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition">
+                  <Sprout className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-gray-700">Plant Doctor</h3>
+              </div>
+              <p className="text-sm text-gray-500">Detect crop diseases via AI</p>
             </div>
 
             {/* Machinery Card */}

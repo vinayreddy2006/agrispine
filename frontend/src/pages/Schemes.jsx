@@ -62,7 +62,7 @@ const Schemes = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-10">
+        <div className="w-full">
 
             {/* Header */}
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-6 pb-12 shadow-md">

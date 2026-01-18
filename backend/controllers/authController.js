@@ -111,26 +111,42 @@ export const getUser = async (req, res) => {
 /* -------------------------------------------------------------------------- */
 export const updateProfile = async (req, res) => {
   try {
-    const { name, village, district, bio } = req.body;
+    // 👇 Add profileImage to extracted fields
+    const { name, village, district, bio, profileImage } = req.body;
     
-    // Create a new object with only the fields that were sent
     const newDetails = {};
     if (name) newDetails.name = name;
     if (village) newDetails.village = village;
     if (district) newDetails.district = district;
     if (bio) newDetails.bio = bio;
+    if (profileImage) newDetails.profileImage = profileImage; // 👈 Save the URL
 
-    // Find user by ID and update
-    let user = await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
       req.user.id, 
       { $set: newDetails }, 
-      { new: true } // Returns the updated user
-    );
+      { new: true }
+    ).select("-password"); // Don't send back password
 
     res.json({ success: true, user });
 
   } catch (error) {
     console.error("Error updating profile:", error);
+    res.status(500).send("Server Error");
+  }
+};
+
+/* GET VILLAGE MEMBERS */
+export const getVillageMembers = async (req, res) => {
+  try {
+    const { village } = req.params;
+    
+    // Find users in this village, select specific fields (exclude password)
+    const members = await User.find({ village })
+      .select("name phone userType profileImage bio");
+
+    res.json(members);
+  } catch (error) {
+    console.error(error);
     res.status(500).send("Server Error");
   }
 };

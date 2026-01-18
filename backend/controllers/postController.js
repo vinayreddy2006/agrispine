@@ -30,7 +30,7 @@ export const getAllPosts = async (req, res) => {
   try {
     // Get posts, sort by newest first, and get the Author's Name
     const posts = await Post.find()
-      .populate("user", "name village") 
+      .populate("user", "name village profileImage") 
       .sort({ createdAt: -1 });
 
     res.json(posts);

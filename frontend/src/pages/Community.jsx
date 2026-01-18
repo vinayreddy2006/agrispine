@@ -132,7 +132,7 @@ const Community = () => {
     const filteredPosts = getFilteredPosts();
 
     return (
-        <div className="min-h-screen bg-gray-100 pb-10">
+        <div className="w-full">
 
             {/* Header */}
             <div className="bg-white shadow-sm sticky top-0 z-10 px-4 pt-3 pb-0 mb-6">
@@ -246,8 +246,18 @@ const Community = () => {
                                     {/* Post Header */}
                                     <div className="p-6">
                                         <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-purple-600 font-bold border border-purple-50">
-                                                {post.user?.name ? post.user.name[0].toUpperCase() : <User className="w-5 h-5" />}
+                                            <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border border-gray-200">
+                                                {post.user?.profileImage ? (
+                                                    <img
+                                                        src={post.user.profileImage}
+                                                        alt={post.user.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-purple-600 font-bold">
+                                                        {post.user?.name ? post.user.name[0].toUpperCase() : <User className="w-5 h-5" />}
+                                                    </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <h3 className="font-bold text-gray-900 leading-tight">

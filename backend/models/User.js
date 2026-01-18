@@ -21,7 +21,8 @@ const userSchema = new mongoose.Schema({
   },
   village: { type: String },
   district: { type: String },
-  bio: { type: String, default: "" }
+  bio: { type: String, default: "" },
+  profileImage: { type: String, default: "" }
 
 }, { timestamps: true });
 
