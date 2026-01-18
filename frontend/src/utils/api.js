@@ -1,10 +1,9 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-//  baseURL: 'https://agrispine-backend.onrender.com/api', // Your Backend URL
-  baseURL : "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
