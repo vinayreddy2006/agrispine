@@ -82,6 +82,22 @@ const VillageChat = () => {
     const [showThemeModal, setShowThemeModal] = useState(false);
     const [chatBackground, setChatBackground] = useState(AGRI_THEMES[0]);
 
+    // --- HELPER TO FIX LOCALHOST URLs ---
+    const getFileUrl = (path) => {
+        if (!path) return null;
+        if (path.includes("http") && !path.includes("localhost")) return path; // Already a valid web URL
+
+        // If it's a localhost URL from DB, replace it
+        if (path.includes("localhost")) {
+            return path.replace("http://localhost:5000", SERVER_URL);
+        }
+        // If it's a relative path, prepend server URL
+        if (path.startsWith("/")) {
+            return `${SERVER_URL}${path}`;
+        }
+        return path;
+    };
+
     useEffect(() => {
         const userStr = localStorage.getItem("user");
         if (!userStr) { navigate("/login"); return; }
@@ -339,7 +355,8 @@ const VillageChat = () => {
     };
 
     const downloadImage = (imageUrl, filename) => {
-        fetch(imageUrl)
+        const fixedUrl = getFileUrl(imageUrl); // Fix URL before download
+        fetch(fixedUrl)
             .then(response => response.blob())
             .then(blob => {
                 const url = window.URL.createObjectURL(blob);
@@ -351,7 +368,7 @@ const VillageChat = () => {
                 a.click();
                 window.URL.revokeObjectURL(url);
             })
-            .catch(() => window.open(imageUrl, '_blank'));
+            .catch(() => window.open(fixedUrl, '_blank'));
     };
 
     // --- SELECTION & BULK ACTIONS ---
@@ -485,7 +502,12 @@ const VillageChat = () => {
     const clearChat = async () => { const result = await Swal.fire({ title: "Clear Chat?", text: "Delete all messages?", icon: "warning", showCancelButton: true, confirmButtonColor: "#d33", confirmButtonText: "Yes" }); if (result.isConfirmed) { try { const token = localStorage.getItem("token"); await api.delete(`/chat/clear/${currentUser.village}`, { headers: { "auth-token": token } }); window.location.reload(); } catch (err) { Swal.fire("Error", "Failed", "error"); } } setHeaderMenuOpen(false); };
     const handleAttach = () => { fileInputRef.current.click(); };
     const getUserColor = (name) => { const colors = ["text-red-500", "text-orange-500", "text-purple-500", "text-blue-500", "text-pink-600", "text-teal-600"]; let sum = 0; for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i); return colors[sum % colors.length]; };
-    const getSenderImage = (msg) => { if (msg.senderImage) return msg.senderImage; const member = members.find(m => m._id === msg.senderId); return member ? member.profileImage : null; };
+
+    const getSenderImage = (msg) => {
+        if (msg.senderImage) return getFileUrl(msg.senderImage);
+        const member = members.find(m => m._id === msg.senderId);
+        return member && member.profileImage ? getFileUrl(member.profileImage) : null;
+    };
 
     // --- BLUE TICK LOGIC ---
     const getTickStatus = (msg) => {
@@ -609,7 +631,7 @@ const VillageChat = () => {
                                                         {msg.image && (
                                                             <div className="relative rounded-lg overflow-hidden cursor-pointer mb-1" onClick={() => setViewImage(msg)}>
                                                                 <img
-                                                                    src={msg.image}
+                                                                        src={getFileUrl(msg.image)}
                                                                     alt="attachment"
                                                                     className="w-full h-auto max-w-[280px] max-h-[300px] object-cover"
                                                                 />
@@ -630,7 +652,7 @@ const VillageChat = () => {
                                                         {/* 🎵 AUDIO PLAYER */}
                                                         {msg.audio && (
                                                             <div className="mb-1 w-[200px] md:w-[250px] relative">
-                                                                <audio controls src={msg.audio} className="w-full h-8" />
+                                                                    <audio controls src={getFileUrl(msg.audio)} className="w-full h-8" />
                                                                 {/* Star + Time for Audio Only */}
                                                                 {!msg.text && (
                                                                     <div className="flex justify-end items-center gap-1 mt-1 mr-1">
@@ -877,7 +899,7 @@ const VillageChat = () => {
                         </div>
                     </div>
                     <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-                        <img src={viewImage.image} alt="Full View" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+                        <img src={getFileUrl(viewImage.image)} alt="Full View" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
                     </div>
                     {viewImage.text && <div className="p-4 bg-black/40 text-white text-center backdrop-blur-md"><p>{viewImage.text}</p></div>}
                 </div>
