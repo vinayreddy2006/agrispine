@@ -11,14 +11,14 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 
-// Get the Base URL from the environment (e.g., https://agrispine-backend.onrender.com/api)
+// Get the Base URL from the environment
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Remove '/api' from the end to get the root server URL (e.g., https://agrispine-backend.onrender.com)
-// If running locally, it converts http://localhost:5000/api -> http://localhost:5000
-const SOCKET_URL = API_URL ? API_URL.replace('/api', '') : "http://localhost:5000";
+// Remove '/api' to get the root server URL (e.g., https://agrispine-backend.onrender.com)
+// This variable MUST be named SERVER_URL because getFileUrl uses it
+const SERVER_URL = API_URL ? API_URL.replace('/api', '') : "http://localhost:5000";
 
-const socket = io.connect(SOCKET_URL);
+const socket = io.connect(SERVER_URL);
 
 // 🌾 AGRICULTURE THEME LIBRARY
 const AGRI_THEMES = [
