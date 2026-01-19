@@ -11,7 +11,14 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 
-const socket = io.connect("http://localhost:5000");
+// Get the Base URL from the environment (e.g., https://agrispine-backend.onrender.com/api)
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
+// Remove '/api' from the end to get the root server URL (e.g., https://agrispine-backend.onrender.com)
+// If running locally, it converts http://localhost:5000/api -> http://localhost:5000
+const SOCKET_URL = API_URL ? API_URL.replace('/api', '') : "http://localhost:5000";
+
+const socket = io.connect(SOCKET_URL);
 
 // 🌾 AGRICULTURE THEME LIBRARY
 const AGRI_THEMES = [
