@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import { Plus, Sprout, Calendar, ChevronRight, CheckCircle, Leaf } from "lucide-react";
+import { useTranslation } from "react-i18next"; // 1. Import Hook
 
 const MyCrops = () => {
+    const { t } = useTranslation(); // 2. Initialize Hook
     const navigate = useNavigate();
     const [crops, setCrops] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -29,13 +31,15 @@ const MyCrops = () => {
             {/* Header */}
             <div className="bg-white shadow-sm sticky top-0 z-10 px-6 py-4 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <Sprout className="text-green-600 w-7 h-7" /> My Crops
+                    {/* Translated Title */}
+                    <Sprout className="text-green-600 w-7 h-7" /> {t('dashboard.my_crops')}
                 </h1>
                 <button
                     onClick={() => navigate("/add-crop")}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm transition"
                 >
-                    <Plus className="w-4 h-4" /> Add New
+                    {/* Translated Button */}
+                    <Plus className="w-4 h-4" /> {t('dashboard.add_crop')}
                 </button>
             </div>
 
@@ -48,10 +52,11 @@ const MyCrops = () => {
                 ) : crops.length === 0 ? (
                     <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
                         <Leaf className="w-16 h-16 mx-auto text-gray-200 mb-3" />
-                        <h3 className="text-lg font-medium text-gray-600">No crops yet</h3>
+                        {/* Translated Empty State */}
+                        <h3 className="text-lg font-medium text-gray-600">{t('dashboard.no_crops')}</h3>
                         <p className="text-gray-400 text-sm mb-4">Start tracking your farm today.</p>
                         <button onClick={() => navigate("/add-crop")} className="text-green-600 font-bold hover:underline">
-                            Add your first crop
+                            {t('dashboard.add_first_crop')}
                         </button>
                     </div>
                 ) : (

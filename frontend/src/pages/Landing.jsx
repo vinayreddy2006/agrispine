@@ -1,32 +1,39 @@
 import { useNavigate } from "react-router-dom";
 import { Sprout, TrendingUp, Tractor, Users, ArrowRight, ShieldCheck, Leaf } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 const Landing = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     return (
         <div className="min-h-screen bg-white">
 
             {/* --- NAVBAR --- */}
-            <nav className="flex justify-between items-center px-8 py-5 max-w-7xl mx-auto">
+            <nav className="flex justify-between items-center px-6 py-5 max-w-7xl mx-auto">
                 <div className="flex items-center gap-2">
                     <div className="bg-green-600 p-2 rounded-lg">
                         <Leaf className="w-6 h-6 text-white" />
                     </div>
                     <span className="text-2xl font-bold text-gray-800 tracking-tight">AgriSpine</span>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="hidden sm:block">
+                        <LanguageSwitcher />
+                    </div>
+
                     <button
                         onClick={() => navigate("/login")}
                         className="text-gray-600 font-semibold hover:text-green-600 transition"
                     >
-                        Login
+                        {t('auth.login_title', { defaultValue: 'Login' })}
                     </button>
                     <button
                         onClick={() => navigate("/register")}
                         className="bg-green-600 text-white px-5 py-2.5 rounded-full font-bold hover:bg-green-700 transition shadow-lg hover:shadow-green-200"
                     >
-                        Join Now
+                        {t('landing.join', { defaultValue: 'Join Now' })}
                     </button>
                 </div>
             </nav>
@@ -35,27 +42,27 @@ const Landing = () => {
             <header className="max-w-7xl mx-auto px-6 py-16 md:py-24 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div className="space-y-6">
                     <div className="inline-block bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide mb-2">
-                        🚀 The Future of Farming is Here
+                        🚀 {t('landing.badge', { defaultValue: 'The Future of Farming is Here' })}
                     </div>
                     <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight">
-                        Smart Tech for <br />
-                        <span className="text-green-600">Modern Farmers</span>
+                        {t('landing.hero_title_1', { defaultValue: 'Smart Tech for' })} <br />
+                        <span className="text-green-600">{t('landing.hero_title_2', { defaultValue: 'Modern Farmers' })}</span>
                     </h1>
                     <p className="text-lg text-gray-500 max-w-lg leading-relaxed">
-                        Manage your crops, track expenses, rent machinery, and detect plant diseases with AI. All in one app.
+                        {t('landing.hero_desc', { defaultValue: 'Manage your crops, track expenses, rent machinery, and detect plant diseases with AI. All in one app.' })}
                     </p>
                     <div className="flex gap-4 pt-4">
                         <button
                             onClick={() => navigate("/register")}
                             className="bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition shadow-xl hover:shadow-green-200 flex items-center gap-2"
                         >
-                            Get Started <ArrowRight className="w-5 h-5" />
+                            {t('landing.get_started', { defaultValue: 'Get Started' })} <ArrowRight className="w-5 h-5" />
                         </button>
                         <button
                             onClick={() => navigate("/login")}
                             className="bg-white text-gray-700 border border-gray-200 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-50 transition"
                         >
-                            Log In
+                            {t('auth.login_title', { defaultValue: 'Login' })}
                         </button>
                     </div>
                     <div className="pt-6 flex items-center gap-4 text-sm text-gray-400 font-medium">
@@ -64,7 +71,7 @@ const Landing = () => {
                                 <div key={i} className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white"></div>
                             ))}
                         </div>
-                        <p>Trusted by 10,000+ Farmers</p>
+                        <p>{t('landing.trusted', { defaultValue: 'Trusted by 10,000+ Farmers' })}</p>
                     </div>
                 </div>
 
@@ -82,8 +89,8 @@ const Landing = () => {
                             <ShieldCheck className="w-6 h-6 text-green-600" />
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400 font-bold uppercase">Status</p>
-                            <p className="text-gray-800 font-bold">Safe & Secure</p>
+                            <p className="text-xs text-gray-400 font-bold uppercase">{t('landing.status', { defaultValue: 'STATUS' })}</p>
+                            <p className="text-gray-800 font-bold">{t('landing.secure', { defaultValue: 'Safe & Secure' })}</p>
                         </div>
                     </div>
                 </div>
@@ -93,40 +100,40 @@ const Landing = () => {
             <section className="bg-gray-50 py-20">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold text-gray-900">Everything you need to grow</h2>
-                        <p className="text-gray-500 mt-3">Advanced tools simplified for every farmer.</p>
+                        <h2 className="text-3xl font-bold text-gray-900">{t('landing.features_title', { defaultValue: 'Everything you need to grow' })}</h2>
+                        <p className="text-gray-500 mt-3">{t('landing.features_subtitle', { defaultValue: 'Advanced tools simplified for every farmer.' })}</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <FeatureCard
                             icon={<Sprout className="w-8 h-8 text-green-600" />}
-                            title="Crop Management"
-                            desc="Track sowing dates, expenses, and harvest yields efficiently."
+                            title={t('dashboard.my_crops', { defaultValue: 'Crop Management' })}
+                            desc={t('landing.feat_crop_desc', { defaultValue: 'Track sowing dates, expenses, and harvest yields efficiently.' })}
                         />
                         <FeatureCard
                             icon={<TrendingUp className="w-8 h-8 text-blue-600" />}
-                            title="Market Rates"
-                            desc="Get real-time Mandi prices and sell at the best time."
+                            title={t('dashboard.mandi_rates', { defaultValue: 'Market Rates' })}
+                            desc={t('landing.feat_mandi_desc', { defaultValue: 'Get real-time Mandi prices and sell at the best time.' })}
                         />
                         <FeatureCard
                             icon={<Tractor className="w-8 h-8 text-orange-600" />}
-                            title="Rent Machinery"
-                            desc="Find tractors, drones, and harvesters nearby instantly."
+                            title={t('rent.title', { defaultValue: 'Rent Machinery' })}
+                            desc={t('landing.feat_rent_desc', { defaultValue: 'Find tractors, drones, and harvesters nearby instantly.' })}
                         />
                         <FeatureCard
                             icon={<ShieldCheck className="w-8 h-8 text-teal-600" />}
-                            title="Plant Doctor"
-                            desc="Detect diseases early using our AI-powered scanner."
+                            title={t('dashboard.plant_doctor', { defaultValue: 'Plant Doctor' })}
+                            desc={t('landing.feat_doctor_desc', { defaultValue: 'Detect diseases early using our AI-powered scanner.' })}
                         />
                         <FeatureCard
                             icon={<Users className="w-8 h-8 text-purple-600" />}
-                            title="Community"
-                            desc="Connect with experts and other farmers to solve doubts."
+                            title={t('community.title', { defaultValue: 'Community' })}
+                            desc={t('landing.feat_community_desc', { defaultValue: 'Connect with experts and other farmers to solve doubts.' })}
                         />
                         <FeatureCard
                             icon={<Leaf className="w-8 h-8 text-yellow-600" />}
-                            title="Govt Schemes"
-                            desc="Stay updated with the latest subsidies and financial aid."
+                            title={t('dashboard.govt_schemes', { defaultValue: 'Govt Schemes' })}
+                            desc={t('landing.feat_schemes_desc', { defaultValue: 'Stay updated with the latest subsidies and financial aid.' })}
                         />
                     </div>
                 </div>
@@ -139,7 +146,7 @@ const Landing = () => {
                         <Leaf className="w-6 h-6 text-green-500" />
                         <span className="text-xl font-bold">AgriSpine</span>
                     </div>
-                    <p className="text-gray-400 text-sm">© 2025 AgriSpine Inc. All rights reserved.</p>
+                    <p className="text-gray-400 text-sm">© 2025 AgriSpine Inc. {t('landing.rights', { defaultValue: 'All rights reserved.' })}</p>
                 </div>
             </footer>
 

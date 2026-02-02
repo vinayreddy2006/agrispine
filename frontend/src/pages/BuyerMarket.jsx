@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Phone, MapPin, Search, ShoppingBag, Filter } from "lucide-react";
+import { useTranslation } from "react-i18next"; // 1. Import Hook
 
 const BuyerMarket = () => {
+    const { t } = useTranslation(); // 2. Initialize Hook
     const navigate = useNavigate();
     const [listings, setListings] = useState([]);
     const [filteredListings, setFilteredListings] = useState([]);
@@ -50,7 +52,8 @@ const BuyerMarket = () => {
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <h1 className="text-xl font-bold flex items-center gap-2 text-gray-800">
-                        <ShoppingBag className="text-orange-600" /> Buyer Market
+                        {/* Translated Title */}
+                        <ShoppingBag className="text-orange-600" /> {t('market.title')}
                     </h1>
                 </div>
 
@@ -58,7 +61,8 @@ const BuyerMarket = () => {
                     <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
                     <input
                         type="text"
-                        placeholder="Search by crop, village, or district..."
+                        // Translated Placeholder
+                        placeholder={t('market.search', { defaultValue: "Search by crop, village..." })}
                         className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-transparent focus:bg-white border focus:border-orange-500 rounded-xl outline-none transition"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -77,7 +81,8 @@ const BuyerMarket = () => {
                         <div className="bg-orange-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
                             <Filter className="w-8 h-8 text-orange-300" />
                         </div>
-                        <p className="text-gray-500 font-medium">No crops found.</p>
+                        {/* Translated Empty State */}
+                        <p className="text-gray-500 font-medium">{t('market.no_crops')}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -119,7 +124,8 @@ const BuyerMarket = () => {
                                         href={`tel:${item.user?.phone}`}
                                         className="bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-green-700 active:scale-95 transition shadow-sm"
                                     >
-                                        <Phone className="w-4 h-4" /> Call Farmer
+                                        {/* Translated Call Button */}
+                                        <Phone className="w-4 h-4" /> {t('market.call_farmer')}
                                     </a>
                                 </div>
                             </div>

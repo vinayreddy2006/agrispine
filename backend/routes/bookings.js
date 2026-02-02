@@ -1,16 +1,24 @@
 import express from "express";
-import fetchUser from "../middlewares/fetchUser.js";
-import { createBooking, getMyBookings, updateStatus } from "../controllers/bookingController.js";
+import fetchUser from "../middlewares/fetchUser.js"; 
+import { 
+    createBooking, 
+    getMyBookings, 
+    updateStatus, 
+    deleteBooking 
+} from "../controllers/bookingController.js";
 
 const router = express.Router();
 
-// POST /api/bookings/book -> Create Request
+// 1. Create a Booking (POST /api/bookings/book)
 router.post("/book", fetchUser, createBooking);
 
-// GET /api/bookings/fetchall -> See my history
+// 2. Get My Bookings (GET /api/bookings/fetchall)
 router.get("/fetchall", fetchUser, getMyBookings);
 
-// PUT /api/bookings/status/:id -> Accept/Reject (Owner only)
+// 3. Update Status (Accept/Reject) (PUT /api/bookings/status/:id)
 router.put("/status/:id", fetchUser, updateStatus);
+
+// 4. Delete Booking (DELETE /api/bookings/delete/:id)
+router.delete("/delete/:id", fetchUser, deleteBooking);
 
 export default router;

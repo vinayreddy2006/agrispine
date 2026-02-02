@@ -15,6 +15,7 @@ import cropRoutes from "./routes/crops.js";
 import machineRoutes from "./routes/machines.js";
 import postRoutes from "./routes/posts.js";
 import chatRoutes from "./routes/chat.js"; // 👈 Import Chat Routes
+import bookingRoutes from "./routes/bookings.js";
 import Message from "./models/Message.js"; // 👈 Import Model for Socket saving
 
 // 👇 DEFINE __dirname MANUALLY (Required for ES Modules)
@@ -119,6 +120,7 @@ app.use("/api/machines", machineRoutes);
 app.use("/api/community", postRoutes);
 app.use("/api/chat", chatRoutes); // 👈 Mount Chat Route
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/bookings",bookingRoutes);
 
 const PORT = process.env.PORT || 5000;
 

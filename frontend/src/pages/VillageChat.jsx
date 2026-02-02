@@ -10,6 +10,7 @@ import {
     Image as ImageIcon, Upload, StopCircle, Download, Forward, Copy, Info, Share2
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { useTranslation } from "react-i18next"; // 1. Import Hook
 
 // Get the Base URL from the environment
 const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -37,6 +38,7 @@ const AGRI_THEMES = [
 ];
 
 const VillageChat = () => {
+    const { t } = useTranslation(); // 2. Initialize Hook
     const navigate = useNavigate();
     const [currentUser, setCurrentUser] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -182,15 +184,15 @@ const VillageChat = () => {
         );
     };
 
-    // --- DATE HELPERS ---
+    // --- DATE HELPERS (With Translation) ---
     const getMessageDate = (dateString) => {
         const date = new Date(dateString);
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
-        if (date.toDateString() === today.toDateString()) return "Today";
-        if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+        if (date.toDateString() === today.toDateString()) return t('date.today', { defaultValue: "Today" });
+        if (date.toDateString() === yesterday.toDateString()) return t('date.yesterday', { defaultValue: "Yesterday" });
         return date.toLocaleDateString();
     };
 
@@ -231,7 +233,7 @@ const VillageChat = () => {
             }, 1000);
 
         } catch (err) {
-            Swal.fire("Error", "Microphone access denied", "error");
+            Swal.fire("Error", t('village.mic_error', { defaultValue: "Microphone access denied" }), "error");
         }
     };
 
@@ -280,7 +282,7 @@ const VillageChat = () => {
             await socket.emit("send_message", messageData);
             cancelRecording();
         } catch (err) {
-            Swal.fire("Error", "Failed to send audio", "error");
+            Swal.fire("Error", t('village.audio_fail', { defaultValue: "Failed to send audio" }), "error");
         } finally {
             setIsUploading(false);
         }
@@ -310,7 +312,14 @@ const VillageChat = () => {
     };
 
     const handleLogout = () => {
-        Swal.fire({ title: 'Log out?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Log out' }).then((result) => {
+        Swal.fire({
+            title: t('village.logout_confirm', { defaultValue: 'Log out?' }),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: t('common.logout', { defaultValue: 'Log out' }),
+            cancelButtonText: t('common.cancel', { defaultValue: 'Cancel' })
+        }).then((result) => {
             if (result.isConfirmed) {
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
@@ -420,7 +429,7 @@ const VillageChat = () => {
 
         if (texts) {
             navigator.clipboard.writeText(texts);
-            Swal.fire({ toast: true, position: 'bottom', icon: 'success', title: 'Copied to clipboard', timer: 1500, showConfirmButton: false });
+            Swal.fire({ toast: true, position: 'bottom', icon: 'success', title: t('village.copied', { defaultValue: 'Copied to clipboard' }), timer: 1500, showConfirmButton: false });
         }
         cancelSelection();
     };
@@ -434,7 +443,7 @@ const VillageChat = () => {
             } catch (err) { console.error(err); }
         }
         cancelSelection();
-        Swal.fire({ toast: true, position: 'bottom', icon: 'success', title: 'Messages starred', timer: 1500, showConfirmButton: false });
+        Swal.fire({ toast: true, position: 'bottom', icon: 'success', title: t('village.starred', { defaultValue: 'Messages starred' }), timer: 1500, showConfirmButton: false });
     };
 
     const handleBulkDelete = async () => {
@@ -443,8 +452,8 @@ const VillageChat = () => {
             const msg = messages.find(m => m._id === id);
             return msg && msg.senderId === (currentUser.id || currentUser._id);
         });
-        const swalOptions = { title: `Delete ${selectedMessages.length} messages?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Delete for me' };
-        if (allMine) { swalOptions.showDenyButton = true; swalOptions.denyButtonText = 'Delete for Everyone'; }
+        const swalOptions = { title: `${t('village.delete_cnt', { count: selectedMessages.length, defaultValue: `Delete ${selectedMessages.length} messages?` })}`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: t('village.delete_me', { defaultValue: 'Delete for me' }) };
+        if (allMine) { swalOptions.showDenyButton = true; swalOptions.denyButtonText = t('village.delete_all', { defaultValue: 'Delete for Everyone' }); }
         const result = await Swal.fire(swalOptions);
         const token = localStorage.getItem("token");
         if (result.isConfirmed) {
@@ -458,7 +467,7 @@ const VillageChat = () => {
         setActiveMessageMenu(null);
         const isMe = msg.senderId === (currentUser.id || currentUser._id);
         if (msg.isDeleted) {
-            const result = await Swal.fire({ title: 'Delete notification?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Delete for me' });
+            const result = await Swal.fire({ title: t('village.delete_notif', { defaultValue: 'Delete notification?' }), icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: t('village.delete_me', { defaultValue: 'Delete for me' }) });
             if (result.isConfirmed) {
                 const token = localStorage.getItem("token");
                 await api.put("/chat/delete-for-me", { messageIds: [msg._id] }, { headers: { "auth-token": token } });
@@ -466,8 +475,8 @@ const VillageChat = () => {
             }
             return;
         }
-        const swalOptions = { title: 'Delete Message?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Delete for me' };
-        if (isMe) { swalOptions.showDenyButton = true; swalOptions.denyButtonText = 'Delete for Everyone'; }
+        const swalOptions = { title: t('village.delete_msg', { defaultValue: 'Delete Message?' }), icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: t('village.delete_me', { defaultValue: 'Delete for me' }) };
+        if (isMe) { swalOptions.showDenyButton = true; swalOptions.denyButtonText = t('village.delete_all', { defaultValue: 'Delete for Everyone' }); }
         const result = await Swal.fire(swalOptions);
         const token = localStorage.getItem("token");
         if (result.isConfirmed) {
@@ -499,7 +508,7 @@ const VillageChat = () => {
     const reactToMessage = async (msgId, emoji) => { try { const token = localStorage.getItem("token"); const { data } = await api.put(`/chat/react/${msgId}`, { emoji }, { headers: { "auth-token": token } }); socket.emit("update_message", { message: data, village: currentUser.village }); } catch (err) { console.error(err); } setActiveMessageMenu(null); setShowReactionPicker(null); };
     const removeReaction = async (msgId) => { try { const token = localStorage.getItem("token"); const { data } = await api.put(`/chat/react/remove/${msgId}`, {}, { headers: { "auth-token": token } }); socket.emit("update_message", { message: data, village: currentUser.village }); Swal.fire({ toast: true, position: 'bottom', icon: 'success', title: 'Reaction removed', timer: 1000, showConfirmButton: false }); } catch (err) { console.error(err); } };
     const starMessage = async (msgId) => { try { const token = localStorage.getItem("token"); const { data } = await api.put(`/chat/star/${msgId}`, {}, { headers: { "auth-token": token } }); socket.emit("update_message", { message: data, village: currentUser.village }); } catch (err) { console.error(err); } setActiveMessageMenu(null); };
-    const clearChat = async () => { const result = await Swal.fire({ title: "Clear Chat?", text: "Delete all messages?", icon: "warning", showCancelButton: true, confirmButtonColor: "#d33", confirmButtonText: "Yes" }); if (result.isConfirmed) { try { const token = localStorage.getItem("token"); await api.delete(`/chat/clear/${currentUser.village}`, { headers: { "auth-token": token } }); window.location.reload(); } catch (err) { Swal.fire("Error", "Failed", "error"); } } setHeaderMenuOpen(false); };
+    const clearChat = async () => { const result = await Swal.fire({ title: t('village.clear_chat_title', { defaultValue: "Clear Chat?" }), text: t('village.delete_all_msgs', { defaultValue: "Delete all messages?" }), icon: "warning", showCancelButton: true, confirmButtonColor: "#d33", confirmButtonText: t('common.yes', { defaultValue: "Yes" }) }); if (result.isConfirmed) { try { const token = localStorage.getItem("token"); await api.delete(`/chat/clear/${currentUser.village}`, { headers: { "auth-token": token } }); window.location.reload(); } catch (err) { Swal.fire("Error", "Failed", "error"); } } setHeaderMenuOpen(false); };
     const handleAttach = () => { fileInputRef.current.click(); };
     const getUserColor = (name) => { const colors = ["text-red-500", "text-orange-500", "text-purple-500", "text-blue-500", "text-pink-600", "text-teal-600"]; let sum = 0; for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i); return colors[sum % colors.length]; };
 
@@ -511,10 +520,6 @@ const VillageChat = () => {
 
     // --- BLUE TICK LOGIC ---
     const getTickStatus = (msg) => {
-        // 1. Sent (Single Grey)
-        // 2. Delivered (Double Grey) - Simplified as "Saved"
-        // 3. Read (Double Blue) - Read by all other members
-
         // Exclude sender from count
         const totalMembers = members.length;
         const readCount = msg.readBy ? msg.readBy.length : 0;
@@ -540,7 +545,7 @@ const VillageChat = () => {
                 {isSearching ? (
                     <div className="bg-white px-4 py-3 flex items-center gap-3 shadow-md z-20 shrink-0 h-[64px] animate-in slide-in-from-top-2">
                         <button onClick={() => { setIsSearching(false); setSearchQuery(""); }} className="p-1 hover:bg-gray-100 rounded-full text-gray-600"><ArrowLeft className="w-6 h-6" /></button>
-                        <input type="text" autoFocus value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search messages..." className="flex-1 outline-none text-gray-700 bg-transparent text-sm" />
+                        <input type="text" autoFocus value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('village.search', { defaultValue: "Search messages..." })} className="flex-1 outline-none text-gray-700 bg-transparent text-sm" />
                         {searchQuery && <button onClick={() => setSearchQuery("")} className="text-gray-500 hover:text-gray-700"><X className="w-5 h-5" /></button>}
                     </div>
                 ) : !selectionMode ? (
@@ -548,7 +553,7 @@ const VillageChat = () => {
                         <div className="flex items-center gap-3 cursor-pointer" onClick={toggleGroupInfo}>
                             <button onClick={(e) => { e.stopPropagation(); navigate("/dashboard"); }} className="p-1 hover:bg-white/20 rounded-full"><ArrowLeft className="w-6 h-6" /></button>
                             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold text-lg">{currentUser?.village?.charAt(0) || "V"}</div>
-                            <div className="overflow-hidden"><h1 className="font-bold text-lg leading-tight truncate max-w-[180px] md:max-w-xs">{currentUser?.village || "Village"}</h1><p className="text-xs text-green-100 hover:underline truncate">click for info</p></div>
+                            <div className="overflow-hidden"><h1 className="font-bold text-lg leading-tight truncate max-w-[180px] md:max-w-xs">{currentUser?.village || "Village"}</h1><p className="text-xs text-green-100 hover:underline truncate">{t('village.click_info', { defaultValue: 'click for info' })}</p></div>
                         </div>
                         <div className="flex items-center gap-3 md:gap-4 relative">
                             <Search className="w-5 h-5 cursor-pointer hover:opacity-80" onClick={() => setIsSearching(true)} />
@@ -556,11 +561,11 @@ const VillageChat = () => {
                                 <MoreVertical className="w-5 h-5 cursor-pointer hover:opacity-80" onClick={() => setHeaderMenuOpen(!headerMenuOpen)} />
                                 {headerMenuOpen && (
                                     <div className="absolute right-0 top-8 w-48 bg-white text-gray-800 rounded-lg shadow-xl py-2 z-50 border border-gray-100 animate-in fade-in zoom-in-95">
-                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm" onClick={() => { toggleGroupInfo(); setHeaderMenuOpen(false); }}>Group Info</button>
-                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2" onClick={() => { setSelectionMode(true); setHeaderMenuOpen(false); }}><CheckSquare className="w-3 h-3" /> Select Messages</button>
-                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2" onClick={() => { setShowThemeModal(true); setHeaderMenuOpen(false); }}><ImageIcon className="w-3 h-3" /> Change Theme</button>
-                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm text-red-600" onClick={clearChat}>Clear Chat</button>
-                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm text-red-600 border-t border-gray-100 flex items-center gap-2" onClick={handleLogout}><LogOut className="w-3 h-3" /> Log out</button>
+                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm" onClick={() => { toggleGroupInfo(); setHeaderMenuOpen(false); }}>{t('village.group_info', { defaultValue: "Group Info" })}</button>
+                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2" onClick={() => { setSelectionMode(true); setHeaderMenuOpen(false); }}><CheckSquare className="w-3 h-3" /> {t('village.select_msgs', { defaultValue: "Select Messages" })}</button>
+                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2" onClick={() => { setShowThemeModal(true); setHeaderMenuOpen(false); }}><ImageIcon className="w-3 h-3" /> {t('village.change_theme', { defaultValue: "Change Theme" })}</button>
+                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm text-red-600" onClick={clearChat}>{t('village.clear_chat', { defaultValue: "Clear Chat" })}</button>
+                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm text-red-600 border-t border-gray-100 flex items-center gap-2" onClick={handleLogout}><LogOut className="w-3 h-3" /> {t('common.logout', { defaultValue: "Log out" })}</button>
                                     </div>
                                 )}
                             </div>
@@ -570,19 +575,19 @@ const VillageChat = () => {
                     <div className="bg-[#008069] px-4 py-3 flex items-center justify-between text-white shadow-md z-20 shrink-0 relative animate-in slide-in-from-top-2">
                         <div className="flex items-center gap-4">
                             <button onClick={cancelSelection} className="p-1 hover:bg-white/20 rounded-full"><X className="w-6 h-6" /></button>
-                            <span className="font-bold text-lg">{selectedMessages.length} Selected</span>
+                            <span className="font-bold text-lg">{selectedMessages.length} {t('village.selected', { defaultValue: 'Selected' })}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            {selectedMessages.length === 1 && <button onClick={handleReplySelected} className="p-2 hover:bg-white/20 rounded-full" title="Reply"><Reply className="w-5 h-5" /></button>}
-                            <button onClick={handleBulkStar} className="p-2 hover:bg-white/20 rounded-full" title="Star"><Star className="w-5 h-5" /></button>
-                            <button onClick={handleBulkDelete} className="p-2 hover:bg-white/20 rounded-full" title="Delete"><Trash2 className="w-5 h-5" /></button>
+                            {selectedMessages.length === 1 && <button onClick={handleReplySelected} className="p-2 hover:bg-white/20 rounded-full" title={t('community.reply', { defaultValue: "Reply" })}><Reply className="w-5 h-5" /></button>}
+                            <button onClick={handleBulkStar} className="p-2 hover:bg-white/20 rounded-full" title={t('village.star', { defaultValue: "Star" })}><Star className="w-5 h-5" /></button>
+                            <button onClick={handleBulkDelete} className="p-2 hover:bg-white/20 rounded-full" title={t('common.delete', { defaultValue: "Delete" })}><Trash2 className="w-5 h-5" /></button>
                             <div className="relative">
                                 <button onClick={() => setSelectionMenuOpen(!selectionMenuOpen)} className="p-2 hover:bg-white/20 rounded-full" title="More"><MoreVertical className="w-5 h-5" /></button>
                                 {selectionMenuOpen && (
                                     <div className="absolute right-0 top-10 w-48 bg-white text-gray-800 rounded-lg shadow-xl py-2 z-50 border border-gray-100 animate-in fade-in zoom-in-95">
-                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2"><Forward className="w-4 h-4" /> Forward</button>
-                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2" onClick={handleCopySelected}><Copy className="w-4 h-4" /> Copy</button>
-                                        {selectedMessages.length === 1 && <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2" onClick={handleInfoSelected}><Info className="w-4 h-4" /> Info</button>}
+                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2"><Forward className="w-4 h-4" /> {t('village.forward', { defaultValue: "Forward" })}</button>
+                                        <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2" onClick={handleCopySelected}><Copy className="w-4 h-4" /> {t('village.copy', { defaultValue: "Copy" })}</button>
+                                        {selectedMessages.length === 1 && <button className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm flex items-center gap-2" onClick={handleInfoSelected}><Info className="w-4 h-4" /> {t('village.info', { defaultValue: "Info" })}</button>}
                                     </div>
                                 )}
                             </div>
@@ -619,7 +624,7 @@ const VillageChat = () => {
                                                     <div className="flex flex-col px-2 pb-1">
                                                         <div className="flex items-center gap-1.5 text-gray-500 italic text-sm py-1 pr-2">
                                                             <Ban className="w-3.5 h-3.5" />
-                                                            <span>{isMe ? "You deleted this message" : "This message was deleted"}</span>
+                                                            <span>{isMe ? t('village.you_deleted', { defaultValue: "You deleted this message" }) : t('village.msg_deleted', { defaultValue: "This message was deleted" })}</span>
                                                         </div>
                                                         <div className="flex items-center justify-end gap-0.5 ml-auto opacity-60 h-3 mb-[1px]">
                                                             <span className="text-[9px] whitespace-nowrap">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -631,7 +636,7 @@ const VillageChat = () => {
                                                         {msg.image && (
                                                             <div className="relative rounded-lg overflow-hidden cursor-pointer mb-1" onClick={() => setViewImage(msg)}>
                                                                 <img
-                                                                        src={getFileUrl(msg.image)}
+                                                                    src={getFileUrl(msg.image)}
                                                                     alt="attachment"
                                                                     className="w-full h-auto max-w-[280px] max-h-[300px] object-cover"
                                                                 />
@@ -652,7 +657,7 @@ const VillageChat = () => {
                                                         {/* 🎵 AUDIO PLAYER */}
                                                         {msg.audio && (
                                                             <div className="mb-1 w-[200px] md:w-[250px] relative">
-                                                                    <audio controls src={getFileUrl(msg.audio)} className="w-full h-8" />
+                                                                <audio controls src={getFileUrl(msg.audio)} className="w-full h-8" />
                                                                 {/* Star + Time for Audio Only */}
                                                                 {!msg.text && (
                                                                     <div className="flex justify-end items-center gap-1 mt-1 mr-1">
@@ -726,7 +731,7 @@ const VillageChat = () => {
                                                     {!isDeleted ? (
                                                         <>
                                                             <button onClick={() => { setReplyingTo(msg); setActiveMessageMenu(null); }} className="w-full text-left px-4 py-2.5 hover:bg-gray-100 text-xs flex items-center gap-3 text-gray-700">
-                                                                <Reply className="w-4 h-4" /> Reply
+                                                                <Reply className="w-4 h-4" /> {t('community.reply', { defaultValue: "Reply" })}
                                                             </button>
 
                                                             <button
@@ -738,19 +743,19 @@ const VillageChat = () => {
                                                                 }}
                                                                 className="w-full text-left px-4 py-2.5 hover:bg-gray-100 text-xs flex items-center gap-3 text-gray-700"
                                                             >
-                                                                <Info className="w-4 h-4" /> Info
+                                                                <Info className="w-4 h-4" /> {t('village.info', { defaultValue: "Info" })}
                                                             </button>
 
                                                             <button onClick={() => starMessage(msg._id)} className="w-full text-left px-4 py-2.5 hover:bg-gray-100 text-xs flex items-center gap-3 text-gray-700">
-                                                                <Star className={`w-4 h-4 ${isStarred ? 'text-yellow-500 fill-yellow-500' : ''}`} /> {isStarred ? 'Unstar' : 'Star'}
+                                                                <Star className={`w-4 h-4 ${isStarred ? 'text-yellow-500 fill-yellow-500' : ''}`} /> {isStarred ? t('village.unstar', { defaultValue: 'Unstar' }) : t('village.star', { defaultValue: 'Star' })}
                                                             </button>
 
                                                             <button onClick={() => startSelection(msg._id)} className="w-full text-left px-4 py-2.5 hover:bg-gray-100 text-xs flex items-center gap-3 text-gray-700">
-                                                                <CheckSquare className="w-4 h-4" /> Select Message
+                                                                <CheckSquare className="w-4 h-4" /> {t('village.select_msg', { defaultValue: "Select Message" })}
                                                             </button>
 
                                                             <button onClick={() => handleDeleteSingle(msg)} className="w-full text-left px-4 py-2.5 hover:bg-gray-100 text-xs text-red-600 flex items-center gap-3 border-t border-gray-100">
-                                                                <Trash2 className="w-4 h-4" /> Delete
+                                                                <Trash2 className="w-4 h-4" /> {t('common.delete', { defaultValue: "Delete" })}
                                                             </button>
 
                                                             <div className="flex justify-between px-4 py-2 border-t bg-gray-50 gap-1 relative">
@@ -769,7 +774,7 @@ const VillageChat = () => {
                                                         </>
                                                     ) : (
                                                         <button onClick={() => handleDeleteSingle(msg)} className="w-full text-left px-4 py-2.5 hover:bg-gray-100 text-xs text-gray-700 flex items-center gap-3">
-                                                            <Trash2 className="w-4 h-4" /> Delete for me
+                                                            <Trash2 className="w-4 h-4" /> {t('village.delete_me', { defaultValue: "Delete for me" })}
                                                         </button>
                                                     )}
                                                 </div>
@@ -788,26 +793,26 @@ const VillageChat = () => {
                     <div className="bg-[#f0f2f5] px-2 md:px-4 py-2 z-20 shrink-0 pb-safe relative shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
                         {imagePreview && (
                             <div className="bg-white p-2 mb-2 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between animate-in slide-in-from-bottom-2">
-                                <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border border-gray-200"><img src={imagePreview} alt="Preview" className="w-full h-full object-cover" /></div><div className="flex flex-col"><span className="text-xs font-bold text-gray-700">Photo selected</span><span className="text-[10px] text-gray-500">Add a caption...</span></div></div>
+                                <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border border-gray-200"><img src={imagePreview} alt="Preview" className="w-full h-full object-cover" /></div><div className="flex flex-col"><span className="text-xs font-bold text-gray-700">{t('village.photo_selected', { defaultValue: "Photo selected" })}</span><span className="text-[10px] text-gray-500">{t('village.add_caption', { defaultValue: "Add a caption..." })}</span></div></div>
                                 <button onClick={clearAttachment} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition"><X className="w-5 h-5" /></button>
                             </div>
                         )}
                         {showInputEmoji && <div className="absolute bottom-16 left-2 z-50 shadow-2xl rounded-lg overflow-hidden"><EmojiPicker onEmojiClick={(e) => setCurrentMessage(prev => prev + e.emoji)} width={300} height={350} /></div>}
-                        {replyingTo && <div className="bg-white px-4 py-2 border-l-4 border-green-600 flex justify-between items-center mb-2 rounded-lg shadow-sm"><div className="text-sm overflow-hidden"><p className="text-green-700 font-bold text-xs">Replying to {replyingTo.senderName}</p><p className="text-gray-500 truncate text-xs">{replyingTo.text}</p></div><button onClick={() => setReplyingTo(null)}><X className="w-4 h-4 text-gray-500" /></button></div>}
+                        {replyingTo && <div className="bg-white px-4 py-2 border-l-4 border-green-600 flex justify-between items-center mb-2 rounded-lg shadow-sm"><div className="text-sm overflow-hidden"><p className="text-green-700 font-bold text-xs">{t('village.replying_to', { defaultValue: "Replying to" })} {replyingTo.senderName}</p><p className="text-gray-500 truncate text-xs">{replyingTo.text}</p></div><button onClick={() => setReplyingTo(null)}><X className="w-4 h-4 text-gray-500" /></button></div>}
 
                         <div className="flex items-center gap-2">
                             {isRecording ? (
                                 <div className="flex-1 flex items-center gap-3 bg-red-50 border border-red-100 rounded-full px-4 py-2.5 animate-in fade-in duration-200 shadow-inner">
                                     <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
-                                    <span className="text-red-600 text-sm font-mono font-medium flex-1">Recording {formatTime(recordingTime)}</span>
-                                    <button onClick={cancelRecording} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition" title="Cancel"><Trash2 className="w-5 h-5" /></button>
-                                    <button onClick={() => { stopRecording(); setTimeout(sendAudioMessage, 500); }} className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition active:scale-95" title="Send Audio"><Send className="w-5 h-5 ml-0.5" /></button>
+                                    <span className="text-red-600 text-sm font-mono font-medium flex-1">{t('village.recording', { defaultValue: "Recording" })} {formatTime(recordingTime)}</span>
+                                    <button onClick={cancelRecording} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition" title={t('common.cancel', { defaultValue: "Cancel" })}><Trash2 className="w-5 h-5" /></button>
+                                    <button onClick={() => { stopRecording(); setTimeout(sendAudioMessage, 500); }} className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition active:scale-95" title={t('village.send_audio', { defaultValue: "Send Audio" })}><Send className="w-5 h-5 ml-0.5" /></button>
                                 </div>
                             ) : (
                                 <>
                                     <button type="button" onClick={() => setShowInputEmoji(!showInputEmoji)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full transition"><Smile className="w-6 h-6" /></button>
                                     <button type="button" onClick={handleAttach} className={`p-2 rounded-full transition ${imagePreview ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:bg-gray-200'}`}><Paperclip className="w-5 h-5 md:w-6 md:h-6" /></button>
-                                    <form onSubmit={sendMessage} className="flex-1"><input type="text" value={currentMessage} placeholder={imagePreview ? "Add a caption..." : "Message"} className="w-full bg-white border border-gray-200 rounded-full md:rounded-lg px-4 py-2 md:py-3 outline-none focus:ring-1 focus:ring-[#008069] text-gray-700 text-sm" onChange={(event) => setCurrentMessage(event.target.value)} onFocus={() => setShowInputEmoji(false)} /></form>
+                                    <form onSubmit={sendMessage} className="flex-1"><input type="text" value={currentMessage} placeholder={imagePreview ? t('village.add_caption', { defaultValue: "Add a caption..." }) : t('village.type_message', { defaultValue: "Message" })} className="w-full bg-white border border-gray-200 rounded-full md:rounded-lg px-4 py-2 md:py-3 outline-none focus:ring-1 focus:ring-[#008069] text-gray-700 text-sm" onChange={(event) => setCurrentMessage(event.target.value)} onFocus={() => setShowInputEmoji(false)} /></form>
                                     {(currentMessage.trim() || imagePreview) ? (
                                         <button onClick={sendMessage} disabled={isUploading} className={`p-3 bg-[#008069] hover:bg-[#006a57] text-white rounded-full shadow-md transition active:scale-95 flex items-center justify-center ${isUploading ? 'opacity-70 cursor-not-allowed' : ''}`}>{isUploading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-5 h-5 ml-0.5" />}</button>
                                     ) : (
@@ -825,7 +830,7 @@ const VillageChat = () => {
                 <div className="fixed inset-0 z-50 md:static md:z-auto w-full md:w-[350px] bg-white md:border-l border-gray-200 flex flex-col h-full animate-in slide-in-from-right duration-300">
                     <div className="h-[64px] bg-gray-100 px-4 flex items-center gap-3 border-b border-gray-200 shrink-0">
                         <button onClick={() => { setShowGroupInfo(false); setShowMessageInfo(null); }} className="p-1 hover:bg-gray-200 rounded-full"><X className="w-6 h-6 text-gray-600" /></button>
-                        <h2 className="font-semibold text-gray-700">{showMessageInfo ? "Message Info" : "Group Info"}</h2>
+                        <h2 className="font-semibold text-gray-700">{showMessageInfo ? t('village.msg_info', { defaultValue: "Message Info" }) : t('village.grp_info', { defaultValue: "Group Info" })}</h2>
                     </div>
                     <div className="flex-1 overflow-y-auto bg-gray-50">
                         {showMessageInfo ? (
@@ -838,7 +843,7 @@ const VillageChat = () => {
                                     </div>
                                 </div>
                                 <div className="bg-white shadow-sm">
-                                    <div className="p-4 text-gray-500 text-sm font-bold flex items-center gap-2 border-b"><CheckCheck className="w-4 h-4 text-blue-500" /> Read by</div>
+                                    <div className="p-4 text-gray-500 text-sm font-bold flex items-center gap-2 border-b"><CheckCheck className="w-4 h-4 text-blue-500" /> {t('village.read_by', { defaultValue: "Read by" })}</div>
                                     {members
                                         .filter(m =>
                                             showMessageInfo.readBy &&
@@ -846,20 +851,20 @@ const VillageChat = () => {
                                             m._id !== showMessageInfo.senderId // 👈 Exclude sender
                                         )
                                         .map((m) => (
-                                        <div key={m._id} className="flex items-center gap-3 p-3 border-b border-gray-50">
-                                            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">{m.profileImage ? <img src={m.profileImage} className="w-full h-full object-cover" /> : <User className="w-full h-full p-2 text-gray-500" />}</div>
-                                            <div>
-                                                <h3 className="text-sm font-medium">{m.name}</h3>
-                                                <p className="text-xs text-gray-400">Viewed</p>
+                                            <div key={m._id} className="flex items-center gap-3 p-3 border-b border-gray-50">
+                                                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">{m.profileImage ? <img src={m.profileImage} className="w-full h-full object-cover" /> : <User className="w-full h-full p-2 text-gray-500" />}</div>
+                                                <div>
+                                                    <h3 className="text-sm font-medium">{m.name}</h3>
+                                                    <p className="text-xs text-gray-400">{t('village.viewed', { defaultValue: "Viewed" })}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             </div>
                         ) : (
                             <div>
-                                <div className="bg-white p-6 mb-2 shadow-sm flex flex-col items-center"><div className="w-24 h-24 md:w-32 md:h-32 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-5xl font-bold mb-4 overflow-hidden">{currentUser?.village?.charAt(0)}</div><h2 className="text-xl font-bold text-gray-800 text-center">{currentUser?.village}</h2><p className="text-gray-500 text-sm mt-1">{members.length} participants</p></div>
-                                <div className="bg-white shadow-sm pb-6"><div className="p-4 text-green-600 font-bold text-sm border-b border-gray-100 bg-white sticky top-0">{members.length} participants</div>{loadingMembers ? <div className="p-6 text-center text-gray-400 text-sm">Loading...</div> : <div>{members.map((member) => (<div key={member._id} className="flex items-center gap-3 p-3 hover:bg-gray-50 transition border-b border-gray-50 mx-2 cursor-pointer"><div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">{member.profileImage ? <img src={member.profileImage} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-500"><User className="w-5 h-5" /></div>}</div><div className="flex-1 min-w-0"><h3 className="font-medium text-gray-800 text-sm">{member.name} {member._id === currentUser.id && "(You)"}</h3><p className="text-xs text-gray-500 truncate">{member.bio || "Available"}</p></div></div>))}</div>}</div>
+                                <div className="bg-white p-6 mb-2 shadow-sm flex flex-col items-center"><div className="w-24 h-24 md:w-32 md:h-32 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-5xl font-bold mb-4 overflow-hidden">{currentUser?.village?.charAt(0)}</div><h2 className="text-xl font-bold text-gray-800 text-center">{currentUser?.village}</h2><p className="text-gray-500 text-sm mt-1">{members.length} {t('village.participants', { defaultValue: "participants" })}</p></div>
+                                <div className="bg-white shadow-sm pb-6"><div className="p-4 text-green-600 font-bold text-sm border-b border-gray-100 bg-white sticky top-0">{members.length} {t('village.participants', { defaultValue: "participants" })}</div>{loadingMembers ? <div className="p-6 text-center text-gray-400 text-sm">Loading...</div> : <div>{members.map((member) => (<div key={member._id} className="flex items-center gap-3 p-3 hover:bg-gray-50 transition border-b border-gray-50 mx-2 cursor-pointer"><div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">{member.profileImage ? <img src={member.profileImage} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-500"><User className="w-5 h-5" /></div>}</div><div className="flex-1 min-w-0"><h3 className="font-medium text-gray-800 text-sm">{member.name} {member._id === currentUser.id && "(You)"}</h3><p className="text-xs text-gray-500 truncate">{member.bio || t('village.available', { defaultValue: "Available" })}</p></div></div>))}</div>}</div>
                             </div>
                         )}
                     </div>
@@ -870,9 +875,9 @@ const VillageChat = () => {
             {showThemeModal && (
                 <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50"><h3 className="font-bold text-lg text-gray-800">Choose Chat Theme</h3><button onClick={() => setShowThemeModal(false)} className="p-2 hover:bg-gray-200 rounded-full"><X className="w-5 h-5 text-gray-600" /></button></div>
-                        <div className="p-6 overflow-y-auto bg-gray-100 grid grid-cols-2 md:grid-cols-4 gap-4"><label className="cursor-pointer group relative aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-[#008069] flex flex-col items-center justify-center bg-white transition hover:bg-green-50"><Upload className="w-8 h-8 text-gray-400 group-hover:text-[#008069] mb-2" /><span className="text-xs text-gray-500 font-medium group-hover:text-[#008069]">Upload Custom</span><input type="file" accept="image/*" className="hidden" onChange={handleCustomUpload} /></label>{AGRI_THEMES.map((theme) => (<div key={theme.id} onClick={() => handleThemeSelect(theme)} className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition border-2 ${chatBackground.id === theme.id ? 'border-[#008069] ring-2 ring-green-100' : 'border-transparent'}`}><img src={theme.url} alt={theme.name} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/20 hover:bg-black/10 transition flex items-end p-2"><span className="text-white text-xs font-bold shadow-sm">{theme.name}</span></div>{chatBackground.id === theme.id && <div className="absolute top-2 right-2 bg-[#008069] text-white p-1 rounded-full"><Check className="w-3 h-3" /></div>}</div>))}</div>
-                        <div className="p-4 bg-gray-50 border-t border-gray-200 text-center text-xs text-gray-500">Select a background to apply immediately. Changes are saved to your device.</div>
+                        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50"><h3 className="font-bold text-lg text-gray-800">{t('village.choose_theme', { defaultValue: "Choose Chat Theme" })}</h3><button onClick={() => setShowThemeModal(false)} className="p-2 hover:bg-gray-200 rounded-full"><X className="w-5 h-5 text-gray-600" /></button></div>
+                        <div className="p-6 overflow-y-auto bg-gray-100 grid grid-cols-2 md:grid-cols-4 gap-4"><label className="cursor-pointer group relative aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-[#008069] flex flex-col items-center justify-center bg-white transition hover:bg-green-50"><Upload className="w-8 h-8 text-gray-400 group-hover:text-[#008069] mb-2" /><span className="text-xs text-gray-500 font-medium group-hover:text-[#008069]">{t('village.upload_custom', { defaultValue: "Upload Custom" })}</span><input type="file" accept="image/*" className="hidden" onChange={handleCustomUpload} /></label>{AGRI_THEMES.map((theme) => (<div key={theme.id} onClick={() => handleThemeSelect(theme)} className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition border-2 ${chatBackground.id === theme.id ? 'border-[#008069] ring-2 ring-green-100' : 'border-transparent'}`}><img src={theme.url} alt={theme.name} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/20 hover:bg-black/10 transition flex items-end p-2"><span className="text-white text-xs font-bold shadow-sm">{theme.name}</span></div>{chatBackground.id === theme.id && <div className="absolute top-2 right-2 bg-[#008069] text-white p-1 rounded-full"><Check className="w-3 h-3" /></div>}</div>))}</div>
+                        <div className="p-4 bg-gray-50 border-t border-gray-200 text-center text-xs text-gray-500">{t('village.theme_hint', { defaultValue: "Select a background to apply immediately. Changes are saved to your device." })}</div>
                     </div>
                 </div>
             )}

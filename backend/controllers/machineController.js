@@ -64,3 +64,38 @@ export const deleteMachine = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
+// backend/controllers/machineController.js
+
+export const getMachinesByType = async (req, res) => {
+  try {
+    const { type } = req.params;
+
+    const machines = await Machine.find({ 
+      type: { $regex: new RegExp(`^${type}$`, "i") } 
+    })
+    // 👇 FIX: Change "image" to "profileImage"
+    .populate("user", "name phone profileImage village") 
+    .sort({ createdAt: -1 });
+    
+    res.json(machines);
+
+  } catch (error) {
+    console.error("Error fetching machines by type:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// GET MACHINES FOR LOGGED IN USER (Provider's "My Machines")
+export const getMyMachines = async (req, res) => {
+  try {
+    // req.user.id comes from the fetchUser middleware
+    const machines = await Machine.find({ user: req.user.id })
+      .sort({ createdAt: -1 });
+    
+    res.json(machines);
+  } catch (error) {
+    console.error("Error fetching my machines:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};

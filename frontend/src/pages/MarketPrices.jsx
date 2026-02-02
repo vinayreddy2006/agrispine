@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, TrendingUp, TrendingDown, Search, MapPin, Filter, Minus, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next"; // 1. Import Hook
 
 const MarketPrices = () => {
+    const { t } = useTranslation(); // 2. Initialize Hook
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedDistrict, setSelectedDistrict] = useState("All");
@@ -77,7 +79,7 @@ const MarketPrices = () => {
     return (
         <div className="w-full">
 
-            {/* --- HEADER (Kept exactly as requested) --- */}
+            {/* --- HEADER --- */}
             <div className="bg-gradient-to-r from-green-700 to-green-600 pb-10 pt-6 px-6 shadow-md sticky top-0 z-30">
                 <div className="max-w-6xl mx-auto">
                     <div className="flex items-center gap-3 text-white mb-6">
@@ -86,9 +88,10 @@ const MarketPrices = () => {
                         </button>
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2">
-                                <TrendingUp className="w-7 h-7" /> Market Prices
+                                {/* Translated Title */}
+                                <TrendingUp className="w-7 h-7" /> {t('dashboard.mandi_rates')}
                             </h1>
-                            <p className="text-green-100 text-sm opacity-90">Live rates from e-NAM Mandis across Telangana</p>
+                            <p className="text-green-100 text-sm opacity-90">{t('dashboard.mandi_desc')}</p>
                         </div>
                     </div>
 
@@ -98,7 +101,8 @@ const MarketPrices = () => {
                             <Search className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
                             <input
                                 type="text"
-                                placeholder="Search 'Cotton' or 'Warangal'..."
+                                // Translated Placeholder
+                                placeholder={t('market.search', { defaultValue: "Search 'Cotton' or 'Warangal'..." })}
                                 className="w-full pl-10 pr-4 py-2.5 border-none rounded-lg focus:ring-0 text-gray-700 placeholder-gray-400 outline-none"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -112,39 +116,40 @@ const MarketPrices = () => {
                                 value={selectedDistrict}
                                 onChange={(e) => setSelectedDistrict(e.target.value)}
                             >
-                                {districts.map(d => <option key={d} value={d}>{d === "All" ? "All Mandis" : d}</option>)}
+                                {districts.map(d => <option key={d} value={d}>{d === "All" ? t('market.all_mandis', { defaultValue: 'All Mandis' }) : d}</option>)}
                             </select>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* --- TABLE CONTENT (New Styling) --- */}
-            {/* Removed negative margin (-mt) to fix content hiding behind header */}
+            {/* --- TABLE CONTENT --- */}
             <div className="max-w-6xl mx-auto w-full px-4 mt-6 pb-32 relative z-10 flex-1">
 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
                     {loading ? (
                         <div className="p-8 text-center text-gray-500 flex flex-col items-center justify-center h-64">
                             <RefreshCw className="w-8 h-8 animate-spin mb-2 text-green-600" />
-                            <p>Loading market rates...</p>
+                            <p>{t('loading', { defaultValue: 'Loading market rates...' })}</p>
                         </div>
                     ) : filteredPrices.length === 0 ? (
                         <div className="p-12 text-center">
                             <Filter className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                            <h3 className="text-gray-600 font-medium">No prices found</h3>
-                            <button onClick={() => { setSearchTerm(""); setSelectedDistrict("All"); }} className="text-green-600 font-bold hover:underline mt-1 text-sm">Clear Search</button>
+                            <h3 className="text-gray-600 font-medium">{t('market.no_crops')}</h3>
+                            <button onClick={() => { setSearchTerm(""); setSelectedDistrict("All"); }} className="text-green-600 font-bold hover:underline mt-1 text-sm">
+                                {t('market.clear', { defaultValue: 'Clear Search' })}
+                            </button>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200">
-                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Crop Name</th>
-                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Market</th>
-                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Modal Price</th>
-                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Trend</th>
-                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-right hidden md:table-cell">Range (Min-Max)</th>
+                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('market.col_crop', { defaultValue: 'Crop Name' })}</th>
+                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('market.col_market', { defaultValue: 'Market' })}</th>
+                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">{t('market.col_price', { defaultValue: 'Modal Price' })}</th>
+                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">{t('market.col_trend', { defaultValue: 'Trend' })}</th>
+                                        <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-right hidden md:table-cell">{t('market.col_range', { defaultValue: 'Range (Min-Max)' })}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -164,27 +169,27 @@ const MarketPrices = () => {
                                                 </div>
                                             </td>
 
-                                            {/* Modal Price (Highlighted) */}
+                                            {/* Modal Price */}
                                             <td className="py-4 px-6 text-right">
                                                 <div className="text-lg font-bold text-gray-900">₹{item.modal.toLocaleString()}</div>
-                                                <div className="text-[10px] text-gray-400">per Quintal</div>
+                                                <div className="text-[10px] text-gray-400">{t('market.per_qtl', { defaultValue: 'per Quintal' })}</div>
                                             </td>
 
                                             {/* Trend Badge */}
                                             <td className="py-4 px-6 text-center">
                                                 {item.trend === "up" && (
                                                     <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">
-                                                        <TrendingUp className="w-3 h-3" /> Rising
+                                                        <TrendingUp className="w-3 h-3" /> {t('market.rising', { defaultValue: 'Rising' })}
                                                     </span>
                                                 )}
                                                 {item.trend === "down" && (
                                                     <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold">
-                                                        <TrendingDown className="w-3 h-3" /> Falling
+                                                        <TrendingDown className="w-3 h-3" /> {t('market.falling', { defaultValue: 'Falling' })}
                                                     </span>
                                                 )}
                                                 {item.trend === "stable" && (
                                                     <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-xs font-bold">
-                                                        <Minus className="w-3 h-3" /> Stable
+                                                        <Minus className="w-3 h-3" /> {t('market.stable', { defaultValue: 'Stable' })}
                                                     </span>
                                                 )}
                                             </td>
@@ -204,7 +209,7 @@ const MarketPrices = () => {
 
                 <div className="text-center mt-6 text-xs text-gray-400 flex items-center justify-center gap-1">
                     <RefreshCw className="w-3 h-3" />
-                    Prices updated daily at 08:00 AM based on Mandi arrivals.
+                    {t('market.updated_daily', { defaultValue: 'Prices updated daily at 08:00 AM based on Mandi arrivals.' })}
                 </div>
             </div>
         </div>

@@ -6,8 +6,10 @@ import {
     Users, Send, Plus, ArrowLeft, User, MessageCircle,
     Clock, ChevronDown, ChevronUp, MessageSquare
 } from "lucide-react";
+import { useTranslation } from "react-i18next"; // 1. Import Hook
 
 const Community = () => {
+    const { t } = useTranslation(); // 2. Initialize Hook
     const navigate = useNavigate();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -67,8 +69,8 @@ const Community = () => {
             });
 
             Swal.fire({
-                title: "Posted!",
-                text: "Your question is live.",
+                title: t('community.posted_title', { defaultValue: "Posted!" }),
+                text: t('community.posted_msg', { defaultValue: "Your question is live." }),
                 icon: "success",
                 timer: 1500,
                 showConfirmButton: false
@@ -111,12 +113,10 @@ const Community = () => {
     const getFilteredPosts = () => {
         if (!currentUser) return posts;
 
-        // Safety: Get ID whether it is stored as '_id' or 'id'
         const myId = String(currentUser._id || currentUser.id);
 
         if (activeTab === "my_questions") {
             return posts.filter(post => {
-                // Safety: Handle if post.user is an Object (populated) or just a String ID
                 const postAuthorId = post.user?._id ? String(post.user._id) : String(post.user);
                 return postAuthorId === myId;
             });
@@ -144,7 +144,8 @@ const Community = () => {
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
                             <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                                <Users className="text-purple-600 w-6 h-6" /> Farmers Forum
+                                {/* Translated Title */}
+                                <Users className="text-purple-600 w-6 h-6" /> {t('community.title')}
                             </h1>
                         </div>
 
@@ -152,7 +153,8 @@ const Community = () => {
                             onClick={() => setShowForm(!showForm)}
                             className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 shadow-md transition active:scale-95"
                         >
-                            {showForm ? "Cancel" : <><Plus className="w-4 h-4" /> Ask Question</>}
+                            {/* Translated Buttons */}
+                            {showForm ? t('common.cancel') : <><Plus className="w-4 h-4" /> {t('community.ask')}</>}
                         </button>
                     </div>
 
@@ -162,7 +164,8 @@ const Community = () => {
                             onClick={() => setActiveTab("all")}
                             className={`pb-3 whitespace-nowrap transition relative ${activeTab === "all" ? "text-purple-700 font-bold" : "text-gray-500 hover:text-gray-700"}`}
                         >
-                            Global Feed
+                            {/* Translated Tab */}
+                            {t('community.global')}
                             {activeTab === "all" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-600 rounded-t-full"></div>}
                         </button>
 
@@ -170,7 +173,8 @@ const Community = () => {
                             onClick={() => setActiveTab("my_questions")}
                             className={`pb-3 whitespace-nowrap transition relative ${activeTab === "my_questions" ? "text-purple-700 font-bold" : "text-gray-500 hover:text-gray-700"}`}
                         >
-                            My Questions
+                            {/* Translated Tab */}
+                            {t('community.my_q')}
                             {activeTab === "my_questions" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-600 rounded-t-full"></div>}
                         </button>
 
@@ -178,7 +182,8 @@ const Community = () => {
                             onClick={() => setActiveTab("my_replies")}
                             className={`pb-3 whitespace-nowrap transition relative ${activeTab === "my_replies" ? "text-purple-700 font-bold" : "text-gray-500 hover:text-gray-700"}`}
                         >
-                            My Participation
+                            {/* Translated Tab */}
+                            {t('community.my_a')}
                             {activeTab === "my_replies" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-600 rounded-t-full"></div>}
                         </button>
                     </div>
@@ -191,11 +196,12 @@ const Community = () => {
                 {/* Ask Question Form */}
                 {showForm && (
                     <div className="bg-white p-6 rounded-2xl shadow-lg border border-purple-100 mb-8 animate-in fade-in slide-in-from-top-4">
-                        <h3 className="font-bold text-gray-800 mb-1">Create a Discussion</h3>
-                        <p className="text-sm text-gray-500 mb-4">Ask about crops, diseases, or machinery.</p>
+                        {/* Translated Header */}
+                        <h3 className="font-bold text-gray-800 mb-1">{t('community.create')}</h3>
+                        <p className="text-sm text-gray-500 mb-4">{t('community.ask_hint', { defaultValue: 'Ask about crops, diseases, or machinery.' })}</p>
                         <form onSubmit={handlePostSubmit} className="space-y-4">
                             <input
-                                placeholder="Topic Title..."
+                                placeholder={t('community.topic_ph', { defaultValue: "Topic Title..." })}
                                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-medium"
                                 value={newPost.title}
                                 onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
@@ -203,7 +209,7 @@ const Community = () => {
                             />
                             <textarea
                                 rows="4"
-                                placeholder="Describe details..."
+                                placeholder={t('community.desc_ph', { defaultValue: "Describe details..." })}
                                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none resize-none"
                                 value={newPost.content}
                                 onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
@@ -211,7 +217,8 @@ const Community = () => {
                             />
                             <div className="flex justify-end">
                                 <button type="submit" className="bg-purple-600 text-white px-8 py-2.5 rounded-xl hover:bg-purple-700 font-bold shadow-md">
-                                    Post Discussion
+                                    {/* Translated Button */}
+                                    {t('community.post')}
                                 </button>
                             </div>
                         </form>
@@ -224,17 +231,17 @@ const Community = () => {
                 ) : filteredPosts.length === 0 ? (
                     <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-dashed border-gray-300">
                         <MessageSquare className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-600">No posts found</h3>
+                        {/* Translated Empty State */}
+                        <h3 className="text-lg font-medium text-gray-600">{t('community.no_posts')}</h3>
                         <p className="text-gray-400">
-                            {activeTab === "all" ? "Be the first to ask a question!" :
-                                activeTab === "my_questions" ? "You haven't asked anything yet." :
-                                    "You haven't replied to anyone yet."}
+                            {activeTab === "all" ? t('community.empty_all', { defaultValue: "Be the first to ask a question!" }) :
+                                activeTab === "my_questions" ? t('community.empty_q', { defaultValue: "You haven't asked anything yet." }) :
+                                    t('community.empty_a', { defaultValue: "You haven't replied to anyone yet." })}
                         </p>
                     </div>
                 ) : (
                     <div className="space-y-6">
                         {filteredPosts.map((post) => {
-                            // Check if current user is the owner of this post (for "YOU" badge)
                             const isOwner = currentUser && (
                                 (post.user?._id && String(post.user._id) === String(currentUser._id || currentUser.id)) ||
                                 (post.user && String(post.user) === String(currentUser._id || currentUser.id))
@@ -283,7 +290,7 @@ const Community = () => {
                                             className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-purple-700 transition"
                                         >
                                             <MessageCircle className="w-4 h-4" />
-                                            {post.replies.length} Replies
+                                            {post.replies.length} {t('community.replies', { defaultValue: "Replies" })}
                                             {expandedPosts[post._id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                         </button>
 
@@ -294,7 +301,8 @@ const Community = () => {
                                             }}
                                             className="text-sm font-bold text-purple-600 hover:text-purple-800"
                                         >
-                                            Reply
+                                            {/* Translated Button */}
+                                            {t('community.reply')}
                                         </button>
                                     </div>
 
@@ -303,7 +311,7 @@ const Community = () => {
                                         <div className="bg-gray-50 px-6 pb-6 pt-2 border-t border-gray-200 animate-in slide-in-from-top-2">
                                             <div className="space-y-4 mb-4">
                                                 {post.replies.length === 0 ? (
-                                                    <p className="text-center text-xs text-gray-400 italic py-2">No replies yet. Be the first!</p>
+                                                    <p className="text-center text-xs text-gray-400 italic py-2">{t('community.no_replies_yet', { defaultValue: "No replies yet. Be the first!" })}</p>
                                                 ) : (
                                                     post.replies.map((reply, index) => (
                                                         <div key={index} className="flex gap-3">
@@ -329,7 +337,8 @@ const Community = () => {
 
                                             <div className="flex gap-2 items-center">
                                                 <input
-                                                    placeholder="Write a helpful reply..."
+                                                    // Translated Placeholder
+                                                    placeholder={t('community.write_reply', { defaultValue: "Write a helpful reply..." })}
                                                     className="flex-1 px-4 py-2 rounded-full border border-gray-300 text-sm focus:outline-none focus:border-purple-500 shadow-sm"
                                                     value={replyingTo === post._id ? replyText : ""}
                                                     onChange={(e) => {

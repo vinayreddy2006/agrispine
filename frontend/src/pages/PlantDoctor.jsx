@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, UploadCloud, ScanLine, Sprout, AlertTriangle, CheckCircle, Loader2, Leaf, X } from "lucide-react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { useTranslation } from "react-i18next"; // 1. Import Hook
 
 const PlantDoctor = () => {
+    const { t } = useTranslation(); // 2. Initialize Hook
     const navigate = useNavigate();
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState(null);
@@ -76,10 +78,11 @@ const PlantDoctor = () => {
                     </button>
                     <div>
                         <h1 className="text-3xl font-bold flex items-center gap-3">
-                            <Sprout className="w-8 h-8 text-teal-200" /> Plant Doctor (AI Demo)
+                            {/* Translated Title */}
+                            <Sprout className="w-8 h-8 text-teal-200" /> {t('dashboard.plant_doctor')} <span className="text-sm opacity-70 font-normal">(AI Demo)</span>
                         </h1>
                         <p className="text-teal-100 mt-2 text-sm font-medium opacity-90">
-                            Upload a leaf photo for instant disease detection & remedies.
+                            {t('doctor.subtitle', { defaultValue: 'Upload a leaf photo for instant disease detection & remedies.' })}
                         </p>
                     </div>
                 </div>
@@ -108,7 +111,9 @@ const PlantDoctor = () => {
                                     {loading && (
                                         <div className="absolute inset-0 bg-teal-900/60 flex flex-col items-center justify-center backdrop-blur-sm">
                                             <ScanLine className="w-20 h-20 text-teal-300 animate-pulse" />
-                                            <p className="text-teal-200 font-mono mt-4 font-bold text-lg animate-bounce tracking-wider">ANALYZING...</p>
+                                            <p className="text-teal-200 font-mono mt-4 font-bold text-lg animate-bounce tracking-wider">
+                                                {t('doctor.analyzing', { defaultValue: 'ANALYZING...' })}
+                                            </p>
                                         </div>
                                     )}
                                 </>
@@ -117,8 +122,8 @@ const PlantDoctor = () => {
                                     <div className="bg-teal-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
                                         <UploadCloud className="w-10 h-10 text-teal-600" />
                                     </div>
-                                    <p className="text-gray-700 font-bold text-lg">Click or Drag photo here</p>
-                                    <p className="text-sm text-gray-500 mt-2">Clear leaf photos give best results</p>
+                                    <p className="text-gray-700 font-bold text-lg">{t('doctor.click_upload', { defaultValue: 'Click or Drag photo here' })}</p>
+                                    <p className="text-sm text-gray-500 mt-2">{t('doctor.hint', { defaultValue: 'Clear leaf photos give best results' })}</p>
                                 </div>
                             )}
 
@@ -139,7 +144,11 @@ const PlantDoctor = () => {
                    ${!image ? "bg-gray-100 text-gray-400 cursor-not-allowed" :
                                     loading ? "bg-teal-800 text-white cursor-wait" : "bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white active:scale-95"}`}
                         >
-                            {loading ? <><Loader2 className="animate-spin w-6 h-6" /> Processing Image...</> : <><ScanLine className="w-6 h-6" /> Detect Disease</>}
+                            {loading ?
+                                <><Loader2 className="animate-spin w-6 h-6" /> {t('doctor.processing', { defaultValue: 'Processing Image...' })}</>
+                                :
+                                <><ScanLine className="w-6 h-6" /> {t('doctor.detect_btn', { defaultValue: 'Detect Disease' })}</>
+                            }
                         </button>
                     </div>
 
@@ -147,7 +156,7 @@ const PlantDoctor = () => {
                     {result && (
                         <div className="border-t border-gray-100 animate-in slide-in-from-bottom-4 fade-in duration-500">
                             <div className={`p-6 text-white flex items-center justify-between 
-                    ${result.color === 'green' ? 'bg-green-600' :
+                   ${result.color === 'green' ? 'bg-green-600' :
                                     result.color === 'red' ? 'bg-red-600' :
                                         result.color === 'orange' ? 'bg-orange-500' : 'bg-yellow-500'}`}>
                                 <div>
@@ -157,7 +166,7 @@ const PlantDoctor = () => {
                                     </h3>
                                 </div>
                                 <div className="text-right">
-                                    <span className="block text-xs opacity-80 uppercase font-bold tracking-wider mb-1">AI Confidence</span>
+                                    <span className="block text-xs opacity-80 uppercase font-bold tracking-wider mb-1">{t('doctor.confidence', { defaultValue: 'AI Confidence' })}</span>
                                     <span className="bg-white/20 px-3 py-1 rounded-full text-lg font-bold backdrop-blur-sm">{result.confidence}%</span>
                                 </div>
                             </div>
@@ -165,9 +174,9 @@ const PlantDoctor = () => {
                             <div className="p-8 bg-gray-50/50">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                                     <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Severity Level</p>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t('doctor.severity', { defaultValue: 'Severity Level' })}</p>
                                         <span className={`inline-block px-4 py-2 rounded-xl text-sm font-bold 
-                              ${result.severity === 'High' ? 'bg-red-100 text-red-800' :
+                             ${result.severity === 'High' ? 'bg-red-100 text-red-800' :
                                                 result.severity === 'Moderate' ? 'bg-orange-100 text-orange-800' :
                                                     result.severity === 'Low' ? 'bg-yellow-100 text-yellow-800' :
                                                         'bg-green-100 text-green-800'
@@ -176,7 +185,7 @@ const PlantDoctor = () => {
                                         </span>
                                     </div>
                                     <div className="md:col-span-2 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Crop Type</p>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t('doctor.crop_type', { defaultValue: 'Crop Type' })}</p>
                                         <p className="text-gray-800 font-medium flex items-center gap-2">
                                             <Leaf className="w-5 h-5 text-green-500" /> General Leaf Crop
                                         </p>
@@ -185,7 +194,7 @@ const PlantDoctor = () => {
 
                                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                                     <h4 className="font-bold text-gray-800 text-lg mb-4 flex items-center gap-2">
-                                        <Sprout className="w-6 h-6 text-teal-600" /> Recommended Action & Cure
+                                        <Sprout className="w-6 h-6 text-teal-600" /> {t('doctor.cure', { defaultValue: 'Recommended Action & Cure' })}
                                     </h4>
                                     <p className="text-gray-700 leading-relaxed text-lg bg-teal-50/50 p-5 rounded-xl border border-teal-100">
                                         {result.cure}
