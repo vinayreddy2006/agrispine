@@ -93,12 +93,12 @@ const AddMachine = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <div className="min-h-screen bg-agriBg p-6 flex items-center justify-center">
             <div className="w-full max-w-lg bg-white rounded-xl shadow-lg border border-gray-100 p-8">
 
                 <button
                     onClick={() => navigate("/rent-machinery")}
-                    className="flex items-center text-gray-500 hover:text-gray-800 mb-6 transition"
+                    className="flex items-center text-gray-500 hover:text-gray-800 mb-6 transition py-2 pr-2 -ml-2 min-h-[44px]"
                 >
                     {/* Translate "Back to Rentals" using rent title */}
                     <ArrowLeft className="w-4 h-4 mr-1" /> {t('rent.title')}
@@ -140,7 +140,7 @@ const AddMachine = () => {
                                 />
                                 <label
                                     htmlFor="file-upload"
-                                    className="cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2 w-max"
+                                    className="cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-agriBg transition flex items-center gap-2 w-max"
                                 >
                                     <UploadCloud className="w-4 h-4" /> {t('add_machine.click_upload')}
                                 </label>

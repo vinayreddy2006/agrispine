@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Sprout, TrendingUp, Users, User } from "lucide-react";
+import { Home, Sprout, TrendingUp, Users, User, Briefcase } from "lucide-react";
 
 const BottomNav = () => {
     const navigate = useNavigate();
@@ -11,11 +11,12 @@ const BottomNav = () => {
         { name: "Crops", path: "/my-crops", icon: <Sprout className="w-6 h-6" /> }, // Or a My Crops list page
         { name: "Market", path: "/market", icon: <TrendingUp className="w-6 h-6" /> },
         { name: "Forum", path: "/community", icon: <Users className="w-6 h-6" /> },
+        { name: "Groups", path: "/groups", icon: <Briefcase className="w-6 h-6" /> },
         { name: "Profile", path: "/profile", icon: <User className="w-6 h-6" /> },
     ];
 
     // Don't show nav on Login, Register, or Landing pages
-    const hideOnPaths = ["/", "/login", "/register", "/village-chat"];
+    const hideOnPaths = ["/", "/login", "/register", "/messages"];
     if (hideOnPaths.includes(location.pathname)) return null;
 
     return (

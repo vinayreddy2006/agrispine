@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
-import { ArrowLeft, Calendar, User, Filter } from "lucide-react";
+import { Calendar, User, Filter } from "lucide-react";
 import { useTranslation } from "react-i18next"; // 1. Import Hook
+import PageHeader from "../../components/common/PageHeader";
 
 const MyBookings = () => {
     const { t } = useTranslation(); // 2. Initialize Hook
@@ -53,16 +54,8 @@ const MyBookings = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
-            <div className="bg-white shadow-sm p-4 sticky top-0 z-10 border-b border-gray-100">
-                <div className="max-w-4xl mx-auto flex items-center gap-3">
-                    <button onClick={() => navigate("/rent-machinery")} className="p-2 hover:bg-gray-100 rounded-full transition">
-                        <ArrowLeft className="w-6 h-6 text-gray-700" />
-                    </button>
-                    {/* Translated "My Requests" */}
-                    <h1 className="text-xl font-bold text-gray-800">{t('rent.my_req')}</h1>
-                </div>
-            </div>
+        <div className="min-h-screen bg-agriBg pb-20">
+            <PageHeader title={t('rent.my_req')} />
 
             <div className="max-w-4xl mx-auto p-4 space-y-4">
                 {/* Tabs */}

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import Swal from "sweetalert2";
-import { ArrowLeft, MapPin, User, Phone, ClipboardList, CalendarCheck, CheckCircle2 } from "lucide-react";
+import { MapPin, User, Phone, ClipboardList, CalendarCheck, CheckCircle2, MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next"; // 1. Import Hook
+import PageHeader from "../../components/common/PageHeader";
 
 const RentDetails = () => {
     const { t } = useTranslation(); // 2. Initialize Hook
@@ -68,18 +69,24 @@ const RentDetails = () => {
         return unit;
     };
 
+    const handleStartChat = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            await api.post("/chat/conversations", {
+                participantIds: [machine.user._id],
+                isGroup: false
+            }, { headers: { "auth-token": token } });
+            
+            navigate("/messages");
+        } catch (err) {
+            Swal.fire("Error", "Could not start chat", "error");
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50/50 pb-20">
+        <div className="min-h-screen bg-agriBg/50 pb-20">
             {/* HEADER NAV */}
-            <div className="bg-white p-4 shadow-sm sticky top-0 z-30">
-                <div className="max-w-4xl mx-auto flex items-center gap-3">
-                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition">
-                        <ArrowLeft className="w-6 h-6 text-gray-800" />
-                    </button>
-                    {/* Translated Header */}
-                    <h2 className="font-bold text-lg text-gray-800">{t('rent.machine_details')}</h2>
-                </div>
-            </div>
+            <PageHeader title={t('rent.machine_details')} />
 
             {/* IMAGE SECTION */}
             <div className="max-w-4xl mx-auto px-4 mt-6">
@@ -119,7 +126,7 @@ const RentDetails = () => {
                     </div>
 
                     {/* Owner Details */}
-                    <div className="bg-gray-50/80 p-5 rounded-2xl flex flex-col md:flex-row items-center gap-5 mb-8 border border-gray-200">
+                    <div className="bg-agriBg/80 p-5 rounded-2xl flex flex-col md:flex-row items-center gap-5 mb-8 border border-gray-200">
                         <div className="w-16 h-16 rounded-full bg-white border-2 border-white shadow-md overflow-hidden shrink-0 flex items-center justify-center">
                             {machine.user?.profileImage ? (
                                 <img
@@ -140,12 +147,16 @@ const RentDetails = () => {
                                 <CheckCircle2 className="w-4 h-4" /> {t('rent.verified')}
                             </div>
                         </div>
-                        {!isOwner && machine.user?.phone && (
-                            <div className="flex flex-col items-center md:items-end gap-2">
-                                <a href={`tel:${machine.user.phone}`} className="flex items-center gap-2 bg-white hover:bg-green-50 text-green-700 border border-green-200 px-5 py-2.5 rounded-xl font-bold transition text-sm shadow-sm">
-                                    {/* Translated Call */}
-                                    <Phone className="w-4 h-4" /> {t('rent.call')} {machine.user.phone}
-                                </a>
+                        {!isOwner && (
+                            <div className="flex flex-col sm:flex-row items-center md:items-end gap-2">
+                                {machine.user?.phone && (
+                                    <a href={`tel:${machine.user.phone}`} className="flex items-center justify-center gap-2 bg-white hover:bg-green-50 text-green-700 border border-green-200 px-5 py-2.5 rounded-xl font-bold transition text-sm shadow-sm w-full sm:w-auto">
+                                        <Phone className="w-4 h-4" /> {t('rent.call')}
+                                    </a>
+                                )}
+                                <button onClick={handleStartChat} className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold transition text-sm shadow-sm w-full sm:w-auto">
+                                    <MessageSquare className="w-4 h-4" /> Message
+                                </button>
                             </div>
                         )}
                     </div>
@@ -156,7 +167,7 @@ const RentDetails = () => {
                             <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-lg">
                                 <ClipboardList className="w-5 h-5 text-green-600" /> {t('rent.desc')}
                             </h3>
-                            <p className="text-gray-600 bg-gray-50 p-5 rounded-2xl text-sm leading-relaxed border border-gray-100">
+                            <p className="text-gray-600 bg-agriBg p-5 rounded-2xl text-sm leading-relaxed border border-gray-100">
                                 {machine.description || "No description provided for this machine."}
                             </p>
                         </div>

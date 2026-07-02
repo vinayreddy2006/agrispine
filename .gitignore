@@ -1,3 +1,16 @@
+# Root Ignore
+.vscode/
 node_modules/
+venv/
 .env
-dist/
+.env.*
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+test_*.py
+test_*.js
+*.log

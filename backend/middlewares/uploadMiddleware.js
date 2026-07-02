@@ -20,18 +20,29 @@ const storage = multer.diskStorage({
     }
 });
 
-// File Filter (Optional: Allow only images, audio, and video)
+// File Filter (Allow images, audio, video, and documents)
 const fileFilter = (req, file, cb) => {
+    const allowedMimeTypes = [
+        "image/", "audio/", "video/", 
+        "application/pdf", 
+        "application/msword", 
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "text/plain"
+    ];
     
-    if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("audio/") || file.mimetype.startsWith("video/")) {
+    if (allowedMimeTypes.some(type => file.mimetype.startsWith(type) || file.mimetype === type)) {
         cb(null, true);
     } else {
-        cb(new Error("Only images and audio are allowed!"), false);
+        cb(new Error("File type not supported!"), false);
     }
 };
 
 export const upload = multer({ 
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // Limit 5MB
+    limits: { fileSize: 20 * 1024 * 1024 } // Limit 20MB
 });

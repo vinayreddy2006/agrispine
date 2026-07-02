@@ -19,7 +19,7 @@ export const createPost = async (req, res) => {
 
   } catch (error) {
     console.error("Error creating post:", error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -37,7 +37,7 @@ export const getAllPosts = async (req, res) => {
 
   } catch (error) {
     console.error("Error fetching posts:", error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -68,6 +68,6 @@ export const addReply = async (req, res) => {
 
   } catch (error) {
     console.error("Error replying:", error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };

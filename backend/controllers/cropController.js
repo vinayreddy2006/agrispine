@@ -61,7 +61,7 @@ export const deleteCrop = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
@@ -79,7 +79,7 @@ export const getCropById = async (req, res) => {
     res.json(crop);
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -105,7 +105,7 @@ export const addExpense = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -132,7 +132,7 @@ export const deleteExpense = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -163,7 +163,7 @@ export const sellCrop = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -184,7 +184,7 @@ export const toggleListing = async (req, res) => {
     if (!crop) return res.status(404).send("Crop not found");
     res.json(crop);
   } catch (error) {
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -200,6 +200,6 @@ export const getMarketListings = async (req, res) => {
 
     res.json(listings);
   } catch (error) {
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };

@@ -1,0 +1,135 @@
+import { useState } from "react";
+import api from "../../utils/api";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+import { Sprout, ArrowLeft, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next"; // 1. Import Hook
+
+const AddCrop = () => {
+  const { t } = useTranslation(); // 2. Initialize Hook
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    cropName: "",
+    area: "",
+    sowingDate: new Date().toISOString().split("T")[0], // Default to today
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    try {
+      await api.post("/crops/add", formData, {
+        headers: { "auth-token": token }
+      });
+
+      await Swal.fire({
+        title: 'Success! 🌱',
+        text: 'Your crop has been added successfully.',
+        icon: 'success',
+        confirmButtonColor: '#16a34a',
+        confirmButtonText: 'Great!'
+      });
+      navigate("/dashboard");
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        title: 'Error',
+        text: 'Could not add crop. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-agriBg p-6 flex items-center justify-center">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="flex items-center text-gray-500 hover:text-gray-800 mb-6 transition min-h-[44px] py-2 pr-2 -ml-2"
+        >
+          {/* Translated: "My Crops" (as context for dashboard) */}
+          <ArrowLeft className="w-4 h-4 mr-1" /> {t('dashboard.my_crops')}
+        </button>
+
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-green-100 p-3 rounded-full">
+            <Sprout className="w-6 h-6 text-green-700" />
+          </div>
+          {/* Translated: "Add New Crop" */}
+          <h1 className="text-2xl font-bold text-gray-800">{t('crop.add')}</h1>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            {/* Translated: "Crop Name" */}
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('crop.name')}</label>
+            <input
+              name="cropName"
+              type="text"
+              placeholder="e.g. Wheat, Rice, Cotton"
+              value={formData.cropName}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            {/* Translated: "Area" */}
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.area')} (Acres)</label>
+            <input
+              name="area"
+              type="number"
+              placeholder="e.g. 2.5"
+              step="0.1"
+              value={formData.area}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            {/* Translated: "Sown" */}
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.sown')}</label>
+            <input
+              name="sowingDate"
+              type="date"
+              value={formData.sowingDate}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 rounded-lg text-white font-semibold flex justify-center items-center gap-2 transition
+              ${loading ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
+          >
+            {/* Translated: "Save Crop" */}
+            {loading ? <Loader2 className="animate-spin w-5 h-5" /> : t('crop.save')}
+          </button>
+        </form>
+
+      </div>
+    </div>
+  );
+};
+
+export default AddCrop;

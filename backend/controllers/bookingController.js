@@ -28,7 +28,7 @@ export const createBooking = async (req, res) => {
 
   } catch (error) {
     console.error("Error creating booking:", error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -75,7 +75,7 @@ export const getMyBookings = async (req, res) => {
 
   } catch (error) {
     console.error("Error fetching bookings:", error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -101,7 +101,7 @@ export const updateStatus = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -121,6 +121,6 @@ export const deleteBooking = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: "Server Error" });
   }
 };

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
-import { ArrowLeft, Tractor, ChevronRight, Plus } from "lucide-react";
-import { useTranslation } from "react-i18next"; // 1. Import
+import { Tractor, ChevronRight, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import PageHeader from "../../components/common/PageHeader";
+import EmptyState from "../../components/ui/EmptyState";
 
 const MyMachines = () => {
     const { t } = useTranslation(); // 2. Hook
@@ -26,40 +28,29 @@ const MyMachines = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
+        <div className="min-h-screen bg-agriBg pb-20">
             {/* Header */}
-            <div className="bg-white shadow-sm p-4 sticky top-0 z-10 border-b border-gray-100">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => navigate("/rent-machinery")} className="p-2 hover:bg-gray-100 rounded-full transition">
-                            <ArrowLeft className="w-6 h-6 text-gray-700" />
-                        </button>
-                        {/* Translated Title */}
-                        <h1 className="text-xl font-bold text-gray-800">{t('rent.my_machines')}</h1>
-                    </div>
-                    <button onClick={() => navigate("/add-machine")} className="bg-green-600 text-white p-2 rounded-full shadow-md">
+            <PageHeader 
+                title={t('rent.my_machines')}
+                rightActions={
+                    <button onClick={() => navigate("/add-machine")} className="bg-green-600 text-white p-2 rounded-full shadow-md hover:bg-green-700 transition min-h-[44px] min-w-[44px] flex items-center justify-center">
                         <Plus className="w-5 h-5" />
                     </button>
-                </div>
-            </div>
+                }
+            />
 
             {/* Content */}
             <div className="max-w-4xl mx-auto p-4 space-y-4">
                 {loading ? (
                     <div className="text-center mt-10 text-gray-400">Loading inventory...</div>
                 ) : machines.length === 0 ? (
-                    <div className="text-center mt-20 p-8 flex flex-col items-center">
-                        <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mb-4">
-                            <Tractor className="w-12 h-12 text-gray-300" />
-                        </div>
-                        {/* Translated Empty State */}
-                        <h3 className="text-lg font-bold text-gray-700">{t('rent.no_found', { type: t('machines.tractor') })}</h3>
-                        {/* Using a generic 'No found' message or hardcoded 'No Machines Listed' translation if you prefer adding a specific key */}
-
-                        <button onClick={() => navigate("/add-machine")} className="bg-green-600 text-white px-6 py-2.5 rounded-full font-bold shadow-lg hover:bg-green-700 transition mt-4">
-                            {t('rent.list')}
-                        </button>
-                    </div>
+                    <EmptyState 
+                        title={t('rent.no_found', { type: t('machines.tractor') })}
+                        description="You haven't listed any machines for rent yet."
+                        icon={Tractor}
+                        actionText={t('rent.list')}
+                        onAction={() => navigate("/add-machine")}
+                    />
                 ) : (
                     machines.map((m) => (
                         <div

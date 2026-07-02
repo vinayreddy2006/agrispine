@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0;
+  
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: #dbeafe;
+  --color-primary-dark: #1e40af;
+}
+
+.dark {
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-border: #334155;
+  
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #64748b;
+  
+  --color-primary: #3b82f6; 
+  --color-primary-hover: #2563eb;
+  --color-primary-light: #1e3a8a;
+  --color-primary-dark: #60a5fa;
+}
+
+
+@layer base {
+  body {
+    @apply bg-background text-text-primary font-sans antialiased transition-colors duration-200;
+  }
+  
+  /* Standardize Heading typography */
+  h1 {
+    @apply text-2xl md:text-3xl font-bold tracking-tight text-text-primary;
+  }
+  h2 {
+    @apply text-xl md:text-2xl font-bold tracking-tight text-text-primary;
+  }
+  h3 {
+    @apply text-lg md:text-xl font-bold text-text-primary;
+  }
+
+  /* Farmer-first accessibility defaults */
+  button, 
+  [role="button"],
+  select,
+  input[type="submit"],
+  input[type="button"] {
+    @apply min-h-[44px] cursor-pointer touch-manipulation;
+  }
+  
+  /* Global Input Visibility & Contrast Fixes */
+  input, textarea, select {
+    @apply bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-colors;
+  }
+  
+  /* Make sure labels are always visible in forms */
+  label {
+    @apply text-gray-700 dark:text-gray-300 font-medium;
+  }
+  
+  /* Fix placeholder text contrast */
+  ::placeholder {
+    @apply text-gray-400 dark:text-gray-500;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  input[type="email"],
+  textarea {
+    @apply min-h-[44px] px-4 py-2 w-full rounded-xl border border-border bg-surface text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow text-base;
+  }
+}
+
+@layer components {
+  /* Common primary button style */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-hover text-white font-bold px-6 py-3 rounded-xl transition shadow-sm active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-surface hover:bg-gray-50 dark:hover:bg-gray-800 text-text-primary font-bold px-6 py-3 rounded-xl border border-border transition shadow-sm active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+}
+
+@layer utilities {
+  /* Global Dark Mode Overrides for Hardcoded Light Classes */
+  .dark body {
+    background-color: #020617 !important; /* Level 1: App Background dark:bg-slate-950 */
+  }
+
+  .dark .bg-agriBg {
+    background-color: #0f172a !important; /* Level 2: Page Containers dark:bg-slate-900 */
+  }
+
+  .dark .bg-white {
+    background-color: #1e293b !important; /* Level 3: Cards dark:bg-slate-800 */
+    border-color: #334155 !important; /* Ensure borders on cards become dark */
+  }
+
+  .dark .text-gray-800, 
+  .dark .text-gray-700 {
+    color: #f1f5f9 !important; /* Text: dark:text-slate-100 */
+  }
+
+  .dark .text-gray-600, 
+  .dark .text-gray-500 {
+    color: #94a3b8 !important; /* Secondary Text: dark:text-slate-400 */
+  }
+
+  .dark .border-gray-200, 
+  .dark .border-gray-100, 
+  .dark .border-gray-50 {
+    border-color: #334155 !important; /* Borders: dark:border-slate-700 */
+  }
+}

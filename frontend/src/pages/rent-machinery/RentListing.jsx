@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../utils/api";
-import { ArrowLeft, MapPin, User, Filter } from "lucide-react";
-import { useTranslation } from "react-i18next"; // 1. Import Hook
+import { MapPin, User, Filter, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import PageHeader from "../../components/common/PageHeader";
+import EmptyState from "../../components/ui/EmptyState";
 
 const RentListing = () => {
     const { t } = useTranslation(); // 2. Initialize Hook
@@ -10,6 +12,7 @@ const RentListing = () => {
     const navigate = useNavigate();
     const [machines, setMachines] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         const fetchMachines = async () => {
@@ -28,39 +31,47 @@ const RentListing = () => {
         fetchMachines();
     }, [type]);
 
+    const filteredMachines = machines.filter(m => 
+        m.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        m.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
-        <div className="min-h-screen bg-gray-50 pb-10">
+        <div className="min-h-screen bg-agriBg pb-10">
             {/* Header */}
-            <div className="bg-white shadow-sm p-4 sticky top-0 z-10">
-                <div className="max-w-5xl mx-auto flex items-center gap-3">
-                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition">
-                        <ArrowLeft className="w-6 h-6 text-gray-600" />
-                    </button>
-                    <div>
-                        <h1 className="text-xl font-bold text-gray-800">
-                            {/* Translated: "Available Tractors" */}
-                            {t('rent.avail')} {t(`machines.${type.toLowerCase().replace(" ", "_")}`, { defaultValue: type })}
-                        </h1>
-                        <p className="text-xs text-gray-500">{machines.length} {t('rent.providers_found', { defaultValue: 'providers found' })}</p>
-                    </div>
-                </div>
-            </div>
+            <PageHeader 
+                title={
+                    <span className="flex flex-col">
+                        <span>{t('rent.avail')} {t(`machines.${type.toLowerCase().replace(" ", "_")}`, { defaultValue: type })}</span>
+                        <span className="text-xs text-gray-500 font-normal mt-0.5 leading-none">{machines.length} {t('rent.providers_found', { defaultValue: 'providers found' })}</span>
+                    </span>
+                }
+            />
 
             {/* List */}
             <div className="max-w-5xl mx-auto p-6 space-y-6">
+                {/* Search Bar 2: Provider Name */}
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
+                    <Search className="w-5 h-5 text-gray-400" />
+                    <input 
+                        type="text" 
+                        placeholder="Search Provider Name..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-transparent border-none outline-none text-gray-700 placeholder-gray-400"
+                    />
+                </div>
+
                 {loading ? (
                     <div className="text-center mt-20 text-gray-500">Loading...</div>
-                ) : machines.length === 0 ? (
-                    <div className="text-center mt-20 bg-white p-10 rounded-2xl shadow-sm border border-gray-100">
-                        <Filter className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        {/* Translated: "No Tractors found" */}
-                        <h3 className="text-lg font-bold text-gray-700">
-                            {t('rent.no_found', { type: t(`machines.${type.toLowerCase().replace(" ", "_")}`, { defaultValue: type }) })}
-                        </h3>
-                        <p className="text-gray-500">Try checking back later.</p>
-                    </div>
+                ) : filteredMachines.length === 0 ? (
+                    <EmptyState 
+                        title={t('rent.no_found', { type: t(`machines.${type.toLowerCase().replace(" ", "_")}`, { defaultValue: type }) })}
+                        description="Try checking back later."
+                        icon={Filter}
+                    />
                 ) : (
-                    machines.map((machine) => (
+                    filteredMachines.map((machine) => (
                         <div
                             key={machine._id}
                             onClick={() => navigate(`/rent/details/${machine._id}`, { state: { machine } })}
@@ -108,7 +119,7 @@ const RentListing = () => {
                             </div>
 
                             {/* Price */}
-                            <div className="text-center md:text-right shrink-0 bg-gray-50 p-4 rounded-xl min-w-[140px]">
+                            <div className="text-center md:text-right shrink-0 bg-agriBg p-4 rounded-xl min-w-[140px]">
                                 <span className="block font-bold text-green-700 text-3xl">₹{machine.price}</span>
                                 <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">
                                     {/* Dynamic Unit Translation */}

@@ -21,7 +21,7 @@ const machineSchema = new mongoose.Schema({
   
   priceUnit: {
     type: String,
-    enum: ['hour', 'acre'], 
+    enum: ['hour', 'acre', 'day'], 
     default: 'hour',
     required: true
   },

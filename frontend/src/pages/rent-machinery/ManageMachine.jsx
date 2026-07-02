@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import api from "../../utils/api";
 import Swal from "sweetalert2"; // Enhanced Alerts
-import { ArrowLeft, Trash2, Check, X, Calendar, User } from "lucide-react";
+import { Trash2, Check, X, Calendar, User } from "lucide-react";
 import { useTranslation } from "react-i18next"; // 1. Import
+import PageHeader from "../../components/common/PageHeader";
 
 const ManageMachine = () => {
     const { t } = useTranslation(); // 2. Hook
@@ -87,21 +88,16 @@ const ManageMachine = () => {
     if (!machine) return <div className="text-center mt-20">Loading...</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
+        <div className="min-h-screen bg-agriBg pb-20">
             {/* Header */}
-            <div className="bg-white p-4 sticky top-0 z-10 shadow-sm border-b border-gray-100">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => navigate("/my-machines")} className="p-2 hover:bg-gray-100 rounded-full">
-                            <ArrowLeft className="w-6 h-6" />
-                        </button>
-                        <div>
-                            <h1 className="font-bold text-lg text-gray-800">{machine.name}</h1>
-                            <p className="text-xs text-gray-500">{t('manage.title')}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <PageHeader 
+                title={
+                    <span className="flex flex-col">
+                        <span>{machine.name}</span>
+                        <span className="text-xs text-gray-500 font-normal mt-0.5 leading-none">{t('manage.title')}</span>
+                    </span>
+                }
+            />
 
             {/* Tabs */}
             <div className="max-w-4xl mx-auto p-4">
@@ -110,7 +106,7 @@ const ManageMachine = () => {
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
-                            className={`flex-1 py-2 text-sm font-bold rounded-lg capitalize transition ${filter === f ? 'bg-black text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                            className={`flex-1 py-2 text-sm font-bold rounded-lg capitalize transition ${filter === f ? 'bg-black text-white' : 'text-gray-500 hover:bg-agriBg'}`}
                         >
                             {/* Dynamically translate 'pending', 'confirmed', 'history' */}
                             {t(`manage.${f}`, { defaultValue: f })}
@@ -142,7 +138,7 @@ const ManageMachine = () => {
                                     </div>
                                 </div>
 
-                                {b.notes && <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mb-3">"{b.notes}"</p>}
+                                {b.notes && <p className="text-sm text-gray-600 bg-agriBg p-2 rounded mb-3">"{b.notes}"</p>}
 
                                 {b.status === 'pending' && (
                                     <div className="flex gap-2 mt-2">
