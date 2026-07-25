@@ -1,5 +1,5 @@
 import express from 'express';
-import fetchUser from '../middlewares/fetchuser.js';
+import fetchUser from '../middlewares/fetchUser.js';
 import {
     createGroup,
     getUserGroups,

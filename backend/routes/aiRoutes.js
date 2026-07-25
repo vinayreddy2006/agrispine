@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import fetchuser from "../middlewares/fetchuser.js";
+import fetchuser from "../middlewares/fetchUser.js";
 import {
     getAllChats,
     createChat,
