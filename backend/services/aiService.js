@@ -6,7 +6,9 @@ import Machine from "../models/Machine.js";
 import Conversation from "../models/Conversation.js";
 import AIChat from "../models/AIChat.js";
 
-const FASTAPI_URL = process.env.AI_SERVICE_URL || "http://localhost:8000/api/ai";
+const rawAiUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
+const cleanAiUrl = rawAiUrl.replace(/\/api\/ai\/?$/, '').replace(/\/$/, '');
+const FASTAPI_URL = `${cleanAiUrl}/api/ai`;
 
 // Fetch user context for LLM
 export const getUserContext = async (userId) => {
@@ -42,7 +44,7 @@ export const getUserContext = async (userId) => {
 
 export const forwardToFastAPI = async (fastApiPayload, authToken) => {
     let response = null;
-    let retries = 5; // Increase retries to handle Render's 50-second cold starts
+    let retries = 15; // Increased to 15 (75 seconds) because Render free tier cold starts can take > 50s
     let lastError = null;
     
     while (retries > 0) {
@@ -89,7 +91,7 @@ export const forwardToFastAPI = async (fastApiPayload, authToken) => {
 // Forward Voice to FastAPI
 export const forwardVoiceToFastAPI = async (formData, authToken) => {
     let response = null;
-    let retries = 5;
+    let retries = 15;
     let lastError = null;
 
     while (retries > 0) {
