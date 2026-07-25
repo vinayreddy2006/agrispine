@@ -173,7 +173,7 @@ const CropDetails = () => {
         if (result.isConfirmed) {
             try {
                 const token = localStorage.getItem("token");
-                await api.delete(`/crops/${id}`, { headers: { "auth-token": token } });
+                await api.delete(`/crops/delete/${id}`, { headers: { "auth-token": token } });
                 Swal.fire("Deleted!", "Crop has been successfully deleted.", "success");
                 navigate("/dashboard");
             } catch (err) {

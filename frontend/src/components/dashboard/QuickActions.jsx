@@ -69,8 +69,8 @@ const QuickActions = ({ weather }) => {
       path: "/schemes"
     },
     {
-      title: "Work Groups", // Note: Need i18n support later, hardcoding for now or using default
-      desc: "Manage farm labor and daily settlements",
+      title: t('dashboard.work_groups', { defaultValue: "Work Groups" }),
+      desc: t('dashboard.work_groups_desc', { defaultValue: "Manage farm labor and daily settlements" }),
       icon: <Briefcase className="w-6 h-6" />,
       colorClass: "bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white",
       path: "/groups"

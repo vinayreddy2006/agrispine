@@ -75,7 +75,9 @@
     "govt_schemes": "Govt Schemes",
     "schemes_desc": "Subsidies & Aid",
     "area": "Area",
-    "sown": "Sown"
+    "sown": "Sown",
+    "work_groups": "Work Groups",
+    "work_groups_desc": "Manage farm labor and daily settlements"
   },
   "rent": {
     "title": "Rent Machinery",

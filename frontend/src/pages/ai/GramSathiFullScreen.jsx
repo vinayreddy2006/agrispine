@@ -282,21 +282,16 @@ export default function GramSathiFullScreen() {
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans">
       
       {/* Sidebar */}
-      <div className="w-0 md:w-[280px] flex-shrink-0 bg-[#f9f9f9] dark:bg-[#171717] flex flex-col z-10 transition-all duration-300 overflow-hidden border-r border-slate-200 dark:border-white/10">
+      <div className="w-0 md:w-[280px] flex-shrink-0 bg-slate-50 dark:bg-slate-950 flex flex-col z-10 transition-all duration-300 overflow-hidden border-r border-slate-200 dark:border-slate-800 shadow-sm">
         
         {/* Header / New Chat */}
-        <div className="p-3">
+        <div className="p-4">
           <button 
             onClick={handleNewChat}
-            className="w-full flex items-center gap-3 bg-white dark:bg-transparent hover:bg-slate-200 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200 py-2.5 px-3 rounded-lg transition-colors group border border-slate-200 dark:border-transparent shadow-sm dark:shadow-none"
+            className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl transition-all shadow-sm shadow-green-600/20 font-bold"
           >
-            <div className="w-7 h-7 rounded-full bg-green-100 dark:bg-white/10 flex items-center justify-center group-hover:bg-green-200 dark:group-hover:bg-green-500/20 transition-colors">
-              <Bot className="w-4 h-4 text-green-600 dark:text-slate-300 group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors" />
-            </div>
-            <span className="font-semibold text-sm">New Chat</span>
-            <div className="ml-auto flex items-center justify-center w-7 h-7">
-                <Edit2 className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
-            </div>
+            <Plus className="w-5 h-5" />
+            <span>New Chat</span>
           </button>
         </div>
         
@@ -315,13 +310,14 @@ export default function GramSathiFullScreen() {
                 <div key={chat._id} className="relative group">
                     <button
                         onClick={() => setCurrentChatId(chat._id)}
-                        className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                        className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
                             currentChatId === chat._id 
-                            ? 'bg-green-100/50 dark:bg-white/10 text-green-900 dark:text-white font-medium' 
-                            : 'hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-800 dark:text-slate-300'
+                            ? 'bg-white dark:bg-slate-800 text-green-700 dark:text-green-400 font-bold shadow-sm border border-slate-200 dark:border-slate-700' 
+                            : 'hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 font-medium'
                         }`}
                     >
-                        <span className="truncate text-[13px] font-medium flex-1 tracking-wide">{chat.title}</span>
+                        <MessageSquare className={`w-4 h-4 flex-shrink-0 ${currentChatId === chat._id ? 'text-green-600' : 'text-slate-400'}`} />
+                        <span className="truncate text-sm flex-1 tracking-wide">{chat.title}</span>
                     </button>
                     
                     {/* Context Menu Trigger */}
@@ -372,7 +368,7 @@ export default function GramSathiFullScreen() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-white dark:bg-slate-900 overflow-hidden relative transition-colors">
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-32">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-48 custom-scrollbar">
           
           {messages.map((msg, idx) => {
             const isUser = msg.sender === "user";

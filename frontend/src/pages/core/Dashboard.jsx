@@ -176,64 +176,7 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Crop History Section */}
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              <TrendingUp className="text-gray-500" /> Crop History
-            </h2>
-          </div>
-
-          {loading ? (
-            <LoadingState message="Loading history..." />
-          ) : crops.filter(c => c.status === 'sold').length === 0 ? (
-            <EmptyState 
-              title="No Past Crops"
-              description="Your completed and sold crops will appear here."
-              icon={TrendingUp}
-            />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {crops.filter(c => c.status === 'sold').map((crop) => {
-                  const totalCost = crop.expenses?.reduce((acc, curr) => acc + curr.amount, 0) || 0;
-                  const profit = (crop.revenue || 0) - totalCost;
-                  const isProfit = profit >= 0;
-
-                  return (
-                    <Card 
-                      key={crop._id}
-                      hover
-                      onClick={() => navigate(`/crop/${crop._id}`)}
-                      className="p-5"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-3 rounded-xl ${isProfit ? 'bg-emerald-100' : 'bg-red-100'}`}>
-                            <Landmark className={`w-7 h-7 ${isProfit ? 'text-emerald-600' : 'text-red-600'}`} />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-text-primary">{t(`crops_list.${crop.cropName.toLowerCase()}`, { defaultValue: crop.cropName })}</h3>
-                            <span className="text-xs font-bold px-2 py-1 rounded-md bg-gray-100 text-gray-600">
-                              SOLD
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-text-secondary text-sm mt-3 space-y-2 bg-background p-3 rounded-lg border border-border">
-                        <p className="flex justify-between"><span>Yield:</span> <span className="font-bold text-text-primary">{crop.yieldQty} Qtl</span></p>
-                        <p className="flex justify-between">
-                            <span>{isProfit ? 'Profit' : 'Loss'}:</span> 
-                            <span className={`font-bold ${isProfit ? 'text-emerald-600' : 'text-red-600'}`}>
-                                {isProfit ? "+" : "-"}₹{Math.abs(profit).toLocaleString('en-IN')}
-                            </span>
-                        </p>
-                      </div>
-                    </Card>
-                  )
-              })}
-            </div>
-          )}
-        </div>
+        {/* Crop History removed per user request, will be added to My Crops page instead */}
 
         <div>
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
