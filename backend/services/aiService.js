@@ -47,6 +47,8 @@ export const forwardToFastAPI = async (fastApiPayload, authToken) => {
     let retries = 15; // Increased to 15 (75 seconds) because Render free tier cold starts can take > 50s
     let lastError = null;
     
+    console.log(`[AI-SERVICE] Attempting to connect to AI Service at: ${FASTAPI_URL}/chat`);
+
     while (retries > 0) {
         try {
             response = await axios.post(`${FASTAPI_URL}/chat`, fastApiPayload, {

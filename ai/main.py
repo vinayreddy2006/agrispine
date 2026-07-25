@@ -23,6 +23,7 @@ app.include_router(chat.router, prefix="/api/ai", tags=["Chat"])
 app.include_router(voice.router, prefix="/api/ai", tags=["Voice"])
 
 @app.get("/")
+@app.head("/")
 async def root():
     return {"message": "GramSathi AI Ecosystem is Online"}
 
