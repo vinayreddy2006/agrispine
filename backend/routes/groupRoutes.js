@@ -13,7 +13,9 @@ import {
     updateMemberRole,
     removeGroupMember,
     transferOwnership,
-    closeGroup
+    closeGroup,
+    deleteGroup,
+    getGroupSettlements
 } from '../controllers/groupController.js';
 
 const router = express.Router();
@@ -28,12 +30,15 @@ router.put('/:id/members/:memberId/role', fetchUser, updateMemberRole);
 router.delete('/:id/members/:memberId', fetchUser, removeGroupMember);
 router.put('/:id/transfer-ownership', fetchUser, transferOwnership);
 router.put('/:id/close', fetchUser, closeGroup);
+router.delete('/:id', fetchUser, deleteGroup);
+
 // Work Records
 router.post('/:id/work', fetchUser, createWorkRecord);
 router.get('/:id/work', fetchUser, getGroupWorkRecords);
 
 // Settlements & Analytics
 router.post('/:id/settlements', fetchUser, processSettlement);
+router.get('/:id/settlements', fetchUser, getGroupSettlements);
 router.get('/:id/analytics', fetchUser, getGroupAnalytics);
 
 export default router;

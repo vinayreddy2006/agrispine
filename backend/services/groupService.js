@@ -216,121 +216,94 @@ export const getGroupAnalyticsService = async (groupId) => {
     return { totalEarnings, pendingPayments, totalAcres, totalWorkDays, memberStats };
 };
 
+export const getGroupSettlementsService = async (groupId) => {
+    return await Settlement.find({ group: groupId }).sort({ createdAt: -1 }).populate('processedBy', 'name');
+};
+
 export const getPersonalDashboardService = async (userId) => {
-    // Find groups the user is a member of
+    // Find groups the user is a member of (where they are not removed)
     const groups = await WorkGroup.find({ 'members.user': userId });
+    
     let totalEarned = 0;
     let pendingEarned = 0;
+    let settledEarned = 0;
     let daysWorked = 0;
+    let totalAcres = 0;
+    let possibleWorkDays = 0;
+    let activeGroups = 0;
+    let closedGroups = 0;
+    
+    let groupDetailsList = [];
 
     for (let group of groups) {
-        // Find member subdoc id
         const memberSubdoc = group.members.find(m => m.user && m.user.toString() === userId.toString());
-        if (!memberSubdoc) continue;
+        if (!memberSubdoc || memberSubdoc.status === 'removed') continue;
 
-        const records = await WorkRecord.find({ group: group._id, attendance: memberSubdoc._id });
-        daysWorked += records.length;
+        if (group.status === 'closed') {
+            closedGroups++;
+        } else {
+            activeGroups++;
+        }
+
+        // All records for this group
+        const groupRecords = await WorkRecord.find({ group: group._id });
+        possibleWorkDays += groupRecords.length;
+
+        // Records where this user was present
+        const userRecords = groupRecords.filter(r => r.attendance.includes(memberSubdoc._id));
+        daysWorked += userRecords.length;
         
-        records.forEach(r => {
+        let groupTotalEarned = 0;
+        let groupPendingEarned = 0;
+
+        userRecords.forEach(r => {
+            totalAcres += (r.acres / r.attendance.length); // Prorated acres
             totalEarned += r.wagePerPerson;
+            groupTotalEarned += r.wagePerPerson;
+            
             const settledIds = (r.settledMembers || []).map(id => id.toString());
             if (!settledIds.includes(memberSubdoc._id.toString())) {
                 pendingEarned += r.wagePerPerson;
+                groupPendingEarned += r.wagePerPerson;
+            } else {
+                settledEarned += r.wagePerPerson;
             }
+        });
+
+        groupDetailsList.push({
+            _id: group._id,
+            name: group.name,
+            village: group.village,
+            role: memberSubdoc.role,
+            totalMembers: group.members.filter(m => m.status !== 'removed').length,
+            status: group.status || 'active',
+            pendingSettlement: groupPendingEarned,
+            totalEarned: groupTotalEarned
         });
     }
 
-    return { totalEarned, pendingEarned, daysWorked, groupsCount: groups.length };
-};
-export const updateMemberRoleService = async (groupId, memberId, newRole, userId) => {
-    const group = await WorkGroup.findById(groupId);
-    if (!group) throw new Error("Group not found");
-    
-    // Check if requester is owner
-    const member = group.members.id(memberId);
-    if (!member) throw new Error("Member not found");
-    
-    member.role = newRole;
-    
-    // Manage admins array
-    if (newRole === 'admin') {
-        if (member.user && !group.admins.includes(member.user)) {
-            group.admins.push(member.user);
-        }
-    } else {
-        if (member.user) {
-            group.admins = group.admins.filter(adminId => adminId.toString() !== member.user.toString());
-        }
-    }
-    
-    await group.save();
+    const avgEarningsPerDay = daysWorked > 0 ? (totalEarned / daysWorked) : 0;
+    const avgEarningsPerAcre = totalAcres > 0 ? (totalEarned / totalAcres) : 0;
+    const attendancePercentage = possibleWorkDays > 0 ? ((daysWorked / possibleWorkDays) * 100) : 0;
 
-    if (member.user) {
-        await sendNotification(
-            member.user,
-            'Role Updated',
-            `Your role in ${group.name} is now ${newRole}`,
-            'GROUP_PROMOTED',
-            group._id
-        );
-    }
-
-    return group;
+    return { 
+        stats: {
+            totalEarned, 
+            pendingEarned, 
+            settledEarned,
+            daysWorked, 
+            totalAcres,
+            avgEarningsPerDay,
+            avgEarningsPerAcre,
+            attendancePercentage,
+            groupsCount: activeGroups + closedGroups,
+            activeGroups,
+            closedGroups
+        },
+        groups: groupDetailsList
+    };
 };
 
-export const removeGroupMemberService = async (groupId, memberId, userId) => {
-    const group = await WorkGroup.findById(groupId);
-    if (!group) throw new Error("Group not found");
-    
-    const member = group.members.id(memberId);
-    if (!member) throw new Error("Member not found");
-    
-    member.status = 'removed';
-    
-    // Remove from admins if they were an admin
-    if (member.user) {
-        group.admins = group.admins.filter(adminId => adminId.toString() !== member.user.toString());
-    }
-    
-    await group.save();
-
-    if (member.user) {
-        await sendNotification(
-            member.user,
-            'Removed from Group',
-            `You have been removed from ${group.name}`,
-            'GROUP_REMOVED',
-            group._id
-        );
-    }
-
-    return group;
-};
-
-export const transferOwnershipService = async (groupId, newOwnerId, userId) => {
-    const group = await WorkGroup.findById(groupId);
-    if (!group) throw new Error("Group not found");
-    
-    if (group.createdBy.toString() !== userId.toString()) {
-        throw new Error("Only the current owner can transfer ownership");
-    }
-    
-    group.createdBy = newOwnerId;
-    
-    // Find new owner in members and set role
-    const newOwnerMember = group.members.find(m => m.user && m.user.toString() === newOwnerId.toString());
-    if (newOwnerMember) {
-        newOwnerMember.role = 'owner';
-    }
-    
-    // Find old owner in members and set to admin or member
-    const oldOwnerMember = group.members.find(m => m.user && m.user.toString() === userId.toString());
-    if (oldOwnerMember) {
-        oldOwnerMember.role = 'admin'; // Or member
-    }
-    
-    return await group.save();
-};
 
 export const closeGroupService = async (groupId, userId) => {
     const group = await WorkGroup.findById(groupId);
@@ -351,5 +324,116 @@ export const closeGroupService = async (groupId, userId) => {
         null
     );
 
+    return group;
+};
+
+export const deleteGroupService = async (groupId, userId) => {
+    const group = await WorkGroup.findById(groupId);
+    if (!group) throw new Error("Group not found");
+    
+    if (group.createdBy.toString() !== userId.toString()) {
+        throw new Error("Only the owner can delete the group");
+    }
+    
+    // Send notification before deleting so the group data is still intact for the broadcast
+    await sendGroupNotification(
+        group,
+        'Group Deleted',
+        `${group.name} has been permanently deleted`,
+        'GROUP_CLOSED',
+        null
+    );
+
+    // Delete associated records and settlements
+    await WorkRecord.deleteMany({ group: groupId });
+    await Settlement.deleteMany({ group: groupId });
+
+    // Delete group
+    await WorkGroup.findByIdAndDelete(groupId);
+
+    return { success: true };
+};
+
+export const updateMemberRoleService = async (groupId, memberId, role, userId) => {
+    const group = await WorkGroup.findById(groupId);
+    if (!group) throw new Error("Group not found");
+
+    if (group.createdBy.toString() !== userId.toString()) {
+        throw new Error("Only the owner can update roles");
+    }
+
+    const member = group.members.id(memberId);
+    if (!member) throw new Error("Member not found");
+
+    member.role = role;
+    if (role === 'admin') {
+        if (!group.admins.includes(member.user)) {
+            group.admins.push(member.user);
+        }
+    } else {
+        group.admins = group.admins.filter(adminId => adminId.toString() !== member.user?.toString());
+    }
+
+    await group.save();
+    return group;
+};
+
+export const removeGroupMemberService = async (groupId, memberId, userId) => {
+    const group = await WorkGroup.findById(groupId);
+    if (!group) throw new Error("Group not found");
+
+    const isOwner = group.createdBy.toString() === userId.toString();
+    const isAdmin = group.admins.includes(userId);
+    
+    if (!isOwner && !isAdmin) {
+        throw new Error("Only admins and owners can remove members");
+    }
+
+    const member = group.members.id(memberId);
+    if (!member) throw new Error("Member not found");
+
+    if (member.user?.toString() === group.createdBy.toString()) {
+        throw new Error("Cannot remove the owner");
+    }
+
+    // Change status to removed instead of deleting the subdocument to preserve history
+    member.status = 'removed';
+    
+    // If they were an admin, remove them from admins array
+    group.admins = group.admins.filter(adminId => adminId.toString() !== member.user?.toString());
+
+    await group.save();
+    return group;
+};
+
+export const transferOwnershipService = async (groupId, newOwnerId, userId) => {
+    const group = await WorkGroup.findById(groupId);
+    if (!group) throw new Error("Group not found");
+
+    if (group.createdBy.toString() !== userId.toString()) {
+        throw new Error("Only the current owner can transfer ownership");
+    }
+
+    const oldOwnerMember = group.members.find(m => m.user?.toString() === userId.toString());
+    const newOwnerMember = group.members.find(m => m.user?.toString() === newOwnerId.toString());
+
+    if (!newOwnerMember) {
+        throw new Error("New owner must be a member of the group");
+    }
+
+    // Transfer ownership
+    group.createdBy = newOwnerId;
+    newOwnerMember.role = 'owner';
+    
+    if (oldOwnerMember) {
+        oldOwnerMember.role = 'admin'; // Old owner becomes admin
+    }
+
+    // Make sure new owner is in admins array
+    if (!group.admins.includes(newOwnerId)) {
+        group.admins.push(newOwnerId);
+    }
+
+    await group.save();
     return group;
 };

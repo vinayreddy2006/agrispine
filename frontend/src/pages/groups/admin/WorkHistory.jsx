@@ -5,11 +5,13 @@ import Card from '../../../components/ui/Card';
 import RecordWorkModal from './RecordWorkModal';
 import { exportToPDF, exportToExcel } from '../../../utils/ReportExport';
 
-const WorkHistoryTab = ({ records, group, onUpdate }) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+const WorkHistory = ({ records, group, onUpdate }) => {
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'table'
+    const [selectedRecord, setSelectedRecord] = useState(null);
+    const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
 
     const activeMembers = group.members.filter(m => m.status !== 'removed');
+    const displayRecords = records;
 
     return (
         <div className="space-y-6">
@@ -35,14 +37,14 @@ const WorkHistoryTab = ({ records, group, onUpdate }) => {
                 </div>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                     <button
-                        onClick={() => exportToPDF(records, group.name)}
+                        onClick={() => exportToPDF(displayRecords, group.name)}
                         className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl flex items-center gap-2 transition-colors flex-1 sm:flex-none justify-center"
                     >
                         <Download className="w-5 h-5" /> PDF
                     </button>
                     {group.status !== 'closed' && (
                         <button
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={() => setIsRecordModalOpen(true)}
                             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl flex items-center gap-2 transition-colors flex-1 sm:flex-none justify-center"
                         >
                             <Plus className="w-5 h-5" /> Record Work
@@ -57,7 +59,7 @@ const WorkHistoryTab = ({ records, group, onUpdate }) => {
                 </div>
             ) : viewMode === 'list' ? (
                 <div className="grid gap-4">
-                    {records.map(record => (
+                    {displayRecords.map(record => (
                         <Card key={record._id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
                                 <div className="flex items-center gap-3 mb-2">
@@ -136,12 +138,12 @@ const WorkHistoryTab = ({ records, group, onUpdate }) => {
                 </Card>
             )}
 
-            {isModalOpen && (
+            {isRecordModalOpen && (
                 <RecordWorkModal 
                     group={group} 
-                    onClose={() => setIsModalOpen(false)} 
+                    onClose={() => setIsRecordModalOpen(false)} 
                     onSuccess={() => {
-                        setIsModalOpen(false);
+                        setIsRecordModalOpen(false);
                         onUpdate();
                     }} 
                 />
@@ -150,4 +152,4 @@ const WorkHistoryTab = ({ records, group, onUpdate }) => {
     );
 };
 
-export default WorkHistoryTab;
+export default WorkHistory;

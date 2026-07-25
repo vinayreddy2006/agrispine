@@ -282,27 +282,27 @@ export default function GramSathiFullScreen() {
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans">
       
       {/* Sidebar */}
-      <div className="w-0 md:w-[280px] flex-shrink-0 bg-slate-950 flex flex-col z-10 transition-all duration-300 overflow-hidden border-r border-white/5">
+      <div className="w-0 md:w-[280px] flex-shrink-0 bg-[#f9f9f9] dark:bg-[#171717] flex flex-col z-10 transition-all duration-300 overflow-hidden border-r border-slate-200 dark:border-white/10">
         
         {/* Header / New Chat */}
         <div className="p-3">
           <button 
             onClick={handleNewChat}
-            className="w-full flex items-center gap-3 bg-transparent hover:bg-white/5 text-slate-200 py-3 px-3 rounded-lg transition-colors group"
+            className="w-full flex items-center gap-3 bg-white dark:bg-transparent hover:bg-slate-200 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200 py-2.5 px-3 rounded-lg transition-colors group border border-slate-200 dark:border-transparent shadow-sm dark:shadow-none"
           >
-            <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
-              <Bot className="w-4 h-4 text-slate-300 group-hover:text-green-400 transition-colors" />
+            <div className="w-7 h-7 rounded-full bg-green-100 dark:bg-white/10 flex items-center justify-center group-hover:bg-green-200 dark:group-hover:bg-green-500/20 transition-colors">
+              <Bot className="w-4 h-4 text-green-600 dark:text-slate-300 group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors" />
             </div>
             <span className="font-semibold text-sm">New Chat</span>
             <div className="ml-auto flex items-center justify-center w-7 h-7">
-                <Edit2 className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                <Edit2 className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
             </div>
           </button>
         </div>
         
         {/* Chats List */}
         <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
-          <div className="text-[11px] font-bold text-slate-500 px-3 py-2 mt-2 mb-1">Today</div>
+          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-3 py-2 mt-4 mb-1">Today</div>
           
           <div className="space-y-0.5">
             {chats.length === 0 ? (
@@ -315,10 +315,10 @@ export default function GramSathiFullScreen() {
                 <div key={chat._id} className="relative group">
                     <button
                         onClick={() => setCurrentChatId(chat._id)}
-                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                        className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                             currentChatId === chat._id 
-                            ? 'bg-white/10 text-white' 
-                            : 'hover:bg-white/5 text-slate-300'
+                            ? 'bg-slate-200/50 dark:bg-white/10 text-slate-900 dark:text-white' 
+                            : 'hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300'
                         }`}
                     >
                         <span className="truncate text-[13px] font-medium flex-1 tracking-wide">{chat.title}</span>
@@ -357,13 +357,13 @@ export default function GramSathiFullScreen() {
         </div>
         
         {/* User Profile / Settings at Bottom (Optional but looks premium) */}
-        <div className="p-3 border-t border-white/5">
-            <button className="w-full flex items-center gap-3 hover:bg-white/5 text-slate-300 py-2.5 px-3 rounded-lg transition-colors">
-                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
-                    <User className="w-4 h-4 text-slate-400" />
+        <div className="p-3 border-t border-slate-200 dark:border-white/10">
+            <button className="w-full flex items-center gap-3 hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 py-2.5 px-3 rounded-lg transition-colors">
+                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border border-slate-300 dark:border-slate-700">
+                    <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                 </div>
                 <div className="flex-1 text-left">
-                    <div className="text-[13px] font-semibold text-white">GramSathi AI</div>
+                    <div className="text-[13px] font-semibold text-slate-800 dark:text-white">GramSathi AI</div>
                     <div className="text-[11px] text-slate-500">AgriSpine Core</div>
                 </div>
             </button>
@@ -463,7 +463,7 @@ export default function GramSathiFullScreen() {
             <textarea
               ref={textareaRef}
               rows={1}
-              className="flex-1 bg-transparent py-3 px-2 focus:outline-none text-slate-800 dark:text-slate-200 placeholder-slate-400 text-[15px] resize-none overflow-y-auto min-h-[48px] max-h-[160px] custom-scrollbar self-center"
+              className="flex-1 bg-transparent py-3 pl-3 pr-4 md:pr-6 focus:outline-none text-slate-800 dark:text-slate-200 placeholder-slate-400 text-[15px] resize-none overflow-y-auto min-h-[48px] max-h-[160px] custom-scrollbar self-center"
               placeholder="Ask GramSathi anything..."
               value={input}
               onChange={(e) => {

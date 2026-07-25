@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import { processSettlement } from '../../../api/groupService';
 import axiosClient from '../../../api/axiosClient'; // Need to fetch settlement history
 
-const SettlementsTab = ({ records, group, onUpdate }) => {
+const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId }) => {
     const [loading, setLoading] = useState(false);
     const [viewTab, setViewTab] = useState(group.status === 'closed' ? 'history' : 'new'); // 'new' or 'history'
     const [history, setHistory] = useState([]);
@@ -153,21 +153,20 @@ const SettlementsTab = ({ records, group, onUpdate }) => {
 
     return (
         <div className="space-y-6">
-            {/* Top Navigation */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl max-w-sm">
+            <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit">
                 {group.status !== 'closed' && (
-                    <button 
+                    <button
                         onClick={() => setViewTab('new')}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewTab === 'new' ? 'bg-white dark:bg-slate-700 text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewTab === 'new' ? 'bg-white dark:bg-slate-700 text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                     >
-                        <Plus className="w-4 h-4" /> New Settlement
+                        New Settlement
                     </button>
                 )}
-                <button 
+                <button
                     onClick={() => setViewTab('history')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewTab === 'history' ? 'bg-white dark:bg-slate-700 text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewTab === 'history' ? 'bg-white dark:bg-slate-700 text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
-                    <History className="w-4 h-4" /> History
+                    Settlement History
                 </button>
             </div>
 
@@ -338,4 +337,4 @@ const SettlementsTab = ({ records, group, onUpdate }) => {
     );
 };
 
-export default SettlementsTab;
+export default SettlementManagement;

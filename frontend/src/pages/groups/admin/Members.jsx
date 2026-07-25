@@ -4,7 +4,7 @@ import Card from '../../../components/ui/Card';
 import Swal from 'sweetalert2';
 import { addGroupMember, updateMemberRole, removeGroupMember, transferOwnership } from '../../../api/groupService';
 
-const MembersTab = ({ group, onUpdate }) => {
+const Members = ({ group, onUpdate }) => {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [village, setVillage] = useState('');
@@ -183,4 +183,4 @@ const MembersTab = ({ group, onUpdate }) => {
     );
 };
 
-export default MembersTab;
+export default Members;

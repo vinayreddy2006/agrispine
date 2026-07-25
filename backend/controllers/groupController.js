@@ -85,8 +85,8 @@ export const getGroupAnalytics = async (req, res) => {
 
 export const getPersonalDashboard = async (req, res) => {
     try {
-        const stats = await getPersonalDashboardService(req.user.id);
-        res.status(200).json({ success: true, stats });
+        const dashboardData = await getPersonalDashboardService(req.user.id);
+        res.status(200).json({ success: true, data: dashboardData });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -126,6 +126,24 @@ export const closeGroup = async (req, res) => {
     try {
         const group = await import('../services/groupService.js').then(m => m.closeGroupService(req.params.id, req.user.id));
         res.status(200).json({ success: true, group });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const deleteGroup = async (req, res) => {
+    try {
+        const result = await import('../services/groupService.js').then(m => m.deleteGroupService(req.params.id, req.user.id));
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getGroupSettlements = async (req, res) => {
+    try {
+        const settlements = await import('../services/groupService.js').then(m => m.getGroupSettlementsService(req.params.id));
+        res.status(200).json({ success: true, settlements });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

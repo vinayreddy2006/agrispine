@@ -17,3 +17,4 @@ export const updateMemberRole = (groupId, memberId, data) => axiosClient.put(`/g
 export const removeGroupMember = (groupId, memberId) => axiosClient.delete(`/groups/${groupId}/members/${memberId}`);
 export const transferOwnership = (groupId, data) => axiosClient.put(`/groups/${groupId}/transfer-ownership`, data);
 export const closeGroup = (groupId) => axiosClient.put(`/groups/${groupId}/close`);
+export const deleteGroup = (groupId) => axiosClient.delete(`/groups/${groupId}`);

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import Card from '../../../components/ui/Card';
 import { IndianRupee, Users, Layout, Clock, ShieldAlert } from 'lucide-react';
 import Swal from 'sweetalert2';
-import { closeGroup } from '../../../api/groupService';
+import { closeGroup, deleteGroup } from '../../../api/groupService';
+import { useNavigate } from 'react-router-dom';
 
-const OverviewTab = ({ analytics, group, isOwner, onUpdate }) => {
+const AdminOverview = ({ analytics, group, isOwner, onUpdate }) => {
     const [closing, setClosing] = useState(false);
+    const navigate = useNavigate();
 
     const handleCloseGroup = async () => {
         const confirm = await Swal.fire({
@@ -28,6 +30,31 @@ const OverviewTab = ({ analytics, group, isOwner, onUpdate }) => {
                 console.error(error);
                 Swal.fire('Error', 'Failed to close group.', 'error');
             } finally {
+                setClosing(false);
+            }
+        }
+    };
+
+    const handleDeleteGroup = async () => {
+        const confirm = await Swal.fire({
+            title: 'Delete Group Permanently?',
+            text: 'This action CANNOT be undone. All work records, settlements, and member data will be wiped out.',
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonColor: '#000000',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Yes, delete permanently!'
+        });
+
+        if (confirm.isConfirmed) {
+            setClosing(true);
+            try {
+                await deleteGroup(group._id);
+                await Swal.fire('Deleted!', 'Group has been deleted.', 'success');
+                navigate('/groups');
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Failed to delete group.', 'error');
                 setClosing(false);
             }
         }
@@ -94,19 +121,34 @@ const OverviewTab = ({ analytics, group, isOwner, onUpdate }) => {
                             <div className="p-3 bg-red-100 dark:bg-red-900/50 rounded-xl text-red-600 dark:text-red-400">
                                 <ShieldAlert className="w-6 h-6" />
                             </div>
-                            <div className="flex-1">
-                                <h4 className="text-lg font-bold text-red-800 dark:text-red-400">Danger Zone</h4>
-                                <p className="text-red-600 dark:text-red-300 mt-1 mb-4 text-sm">
-                                    Closing this group will prevent any further work records, member changes, or new settlements. 
-                                    You should only do this at the end of the season.
-                                </p>
-                                <button 
-                                    onClick={handleCloseGroup}
-                                    disabled={closing}
-                                    className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
-                                >
-                                    {closing ? 'Closing...' : 'Close Group'}
-                                </button>
+                            <div className="flex-1 flex flex-col gap-4">
+                                <div>
+                                    <h4 className="text-lg font-bold text-red-800 dark:text-red-400">Close Group</h4>
+                                    <p className="text-red-600 dark:text-red-300 mt-1 mb-2 text-sm">
+                                        Closing this group will prevent any further work records, member changes, or new settlements. 
+                                        You should only do this at the end of the season.
+                                    </p>
+                                    <button 
+                                        onClick={handleCloseGroup}
+                                        disabled={closing}
+                                        className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+                                    >
+                                        {closing ? 'Closing...' : 'Close Group'}
+                                    </button>
+                                </div>
+                                <div className="pt-4 border-t border-red-200 dark:border-red-900/30">
+                                    <h4 className="text-lg font-bold text-red-800 dark:text-red-400">Delete Group</h4>
+                                    <p className="text-red-600 dark:text-red-300 mt-1 mb-2 text-sm font-bold">
+                                        WARNING: Deleting this group will permanently erase all work records, attendance data, and settlements. This action CANNOT be undone!
+                                    </p>
+                                    <button 
+                                        onClick={handleDeleteGroup}
+                                        disabled={closing}
+                                        className="px-6 py-2 bg-slate-800 dark:bg-black hover:bg-black text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+                                    >
+                                        Delete Group Permanently
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -116,4 +158,4 @@ const OverviewTab = ({ analytics, group, isOwner, onUpdate }) => {
     );
 };
 
-export default OverviewTab;
+export default AdminOverview;
