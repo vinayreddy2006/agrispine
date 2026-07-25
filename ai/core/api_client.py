@@ -1,7 +1,9 @@
 import requests
 from typing import Tuple, Any
 
-BACKEND_URL = "http://localhost:5000"
+import os
+
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:5000")
 
 def make_request(method: str, endpoint: str, auth_token: str, json_data: dict = None) -> Tuple[bool, Any]:
     headers = {}

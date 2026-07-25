@@ -307,7 +307,7 @@ export default function GramSathiFullScreen() {
           <div className="space-y-0.5">
             {chats.length === 0 ? (
                 <div className="text-center px-4 py-8">
-                    <MessageSquare className="w-8 h-8 mx-auto text-slate-700 mb-3" />
+                    <MessageSquare className="w-8 h-8 mx-auto text-slate-400 mb-3" />
                     <p className="text-sm text-slate-500">No recent chats</p>
                 </div>
             ) : (
@@ -317,8 +317,8 @@ export default function GramSathiFullScreen() {
                         onClick={() => setCurrentChatId(chat._id)}
                         className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                             currentChatId === chat._id 
-                            ? 'bg-slate-200/50 dark:bg-white/10 text-slate-900 dark:text-white' 
-                            : 'hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300'
+                            ? 'bg-green-100/50 dark:bg-white/10 text-green-900 dark:text-white font-medium' 
+                            : 'hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-800 dark:text-slate-300'
                         }`}
                     >
                         <span className="truncate text-[13px] font-medium flex-1 tracking-wide">{chat.title}</span>
@@ -491,7 +491,7 @@ export default function GramSathiFullScreen() {
               <Send className="w-5 h-5 ml-0.5" />
             </button>
           </div>
-          <div className="text-center text-xs text-slate-400 dark:text-slate-500 mt-3 pointer-events-auto">
+          <div className="text-center text-[11px] font-medium text-slate-500/70 dark:text-slate-500 mt-4 pointer-events-auto tracking-wide">
             GramSathi can make mistakes. Always verify important farming data.
           </div>
         </div>

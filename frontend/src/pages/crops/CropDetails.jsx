@@ -159,6 +159,29 @@ const CropDetails = () => {
         }
     };
 
+    const handleDeleteCrop = async () => {
+        const result = await Swal.fire({
+            title: 'Delete this Crop?',
+            text: "This action cannot be undone. All related expenses and data will be lost.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: t('common.yes'),
+            cancelButtonText: t('common.no'),
+            confirmButtonColor: '#d33'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const token = localStorage.getItem("token");
+                await api.delete(`/crops/${id}`, { headers: { "auth-token": token } });
+                Swal.fire("Deleted!", "Crop has been successfully deleted.", "success");
+                navigate("/dashboard");
+            } catch (err) {
+                Swal.fire("Error", "Could not delete crop", "error");
+            }
+        }
+    };
+
     // Helper Icons
     const getExpenseIcon = (type) => {
         const lowerType = type.toLowerCase();
@@ -195,6 +218,13 @@ const CropDetails = () => {
                         className="absolute -left-2 top-1 p-2 bg-white/20 rounded-full hover:bg-white/30 transition backdrop-blur-md min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
                         <ArrowLeft className="w-5 h-5 text-white" />
+                    </button>
+                    <button
+                        onClick={handleDeleteCrop}
+                        className="absolute right-0 top-1 p-2 bg-red-500/20 rounded-full hover:bg-red-500/40 transition backdrop-blur-md min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        title="Delete Crop"
+                    >
+                        <Trash2 className="w-5 h-5 text-white" />
                     </button>
                     <div className="text-center">
                         <div className="bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm shadow-inner border border-white/20">
