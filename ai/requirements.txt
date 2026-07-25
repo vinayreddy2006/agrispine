@@ -8,3 +8,4 @@ python-multipart==0.0.9
 python-dotenv==1.0.1
 aiofiles
 huggingface-hub==0.34.4
+SpeechRecognition==3.14.3
