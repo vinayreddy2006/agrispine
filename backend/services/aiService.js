@@ -40,24 +40,29 @@ export const getUserContext = async (userId) => {
     }
 };
 
-// Forward chat to FastAPI with retry logic
 export const forwardToFastAPI = async (fastApiPayload, authToken) => {
     let response = null;
-    let retries = 3;
+    let retries = 5; // Increase retries to handle Render's 50-second cold starts
     let lastError = null;
     
     while (retries > 0) {
         try {
             response = await axios.post(`${FASTAPI_URL}/chat`, fastApiPayload, {
                 headers: { "auth-token": authToken },
-                timeout: 20000 // 20 second timeout
+                timeout: 30000 // 30 second timeout per request
             });
             break; 
         } catch (err) {
             lastError = err;
-            if (err.code === 'ECONNRESET' || err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || !err.response) {
+            const isTimeout = err.code === 'ECONNRESET' || err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || !err.response;
+            const isGatewayError = err.response && (err.response.status === 502 || err.response.status === 503 || err.response.status === 504);
+            
+            if (isTimeout || isGatewayError) {
                 retries--;
-                if (retries > 0) await new Promise(res => setTimeout(res, 1500)); 
+                if (retries > 0) {
+                    console.log(`AI Service unavailable (Cold Start). Retrying... (${retries} attempts left)`);
+                    await new Promise(res => setTimeout(res, 5000)); // Wait 5 seconds between retries
+                }
             } else {
                 break; 
             }
@@ -65,7 +70,7 @@ export const forwardToFastAPI = async (fastApiPayload, authToken) => {
     }
 
     if (!response) {
-        console.error("AI Chat Proxy Error after retries:", lastError?.message);
+        console.error("AI Chat Proxy Error after retries:", lastError?.message || lastError);
         return {
             success: false,
             error: lastError?.code || "ProxyError",
@@ -83,18 +88,43 @@ export const forwardToFastAPI = async (fastApiPayload, authToken) => {
 
 // Forward Voice to FastAPI
 export const forwardVoiceToFastAPI = async (formData, authToken) => {
-    try {
-        const response = await axios.post(`${FASTAPI_URL}/voice`, formData, {
-            headers: {
-                ...formData.getHeaders(),
-                "auth-token": authToken
-            },
-        });
-        return { success: true, data: response.data };
-    } catch (error) {
-        console.error("AI Voice Proxy Error:", error.response?.data || error.message);
-        return { success: false, error: error.response?.data || error.message };
+    let response = null;
+    let retries = 5;
+    let lastError = null;
+
+    while (retries > 0) {
+        try {
+            response = await axios.post(`${FASTAPI_URL}/voice`, formData, {
+                headers: {
+                    ...formData.getHeaders(),
+                    "auth-token": authToken
+                },
+                timeout: 40000 // Voice processing might take longer + cold start
+            });
+            break;
+        } catch (err) {
+            lastError = err;
+            const isTimeout = err.code === 'ECONNRESET' || err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || !err.response;
+            const isGatewayError = err.response && (err.response.status === 502 || err.response.status === 503 || err.response.status === 504);
+            
+            if (isTimeout || isGatewayError) {
+                retries--;
+                if (retries > 0) {
+                    console.log(`AI Voice Service unavailable (Cold Start). Retrying... (${retries} attempts left)`);
+                    await new Promise(res => setTimeout(res, 5000)); 
+                }
+            } else {
+                break;
+            }
+        }
     }
+
+    if (!response) {
+        console.error("AI Voice Proxy Error:", lastError?.response?.data || lastError?.message || lastError);
+        return { success: false, error: lastError?.response?.data || lastError?.message || "ProxyError" };
+    }
+
+    return { success: true, data: response.data };
 };
 
 // Messenger AI Matching
