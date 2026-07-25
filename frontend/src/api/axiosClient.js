@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const rootUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+// Strip trailing slash or /api if user accidentally added it, then append /api
+const cleanUrl = rootUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
+const baseURL = `${cleanUrl}/api`;
 
 const axiosClient = axios.create({
     baseURL: baseURL,

@@ -6,8 +6,8 @@ import Sidebar from './components/Sidebar';
 import ChatWindow from './components/ChatWindow';
 import { Lock, Leaf } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
-const SERVER_URL = API_URL ? API_URL.replace('/api', '') : "http://localhost:5000";
+const rawUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const SERVER_URL = rawUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
 const socket = io.connect(SERVER_URL);
 
 const Messenger = () => {

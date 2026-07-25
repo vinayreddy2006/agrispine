@@ -73,7 +73,10 @@ const ChatWindow = ({ currentUser, conversation, socket, goBack, fetchConversati
     const getFileUrl = (path) => {
         if (!path) return null;
         if (path.includes("http") && !path.includes("localhost")) return path;
-        const SERVER_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || "http://localhost:5000";
+        
+        const rawUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+        const SERVER_URL = rawUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
+        
         if (path.includes("localhost")) return path.replace("http://localhost:5000", SERVER_URL);
         if (path.startsWith("/")) return `${SERVER_URL}${path}`;
         return path;
