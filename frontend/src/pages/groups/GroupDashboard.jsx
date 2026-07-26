@@ -17,7 +17,7 @@ const GroupDashboard = () => {
     // Check if user is admin of any group
     const isAdmin = groups.some(g => g.admins.includes(currentUserId) || g.createdBy === currentUserId);
     
-    const [activeTab, setActiveTab] = useState('personal'); // Default to personal
+    const [activeTab, setActiveTab] = useState('groups');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -27,10 +27,7 @@ const GroupDashboard = () => {
                     getPersonalDashboard()
                 ]);
                 setGroups(groupsRes.data.groups);
-                setPersonalStats(statsRes.data.stats);
-                
-                // If they are an admin, maybe default to group dashboard, but personal is fine too.
-                // Let's stick to personal as default for everyone to see their own stats first.
+                setPersonalStats(statsRes.data.data);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
             } finally {
@@ -49,25 +46,25 @@ const GroupDashboard = () => {
     }
 
     return (
-        <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+        <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 animate-in fade-in duration-500">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Work Groups</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">Manage farm labor and daily settlements</p>
+                    <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">Work Groups</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Manage farm labor and daily settlements</p>
                 </div>
                 
-                <div className="flex mt-4 md:mt-0 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full md:w-auto">
-                    <button 
-                        onClick={() => setActiveTab('personal')}
-                        className={`flex-1 md:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'personal' ? 'bg-white dark:bg-slate-700 text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        My Dashboard
-                    </button>
+                <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl shadow-inner border border-slate-200/50 dark:border-slate-700/50 w-full md:w-auto self-start md:self-center">
                     <button 
                         onClick={() => setActiveTab('groups')}
-                        className={`flex-1 md:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'groups' ? 'bg-white dark:bg-slate-700 text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`flex-1 md:w-40 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'groups' ? 'bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                     >
                         Group Dashboard
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('personal')}
+                        className={`flex-1 md:w-40 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'personal' ? 'bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                    >
+                        My Dashboard
                     </button>
                 </div>
             </div>
