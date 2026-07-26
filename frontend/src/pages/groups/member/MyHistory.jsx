@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { MapPin, IndianRupee } from 'lucide-react';
 import Card from '../../../components/ui/Card';
+import WorkHistoryDetailsModal from '../components/WorkHistoryDetailsModal';
 
-const MyHistory = ({ records, currentUserMember }) => {
+const MyHistory = ({ records, currentUserMember, group }) => {
+    const [selectedRecord, setSelectedRecord] = useState(null);
+
     // Filter to only records where this member was present
     const myRecords = records.filter(r => r.attendance.includes(currentUserMember?._id));
 
@@ -21,7 +24,11 @@ const MyHistory = ({ records, currentUserMember }) => {
                         const isSettled = record.settledMembers?.includes(currentUserMember?._id);
                         
                         return (
-                            <Card key={record._id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-transparent hover:border-l-green-500 transition-all">
+                            <Card 
+                                key={record._id} 
+                                onClick={() => setSelectedRecord(record)}
+                                className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-transparent hover:border-l-green-500 transition-all cursor-pointer hover:shadow-md"
+                            >
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
                                         <span className="font-bold text-lg text-slate-800 dark:text-white">{format(new Date(record.date), 'dd MMM yyyy')}</span>
@@ -47,6 +54,14 @@ const MyHistory = ({ records, currentUserMember }) => {
                         );
                     })}
                 </div>
+            )}
+
+            {selectedRecord && (
+                <WorkHistoryDetailsModal 
+                    record={selectedRecord} 
+                    group={group} 
+                    onClose={() => setSelectedRecord(null)} 
+                />
             )}
         </div>
     );

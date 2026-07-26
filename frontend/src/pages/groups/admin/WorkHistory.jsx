@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { Plus, MapPin, IndianRupee, Download, List, TableProperties, CheckCircle2, X } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import RecordWorkModal from './RecordWorkModal';
+import WorkHistoryDetailsModal from '../components/WorkHistoryDetailsModal';
 import { exportToPDF, exportToExcel } from '../../../utils/ReportExport';
 
 const WorkHistory = ({ records, group, onUpdate }) => {
@@ -60,7 +61,11 @@ const WorkHistory = ({ records, group, onUpdate }) => {
             ) : viewMode === 'list' ? (
                 <div className="grid gap-4">
                     {displayRecords.map(record => (
-                        <Card key={record._id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <Card 
+                            key={record._id} 
+                            onClick={() => setSelectedRecord(record)}
+                            className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:shadow-md hover:border-l-4 hover:border-l-green-500 transition-all border-l-4 border-l-transparent"
+                        >
                             <div>
                                 <div className="flex items-center gap-3 mb-2">
                                     <span className="font-bold text-lg text-slate-800 dark:text-white">{format(new Date(record.date), 'dd MMM yyyy')}</span>
@@ -146,6 +151,14 @@ const WorkHistory = ({ records, group, onUpdate }) => {
                         setIsRecordModalOpen(false);
                         onUpdate();
                     }} 
+                />
+            )}
+
+            {selectedRecord && (
+                <WorkHistoryDetailsModal 
+                    record={selectedRecord} 
+                    group={group} 
+                    onClose={() => setSelectedRecord(null)} 
                 />
             )}
         </div>

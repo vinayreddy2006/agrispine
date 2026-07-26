@@ -56,11 +56,16 @@ export default function GramSathiFullScreen() {
   }, [currentChatId]);
 
   useEffect(() => {
-    scrollToBottom();
+    const timeout = setTimeout(() => {
+        scrollToBottom();
+    }, 100);
+    return () => clearTimeout(timeout);
   }, [messages, isLoading]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
   };
 
   const fetchChats = async () => {
@@ -368,7 +373,7 @@ export default function GramSathiFullScreen() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-white dark:bg-slate-900 overflow-hidden relative transition-colors">
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-48 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-[350px] custom-scrollbar">
           
           {messages.map((msg, idx) => {
             const isUser = msg.sender === "user";
