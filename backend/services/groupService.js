@@ -187,7 +187,7 @@ export const getGroupAnalyticsService = async (groupId) => {
     let pendingPayments = 0;
     let totalAcres = 0;
     let totalWorkDays = records.length;
-    let memberStats = {}; // { memberId: { daysWorked: 0, earned: 0, pending: 0 } }
+    let memberStats = {}; // { memberId: { daysWorked: 0, earned: 0, pending: 0, owed: 0 } }
 
     records.forEach(r => {
         totalAcres += r.acres;
@@ -200,15 +200,25 @@ export const getGroupAnalyticsService = async (groupId) => {
             pendingPayments += (unsettledCount * r.wagePerPerson);
         }
 
-        r.attendance.forEach(memberId => {
-            if (!memberStats[memberId]) {
-                memberStats[memberId] = { daysWorked: 0, earned: 0, pending: 0 };
+        // Handle owed amount for internal farm owner
+        if (r.isInternalFarm && r.internalMemberId) {
+            const internalStr = r.internalMemberId.toString();
+            if (!memberStats[internalStr]) {
+                memberStats[internalStr] = { daysWorked: 0, earned: 0, pending: 0, owed: 0 };
             }
-            memberStats[memberId].daysWorked += 1;
-            memberStats[memberId].earned += r.wagePerPerson;
+            memberStats[internalStr].owed += r.totalAmount;
+        }
+
+        r.attendance.forEach(memberId => {
+            const mIdStr = memberId.toString();
+            if (!memberStats[mIdStr]) {
+                memberStats[mIdStr] = { daysWorked: 0, earned: 0, pending: 0, owed: 0 };
+            }
+            memberStats[mIdStr].daysWorked += 1;
+            memberStats[mIdStr].earned += r.wagePerPerson;
             
-            if (!settledIds.includes(memberId.toString())) {
-                memberStats[memberId].pending += r.wagePerPerson;
+            if (!settledIds.includes(mIdStr)) {
+                memberStats[mIdStr].pending += r.wagePerPerson;
             }
         });
     });
@@ -250,7 +260,7 @@ export const getPersonalDashboardService = async (userId) => {
         possibleWorkDays += groupRecords.length;
 
         // Records where this user was present
-        const userRecords = groupRecords.filter(r => r.attendance.includes(memberSubdoc._id));
+        const userRecords = groupRecords.filter(r => r.attendance.some(id => id.toString() === memberSubdoc._id.toString()));
         daysWorked += userRecords.length;
         
         let groupTotalEarned = 0;

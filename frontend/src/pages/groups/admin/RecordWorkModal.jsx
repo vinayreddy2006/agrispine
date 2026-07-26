@@ -19,7 +19,9 @@ const RecordWorkModal = ({ group, onClose, onSuccess }) => {
         acres: '',
         ratePerAcre: '',
         additionalCharges: 0,
-        attendance: [] // Array of member IDs
+        attendance: [], // Array of member IDs
+        isInternalFarm: false,
+        internalMemberId: ''
     });
     const [loading, setLoading] = useState(false);
 
@@ -35,10 +37,28 @@ const RecordWorkModal = ({ group, onClose, onSuccess }) => {
         });
     };
 
+    const handleInternalMemberSelect = (e) => {
+        const memberId = e.target.value;
+        if (!memberId) {
+            setFormData(prev => ({...prev, internalMemberId: '', landOwnerName: ''}));
+            return;
+        }
+        const member = group.members.find(m => m._id === memberId);
+        setFormData(prev => ({
+            ...prev,
+            internalMemberId: memberId,
+            landOwnerName: member ? member.name : ''
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.attendance.length === 0) {
             Swal.fire('Error', 'Please select at least one member for attendance.', 'error');
+            return;
+        }
+        if (formData.isInternalFarm && !formData.internalMemberId) {
+            Swal.fire('Error', 'Please select the group member who owns the farm.', 'error');
             return;
         }
         setLoading(true);
@@ -64,15 +84,61 @@ const RecordWorkModal = ({ group, onClose, onSuccess }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {/* Farm Type Selection */}
+                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Farm Type</label>
+                        <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="farmType" 
+                                    checked={!formData.isInternalFarm}
+                                    onChange={() => setFormData({...formData, isInternalFarm: false, internalMemberId: '', landOwnerName: ''})}
+                                    className="w-4 h-4 text-green-600 focus:ring-green-500"
+                                />
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">External Farm Owner</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="farmType" 
+                                    checked={formData.isInternalFarm}
+                                    onChange={() => setFormData({...formData, isInternalFarm: true, landOwnerName: ''})}
+                                    className="w-4 h-4 text-green-600 focus:ring-green-500"
+                                />
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Group Member's Farm</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date</label>
                             <input type="date" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Land Owner Name</label>
-                            <input type="text" required value={formData.landOwnerName} onChange={e => setFormData({...formData, landOwnerName: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" placeholder="e.g. Ramesh" />
-                        </div>
+                        
+                        {formData.isInternalFarm ? (
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Select Group Member</label>
+                                <select 
+                                    required 
+                                    value={formData.internalMemberId} 
+                                    onChange={handleInternalMemberSelect}
+                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                                >
+                                    <option value="">-- Select Member --</option>
+                                    {group.members.filter(m => m.status !== 'removed').map(member => (
+                                        <option key={member._id} value={member._id}>{member.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Land Owner Name</label>
+                                <input type="text" required value={formData.landOwnerName} onChange={e => setFormData({...formData, landOwnerName: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" placeholder="e.g. Ramesh" />
+                            </div>
+                        )}
+
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Crop</label>
                             <input type="text" required value={formData.crop} onChange={e => setFormData({...formData, crop: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" placeholder="e.g. Cotton" />
@@ -98,7 +164,7 @@ const RecordWorkModal = ({ group, onClose, onSuccess }) => {
                     <div>
                         <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-3">Attendance</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {group.members.map(member => (
+                            {group.members.filter(m => m.status !== 'removed').map(member => (
                                 <div 
                                     key={member._id}
                                     onClick={() => toggleAttendance(member._id)}

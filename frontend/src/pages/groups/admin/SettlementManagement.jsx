@@ -3,37 +3,20 @@ import { IndianRupee, CheckCircle2, Calculator, CheckSquare, Square, History, Pl
 import Card from '../../../components/ui/Card';
 import Swal from 'sweetalert2';
 import { processSettlement } from '../../../api/groupService';
-import axiosClient from '../../../api/axiosClient'; // Need to fetch settlement history
 
 const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId }) => {
     const [loading, setLoading] = useState(false);
-    const [viewTab, setViewTab] = useState(group.status === 'closed' ? 'history' : 'new'); // 'new' or 'history'
-    const [history, setHistory] = useState([]);
+    const [viewTab, setViewTab] = useState(group.status === 'closed' ? 'history' : 'new'); 
     
-    // Only show pending and partial records for selection
     const pendingRecords = records.filter(r => r.paymentStatus !== 'SETTLED');
     const completedRecords = records.filter(r => r.paymentStatus === 'SETTLED');
     const [selectedRecords, setSelectedRecords] = useState([]);
     
-    // Member selection for partial settlement
     const [selectedMembers, setSelectedMembers] = useState({});
 
     useEffect(() => {
         if (viewTab === 'new') {
             setSelectedRecords(pendingRecords.map(r => r._id));
-        } else {
-            // Fetch settlement history
-            const fetchHistory = async () => {
-                try {
-                    // Assuming we have an endpoint for this, we could also just derive it from records if we fetched settlements.
-                    // For now, let's assume we can fetch settlements for the group. 
-                    // If no dedicated endpoint, we could add one or just show completed records.
-                    // Since the user wants to see "Settlements", we should really fetch the Settlement documents.
-                    // Wait, we don't have a getGroupSettlements endpoint. I'll just show completed records for now,
-                    // or add a quick API call if it existed. Let's just use completed records as "History" since they are settled.
-                } catch (e) {}
-            };
-            fetchHistory();
         }
     }, [records, viewTab]);
     
@@ -47,23 +30,47 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
     
     // Calculate preview
     const calculatePreview = () => {
-        let total = 0;
-        let memberShares = {};
+        let memberEarned = {};
+        let memberOwed = {};
         
         const activeRecords = pendingRecords.filter(r => selectedRecords.includes(r._id));
         activeRecords.forEach(r => {
             const settledIds = (r.settledMembers || []);
+            
+            // Handle internal farm owner
+            if (r.isInternalFarm && r.internalMemberId) {
+                let ownerOwesThisRecord = 0;
+                r.attendance.forEach(memberId => {
+                    if (!settledIds.includes(memberId) && memberId !== r.internalMemberId) {
+                        ownerOwesThisRecord += r.wagePerPerson;
+                    }
+                });
+                
+                if (ownerOwesThisRecord > 0) {
+                    if (!memberOwed[r.internalMemberId]) memberOwed[r.internalMemberId] = 0;
+                    memberOwed[r.internalMemberId] += ownerOwesThisRecord;
+                }
+            }
+
             r.attendance.forEach(memberId => {
-                // If member hasn't been settled for this record
                 if (!settledIds.includes(memberId)) {
-                    if (!memberShares[memberId]) memberShares[memberId] = 0;
-                    memberShares[memberId] += r.wagePerPerson;
-                    total += r.wagePerPerson;
+                    if (!memberEarned[memberId]) memberEarned[memberId] = 0;
+                    memberEarned[memberId] += r.wagePerPerson;
                 }
             });
         });
         
-        return { total, memberShares, activeRecords };
+        let netBalances = {};
+        const allMemberIds = [...new Set([...Object.keys(memberEarned), ...Object.keys(memberOwed)])];
+        
+        allMemberIds.forEach(id => {
+            const earned = memberEarned[id] || 0;
+            const owed = memberOwed[id] || 0;
+            const net = earned - owed;
+            netBalances[id] = { earned, owed, net };
+        });
+        
+        return { netBalances, activeRecords };
     };
     
     const preview = calculatePreview();
@@ -72,7 +79,7 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
     useEffect(() => {
         const newSelectedMembers = { ...selectedMembers };
         let changed = false;
-        Object.keys(preview.memberShares).forEach(memberId => {
+        Object.keys(preview.netBalances).forEach(memberId => {
             if (newSelectedMembers[memberId] === undefined) {
                 newSelectedMembers[memberId] = true;
                 changed = true;
@@ -81,7 +88,7 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
         if (changed) {
             setSelectedMembers(newSelectedMembers);
         }
-    }, [preview.memberShares]);
+    }, [preview.netBalances]);
 
     const handleToggleMember = (memberId) => {
         setSelectedMembers(prev => ({ ...prev, [memberId]: !prev[memberId] }));
@@ -96,11 +103,11 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
             return;
         }
 
-        const activeDistributions = Object.keys(preview.memberShares)
+        const activeDistributions = Object.keys(preview.netBalances)
             .filter(memberId => selectedMembers[memberId])
             .map(memberId => ({
                 memberId,
-                amountPaid: preview.memberShares[memberId]
+                amountPaid: preview.netBalances[memberId].net
             }));
 
         if (activeDistributions.length === 0) {
@@ -108,21 +115,22 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
             return;
         }
 
-        const payloadAmount = activeDistributions.reduce((acc, curr) => acc + curr.amountPaid, 0);
+        // The absolute total transaction volume (for analytics/display)
+        const absoluteTransactionVolume = activeDistributions.reduce((acc, curr) => acc + Math.abs(curr.amountPaid), 0);
         
         const payload = {
-            settlementType: activeDistributions.length === Object.keys(preview.memberShares).length ? 'GROUP_WIDE' : 'SELECTED_MEMBERS',
-            totalAmount: payloadAmount,
+            settlementType: activeDistributions.length === Object.keys(preview.netBalances).length ? 'GROUP_WIDE' : 'NET_SETTLEMENT',
+            totalAmount: absoluteTransactionVolume,
             workRecordsIncluded: selectedRecords,
             distributions: activeDistributions,
-            notes: 'Generated automatically.',
+            notes: 'Net Settlement Processed',
             paymentMode,
             remarks
         };
         
         const confirm = await Swal.fire({
-            title: 'Confirm Settlement',
-            text: `Are you sure you want to process ₹${Math.round(payloadAmount)} for ${activeDistributions.length} members?`,
+            title: 'Confirm Net Settlement',
+            text: `Are you sure you want to process this settlement for ${activeDistributions.length} members?`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#16a34a',
@@ -147,9 +155,14 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
         }
     };
 
-    const activeTotalAmount = Object.keys(preview.memberShares)
-        .filter(id => selectedMembers[id])
-        .reduce((acc, curr) => acc + preview.memberShares[curr], 0);
+    // Calculate total money admin has to pay out (net > 0) and total admin receives (net < 0)
+    const adminPaysOut = Object.keys(preview.netBalances)
+        .filter(id => selectedMembers[id] && preview.netBalances[id].net > 0)
+        .reduce((acc, curr) => acc + preview.netBalances[curr].net, 0);
+
+    const adminReceives = Object.keys(preview.netBalances)
+        .filter(id => selectedMembers[id] && preview.netBalances[id].net < 0)
+        .reduce((acc, curr) => acc + Math.abs(preview.netBalances[curr].net), 0);
 
     return (
         <div className="space-y-6">
@@ -197,6 +210,7 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
                                             </p>
                                             <p className="text-sm text-slate-500">
                                                 {record.activityType} • {record.acres} Acres 
+                                                {record.isInternalFarm && <span className="ml-2 text-indigo-500 font-bold bg-indigo-100 dark:bg-indigo-900/30 px-2 py-0.5 rounded text-xs">INTERNAL FARM</span>}
                                                 {record.paymentStatus === 'PARTIAL' && <span className="ml-2 text-amber-500 font-bold bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded text-xs">PARTIAL</span>}
                                             </p>
                                         </div>
@@ -212,11 +226,11 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
                     </div>
 
                     {/* Right side: Settlement Summary Panel */}
-                    <div className="w-full lg:w-96">
+                    <div className="w-full lg:w-[450px]">
                         <Card className="p-6 sticky top-24 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700">
                             <div className="flex items-center gap-3 mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
                                 <Calculator className="w-6 h-6 text-green-600" />
-                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Settlement Preview</h3>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Net Settlement Preview</h3>
                             </div>
                             
                             <div className="space-y-4 mb-6">
@@ -225,37 +239,62 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
                                     <span className="font-bold text-slate-800 dark:text-white">{selectedRecords.length}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">Total Settlement Amount</span>
-                                    <span className="font-bold text-green-600 text-lg">₹{Math.round(activeTotalAmount)}</span>
+                                    <span className="text-slate-500">Total Payouts (Admin Pays)</span>
+                                    <span className="font-bold text-green-600">₹{Math.round(adminPaysOut)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-500">Total Receivables (Admin Receives)</span>
+                                    <span className="font-bold text-indigo-600">₹{Math.round(adminReceives)}</span>
                                 </div>
                             </div>
 
                             <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mb-6">
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Select Members to Settle</p>
-                                <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
-                                    {Object.keys(preview.memberShares).map(memberId => {
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Line-by-Line Breakdown</p>
+                                <div className="space-y-3 max-h-80 overflow-y-auto custom-scrollbar pr-2">
+                                    {Object.keys(preview.netBalances).map(memberId => {
                                         const memberName = group.members.find(m => m._id === memberId)?.name || 'Unknown';
                                         const isSelected = selectedMembers[memberId] !== false;
+                                        const { earned, owed, net } = preview.netBalances[memberId];
+                                        
                                         return (
                                             <div 
                                                 key={memberId} 
                                                 onClick={() => handleToggleMember(memberId)}
-                                                className="flex justify-between items-center text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-lg transition-colors"
+                                                className={`cursor-pointer p-3 rounded-xl border ${isSelected ? 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm' : 'border-dashed border-slate-200 opacity-60'}`}
                                             >
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 mb-2">
                                                     {isSelected ? <CheckSquare className="w-4 h-4 text-green-500" /> : <Square className="w-4 h-4 text-slate-400" />}
-                                                    <span className={`truncate max-w-[150px] ${isSelected ? 'text-slate-800 dark:text-white font-medium' : 'text-slate-500'}`}>
-                                                        {memberName}
-                                                    </span>
+                                                    <span className="font-bold text-slate-800 dark:text-white text-sm">{memberName}</span>
                                                 </div>
-                                                <span className={`font-bold ${isSelected ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`}>
-                                                    ₹{Math.round(preview.memberShares[memberId])}
-                                                </span>
+                                                <div className="pl-6 space-y-1 text-xs">
+                                                    {earned > 0 && (
+                                                        <div className="flex justify-between">
+                                                            <span className="text-slate-500">Earned (Worked for others)</span>
+                                                            <span className="font-medium text-green-600">+₹{Math.round(earned)}</span>
+                                                        </div>
+                                                    )}
+                                                    {owed > 0 && (
+                                                        <div className="flex justify-between">
+                                                            <span className="text-slate-500">Owed (Others worked on own farm)</span>
+                                                            <span className="font-medium text-red-500">-₹{Math.round(owed)}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex justify-between pt-1 border-t border-slate-100 dark:border-slate-700 mt-1">
+                                                        <span className="font-bold text-slate-700 dark:text-slate-300">Final Balance</span>
+                                                        {net > 0 ? (
+                                                            <span className="font-bold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 rounded">To Receive: ₹{Math.round(net)}</span>
+                                                        ) : net < 0 ? (
+                                                            <span className="font-bold text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30 px-2 rounded">To Pay: ₹{Math.round(Math.abs(net))}</span>
+                                                        ) : (
+                                                            <span className="font-bold text-slate-500">Settled (₹0)</span>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         );
                                     })}
-                                    {Object.keys(preview.memberShares).length === 0 && (
-                                        <p className="text-sm text-slate-400 italic text-center py-4">No pending payments for selected records.</p>
+                                    {Object.keys(preview.netBalances).length === 0 && (
+                                        <p className="text-sm text-slate-400 italic text-center py-4">No pending balances for selected records.</p>
                                     )}
                                 </div>
                             </div>
@@ -268,7 +307,7 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
                                         <select 
                                             value={paymentMode}
                                             onChange={(e) => setPaymentMode(e.target.value)}
-                                            className="w-full"
+                                            className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
                                         >
                                             <option value="CASH">Cash</option>
                                             <option value="UPI">UPI</option>
@@ -283,7 +322,7 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
                                             value={remarks}
                                             onChange={(e) => setRemarks(e.target.value)}
                                             placeholder="E.g., Cleared dues for this week"
-                                            className="w-full min-h-[44px]"
+                                            className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
                                         />
                                     </div>
                                 </div>
@@ -291,10 +330,10 @@ const SettlementManagement = ({ records, group, onUpdate, currentUserMemberId })
 
                             <button 
                                 onClick={handleProcess}
-                                disabled={loading || selectedRecords.length === 0 || activeTotalAmount === 0}
+                                disabled={loading || selectedRecords.length === 0 || Object.keys(preview.netBalances).length === 0}
                                 className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50"
                             >
-                                {loading ? 'Processing...' : `Pay ₹${Math.round(activeTotalAmount)}`}
+                                {loading ? 'Processing...' : 'Process Net Settlement'}
                             </button>
                         </Card>
                     </div>

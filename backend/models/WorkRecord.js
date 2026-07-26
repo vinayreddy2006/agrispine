@@ -14,6 +14,14 @@ const WorkRecordSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    isInternalFarm: {
+        type: Boolean,
+        default: false
+    },
+    internalMemberId: {
+        type: mongoose.Schema.Types.ObjectId, // Member ID (from WorkGroup)
+        required: false
+    },
     crop: {
         type: String,
         required: true
