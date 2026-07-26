@@ -190,30 +190,7 @@ const WeatherMock = () => {
     </div>
 )};
 
-const MarketMock = () => {
-    const { t } = useTranslation();
-    return (
-    <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 h-full w-full p-6 flex flex-col shadow-2xl relative overflow-hidden min-h-[400px]">
-        <h3 className="font-bold text-slate-800 dark:text-white mb-4">{t('landing.mock_market_title', { defaultValue: 'Fertilizers & Seeds' })}</h3>
-        <div className="space-y-4">
-            {[1, 2].map(i => (
-                <div key={i} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex gap-4">
-                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center">
-                        <ShoppingBag className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                        <h4 className="font-bold text-slate-800 dark:text-white text-sm">{t('landing.mock_market_item', { defaultValue: 'Urea 46% Nitrogen' })}</h4>
-                        <p className="text-xs text-slate-500 mt-1">{t('landing.mock_market_brand', { defaultValue: 'IFFCO • 45kg Bag' })}</p>
-                        <div className="flex justify-between items-center mt-2">
-                            <span className="font-bold text-green-600">₹266.50</span>
-                            <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded">{t('landing.mock_market_stock', { defaultValue: 'In Stock' })}</span>
-                        </div>
-                    </div>
-                </div>
-            ))}
-        </div>
-    </div>
-)};
+
 
 const MachineryMock = () => {
     const { t } = useTranslation();
@@ -604,7 +581,7 @@ const Landing = () => {
                             { id: 'gramsathi', label: t('landing.nav_gramsathi', { defaultValue: 'GramSathi AI' }) },
                             { id: 'weather', label: t('landing.nav_weather', { defaultValue: 'Weather' }) },
                             { id: 'workgroups', label: t('landing.nav_workgroups', { defaultValue: 'Work Groups' }) },
-                            { id: 'marketplace', label: t('landing.nav_market', { defaultValue: 'Marketplace' }) },
+
                             { id: 'machinery', label: t('landing.nav_machinery', { defaultValue: 'Rent Machinery' }) },
                             { id: 'messenger', label: t('landing.nav_messenger', { defaultValue: 'Messenger' }) },
                             { id: 'community', label: t('landing.nav_community', { defaultValue: 'Community' }) },
@@ -685,20 +662,7 @@ const Landing = () => {
                         bgColor="bg-white dark:bg-slate-950"
                     />
 
-                    <FeatureSection 
-                        id="marketplace"
-                        title={t('landing.feat_market_title', { defaultValue: 'Direct Marketplace' })}
-                        subtitle={t('landing.feat_market_desc', { defaultValue: 'Buy seeds, fertilizers, and pesticides directly from verified sellers. Cut out the middlemen and ensure you\'re getting genuine products at the best prices.' })}
-                        icon={ShoppingBag}
-                        features={[
-                            t('landing.feat_market_1', { defaultValue: 'Verified input sellers' }),
-                            t('landing.feat_market_2', { defaultValue: 'Live inventory tracking' }),
-                            t('landing.feat_market_3', { defaultValue: 'Direct-to-farm delivery' }),
-                            t('landing.feat_market_4', { defaultValue: 'Bulk purchase discounts' })
-                        ]}
-                        MockupComponent={MarketMock}
-                        bgColor="bg-slate-50 dark:bg-slate-900/20"
-                    />
+
 
                     <FeatureSection 
                         id="machinery"
