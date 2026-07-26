@@ -14,7 +14,9 @@ const LanguageSwitcher = () => {
     ];
 
     const changeLanguage = (lng) => {
-        i18n.changeLanguage(lng);
+        i18n.changeLanguage(lng).then(() => {
+            window.location.reload();
+        });
         setIsOpen(false);
     };
 

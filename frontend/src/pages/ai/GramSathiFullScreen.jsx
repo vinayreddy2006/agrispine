@@ -21,6 +21,7 @@ export default function GramSathiFullScreen() {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const skipFetchRef = useRef(false);
+  const recognitionRef = useRef(null);
   const navigate = useNavigate();
 
   // Close context menu on outside click
@@ -196,22 +197,44 @@ export default function GramSathiFullScreen() {
 
   const handleMicClick = () => {
     stopSpeaking();
+    
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
     if (!("webkitSpeechRecognition" in window)) {
       Swal.fire("Unsupported", "Voice recognition not supported in this browser.", "info");
       return;
     }
+    
     const recognition = new window.webkitSpeechRecognition();
-    recognition.lang = "en-IN";
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognitionRef.current = recognition;
+    recognition.lang = localStorage.getItem('i18nextLng') || "en-IN";
+    recognition.continuous = true;
+    recognition.interimResults = true;
 
     recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      handleSendMessage(transcript);
+    
+    recognition.onend = () => {
+      setIsListening(false);
     };
+
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      for (let i = 0; i < event.results.length; ++i) {
+        finalTranscript += event.results[i][0].transcript;
+      }
+      setInput(finalTranscript);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+      }
+    };
+    
     recognition.start();
   };
 
@@ -494,15 +517,20 @@ export default function GramSathiFullScreen() {
                   className={`p-3 rounded-full transition-all flex items-center justify-center flex-shrink-0 ${
                     isListening ? "bg-red-100 dark:bg-red-900/30 text-red-500 animate-pulse scale-110" : "text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-100 dark:hover:bg-slate-700"
                   }`}
+                  title={isListening ? "Stop Recording" : "Start Recording"}
                 >
-                  <Mic className="w-5 h-5" />
+                  {isListening ? (
+                    <div className="w-4 h-4 bg-red-500 rounded-[3px]"></div>
+                  ) : (
+                    <Mic className="w-5 h-5" />
+                  )}
                 </button>
                 
                 <textarea
                   ref={textareaRef}
                   rows={1}
                   className="flex-1 bg-transparent py-3 pl-3 pr-4 md:pr-6 focus:outline-none text-slate-800 dark:text-slate-200 placeholder-slate-400 text-[15px] resize-none overflow-y-auto min-h-[48px] max-h-[160px] custom-scrollbar self-center"
-                  placeholder="Ask GramSathi anything..."
+                  placeholder={isListening ? "Listening..." : "Ask GramSathi anything..."}
                   value={input}
                   onChange={(e) => {
                     setInput(e.target.value);
