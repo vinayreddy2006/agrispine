@@ -13,6 +13,7 @@ class ChatRequest(BaseModel):
     user_context: Optional[Dict[str, Any]] = None
     current_page_context: Optional[Union[str, Dict[str, Any]]] = None
     auth_token: Optional[str] = None
+    language: Optional[str] = "en"
 
 class ChatResponse(BaseModel):
     session_id: Optional[str] = None

@@ -1,6 +1,13 @@
 import json
 
-def build_system_prompt(user_context: dict, page_context: dict, registry_keys: list) -> str:
+def build_system_prompt(user_context: dict, page_context: dict, registry_keys: list, language: str = "en") -> str:
+    lang_map = {
+        "en": "English",
+        "te": "Telugu (తెలుగు)",
+        "hi": "Hindi (हिन्दी)"
+    }
+    target_language = lang_map.get(language, "English")
+    
     return f"""You are the AgriSpine AI Assistant. Your goal is to map the user's request to a specific backend intent.
 
 AVAILABLE INTENTS:
@@ -31,4 +38,5 @@ IMPORTANT RULES:
 5. If no specific action is required, or the user asks a question about the page they are on (e.g. Schemes, Weather), use the intent CHAT. You MUST answer their question entirely based on the CURRENT PAGE CONTEXT provided below. Put your response in `chat_reply`. DO NOT say you cannot access the page.
 6. NEVER invent success messages. You only identify the intent and extract parameters. The backend will execute it.
 7. Use the provided User Profile and Page Context to automatically fill parameters.
+8. CRITICAL LANGUAGE REQUIREMENT: You MUST generate the `chat_reply` in {target_language}. Even if the user's prompt is in English, if {target_language} is specified, your final `chat_reply` MUST be entirely translated into {target_language}.
 """

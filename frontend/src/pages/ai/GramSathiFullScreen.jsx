@@ -249,7 +249,8 @@ export default function GramSathiFullScreen() {
         {
           session_id: activeSessionId,
           message: text,
-          current_page_context: { path: window.location.pathname } 
+          current_page_context: { path: window.location.pathname },
+          language: localStorage.getItem('i18nextLng') || 'en'
         },
         { headers: { "auth-token": localStorage.getItem("token") } }
       );

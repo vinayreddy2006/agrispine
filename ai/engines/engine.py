@@ -14,11 +14,12 @@ def process_request(
     history: List[ChatMessage], 
     user_context: dict, 
     page_context: dict, 
-    auth_token: str
+    auth_token: str,
+    language: str = "en"
 ) -> dict:
     
     registry_keys = list(TASK_REGISTRY.keys()) + ["CHAT"]
-    system_prompt = build_system_prompt(user_context, page_context, registry_keys)
+    system_prompt = build_system_prompt(user_context, page_context, registry_keys, language)
     
     import logging
     import traceback

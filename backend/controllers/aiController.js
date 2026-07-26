@@ -71,44 +71,45 @@ export const deleteChat = async (req, res) => {
 };
 
 // 4. MAIN CHAT ENDPOINT (Proxy to FastAPI)
-export const processChat = async (req, res) => {
-    try {
-        const { session_id, message, current_page_context } = req.body;
-        const authToken = req.header("auth-token");
-        
-        // 1. Get user context
-        const userContext = await getUserContext(req.user.id);
-        
-        // 2. Append user message to DB if it's a saved chat and extract history
-        let chat = null;
-        let history = [];
-        if (session_id && session_id !== "no-history") {
-            chat = await AIChat.findOne({ _id: session_id, user: req.user.id });
-            if (chat) {
-                // Convert DB messages to ChatMessage schema format
-                history = chat.messages.map(m => ({
-                    role: m.sender === 'user' ? 'user' : 'assistant',
-                    content: m.text
-                }));
-
-                // If it's the first message, update title
-                if (chat.messages.length === 0) {
-                    chat.title = message.substring(0, 30) + "...";
+    export const processChat = async (req, res) => {
+        try {
+            const { session_id, message, current_page_context, language } = req.body;
+            const authToken = req.header("auth-token");
+            
+            // 1. Get user context
+            const userContext = await getUserContext(req.user.id);
+            
+            // 2. Append user message to DB if it's a saved chat and extract history
+            let chat = null;
+            let history = [];
+            if (session_id && session_id !== "no-history") {
+                chat = await AIChat.findOne({ _id: session_id, user: req.user.id });
+                if (chat) {
+                    // Convert DB messages to ChatMessage schema format
+                    history = chat.messages.map(m => ({
+                        role: m.sender === 'user' ? 'user' : 'assistant',
+                        content: m.text
+                    }));
+    
+                    // If it's the first message, update title
+                    if (chat.messages.length === 0) {
+                        chat.title = message.substring(0, 30) + "...";
+                    }
+                    chat.messages.push({ sender: 'user', text: message });
+                    await chat.save();
                 }
-                chat.messages.push({ sender: 'user', text: message });
-                await chat.save();
             }
-        }
-
-        // 3. Forward to FastAPI with retry logic for ECONNRESET / Timeouts
-        const fastApiPayload = {
-            session_id: session_id,
-            message: message,
-            history: history,
-            user_context: userContext,
-            current_page_context: current_page_context,
-            auth_token: authToken
-        };
+    
+            // 3. Forward to FastAPI with retry logic for ECONNRESET / Timeouts
+            const fastApiPayload = {
+                session_id: session_id,
+                message: message,
+                history: history,
+                user_context: userContext,
+                current_page_context: current_page_context,
+                auth_token: authToken,
+                language: language || "en"
+            };
 
         const result = await forwardToFastAPI(fastApiPayload, authToken);
 

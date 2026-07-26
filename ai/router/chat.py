@@ -25,7 +25,8 @@ async def process_chat(request: ChatRequest):
             history=request.history or [],
             user_context=request.user_context or {},
             page_context=page_ctx or {},
-            auth_token=request.auth_token or ""
+            auth_token=request.auth_token or "",
+            language=request.language or "en"
         )
         
         return ChatResponse(
