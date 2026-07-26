@@ -10,7 +10,8 @@ const Members = ({ group, onUpdate }) => {
     const [village, setVillage] = useState('');
     const [loading, setLoading] = useState(false);
     
-    const currentUserId = localStorage.getItem('userId');
+    const userStr = localStorage.getItem('user');
+    const currentUserId = userStr ? JSON.parse(userStr).id : null;
     const currentUserRole = group.members.find(m => m.user === currentUserId)?.role || (group.createdBy === currentUserId ? 'owner' : 'member');
     const isAdmin = currentUserRole === 'admin' || currentUserRole === 'owner';
     const isOwner = currentUserRole === 'owner';

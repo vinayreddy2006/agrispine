@@ -17,7 +17,8 @@ const GroupDetails = () => {
 
     const [viewMode, setViewMode] = useState('member'); // 'admin' or 'member'
     const [isAdmin, setIsAdmin] = useState(false);
-    const currentUserId = localStorage.getItem('userId');
+    const userStr = localStorage.getItem('user');
+    const currentUserId = userStr ? JSON.parse(userStr).id : null;
 
     const fetchData = async () => {
         try {
@@ -95,46 +96,48 @@ const GroupDetails = () => {
 
     return (
         <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/groups')} className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors">
+                    <button onClick={() => navigate('/groups')} className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-xl transition-colors shadow-sm">
                         <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{group.name}</h1>
-                        <p className="text-sm text-slate-500">{group.village || "Work Group"}</p>
+                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">{group.name}</h1>
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{group.village || "Work Group"}</p>
                     </div>
                 </div>
                 
                 {isAdmin && (
-                    <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-4 py-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-                        <span className={`text-sm font-semibold ${viewMode === 'member' ? 'text-green-600' : 'text-slate-500'}`}>My View</span>
-                        <button onClick={handleViewModeToggle} className="text-slate-400 hover:text-green-500 transition-colors">
-                            {viewMode === 'admin' ? <ToggleRight className="w-8 h-8 text-green-500" /> : <ToggleLeft className="w-8 h-8" />}
+                    <div className="flex items-center gap-3 bg-white dark:bg-slate-800/90 px-5 py-2.5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80">
+                        <span className={`text-sm font-bold tracking-wide transition-colors ${viewMode === 'member' ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>My View</span>
+                        <button onClick={handleViewModeToggle} className="text-slate-300 hover:text-green-500 transition-colors drop-shadow-sm">
+                            {viewMode === 'admin' ? <ToggleRight className="w-9 h-9 text-green-500" /> : <ToggleLeft className="w-9 h-9" />}
                         </button>
-                        <span className={`text-sm font-semibold ${viewMode === 'admin' ? 'text-green-600' : 'text-slate-500'}`}>Admin View</span>
+                        <span className={`text-sm font-bold tracking-wide transition-colors ${viewMode === 'admin' ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>Admin View</span>
                     </div>
                 )}
             </div>
             
-            {viewMode === 'admin' ? (
-                <AdminDashboard 
-                    group={group} 
-                    analytics={analytics} 
-                    records={records} 
-                    isOwner={isOwner} 
-                    onUpdate={fetchData} 
-                />
-            ) : (
-                <MemberDashboard 
-                    group={group} 
-                    analytics={analytics} 
-                    records={records} 
-                    currentUserMember={currentUserMember}
-                    isAdmin={isAdmin}
-                    isOwner={isOwner}
-                />
-            )}
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                {viewMode === 'admin' ? (
+                    <AdminDashboard 
+                        group={group} 
+                        analytics={analytics} 
+                        records={records} 
+                        isOwner={isOwner} 
+                        onUpdate={fetchData} 
+                    />
+                ) : (
+                    <MemberDashboard 
+                        group={group} 
+                        analytics={analytics} 
+                        records={records} 
+                        currentUserMember={currentUserMember}
+                        isAdmin={isAdmin}
+                        isOwner={isOwner}
+                    />
+                )}
+            </div>
         </div>
     );
 };

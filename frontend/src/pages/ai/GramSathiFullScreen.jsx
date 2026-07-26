@@ -282,49 +282,49 @@ export default function GramSathiFullScreen() {
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans">
       
       {/* Sidebar */}
-      <div className="w-0 md:w-[280px] flex-shrink-0 bg-slate-50 dark:bg-slate-950 flex flex-col z-10 transition-all duration-300 overflow-hidden border-r border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="w-0 md:w-[320px] flex-shrink-0 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl flex flex-col z-10 transition-all duration-300 overflow-hidden border-r border-slate-200/60 dark:border-slate-800/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-none">
         
         {/* Header / New Chat */}
-        <div className="p-4">
+        <div className="p-5 md:p-6 pb-2">
           <button 
             onClick={handleNewChat}
-            className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl transition-all shadow-sm shadow-green-600/20 font-bold"
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white py-3.5 px-4 rounded-2xl transition-all duration-300 shadow-[0_8px_20px_rgba(5,150,105,0.2)] hover:shadow-[0_12px_25px_rgba(5,150,105,0.3)] hover:-translate-y-0.5 font-bold"
           >
             <Plus className="w-5 h-5" />
-            <span>New Chat</span>
+            <span className="text-[15px] tracking-wide">New Chat</span>
           </button>
         </div>
         
         {/* Chats List */}
-        <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
-          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-3 py-2 mt-4 mb-1">Today</div>
+        <div className="flex-1 overflow-y-auto px-4 pb-6 custom-scrollbar mt-2">
+          <div className="text-[11px] font-bold tracking-widest text-slate-400 dark:text-slate-500 px-2 py-3 uppercase">Today</div>
           
-          <div className="space-y-0.5">
+          <div className="space-y-1.5">
             {chats.length === 0 ? (
-                <div className="text-center px-4 py-8">
-                    <MessageSquare className="w-8 h-8 mx-auto text-slate-400 mb-3" />
-                    <p className="text-sm text-slate-500">No recent chats</p>
+                <div className="text-center px-4 py-10 opacity-70">
+                    <MessageSquare className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-4 stroke-1" />
+                    <p className="text-[13px] text-slate-500 font-medium">No recent chats</p>
                 </div>
             ) : (
                 chats.map(chat => (
                 <div key={chat._id} className="relative group">
                     <button
                         onClick={() => setCurrentChatId(chat._id)}
-                        className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
+                        className={`w-full text-left flex items-center gap-3.5 px-3 py-3.5 transition-all duration-200 ${
                             currentChatId === chat._id 
-                            ? 'bg-white dark:bg-slate-800 text-green-700 dark:text-green-400 font-bold shadow-sm border border-slate-200 dark:border-slate-700' 
-                            : 'hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 font-medium'
+                            ? 'bg-green-50/80 dark:bg-green-900/10 text-green-700 dark:text-green-400 font-bold shadow-sm border-l-[3px] border-l-green-600 border-t border-t-transparent border-r border-r-transparent border-b border-b-transparent rounded-r-xl rounded-l-sm' 
+                            : 'hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 font-medium rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700'
                         }`}
                     >
-                        <MessageSquare className={`w-4 h-4 flex-shrink-0 ${currentChatId === chat._id ? 'text-green-600' : 'text-slate-400'}`} />
-                        <span className="truncate text-sm flex-1 tracking-wide">{chat.title}</span>
+                        <MessageSquare className={`w-4 h-4 flex-shrink-0 transition-colors ${currentChatId === chat._id ? 'text-green-600' : 'text-slate-400 group-hover:text-slate-500'}`} />
+                        <span className={`truncate flex-1 tracking-wide ${currentChatId === chat._id ? 'text-[14px]' : 'text-[14px]'}`}>{chat.title}</span>
                     </button>
                     
                     {/* Context Menu Trigger */}
-                    <div className={`absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1 rounded-md transition-opacity bg-gradient-to-l from-slate-950/90 via-slate-950/80 to-transparent ${currentChatId === chat._id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all duration-200 ${currentChatId === chat._id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         <button 
                             onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === chat._id ? null : chat._id); }}
-                            className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                            className="p-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm shadow-sm border border-slate-200/80 dark:border-slate-700/80 text-slate-400 hover:text-green-600 hover:border-green-300 hover:shadow-md transition-all duration-200"
                         >
                             <MoreVertical className="w-4 h-4" />
                         </button>
@@ -336,12 +336,12 @@ export default function GramSathiFullScreen() {
                             {/* Invisible overlay to close menu */}
                             <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); }} />
                             
-                            <div className="absolute right-2 top-8 w-36 bg-slate-800 rounded-lg shadow-xl border border-slate-700 py-1.5 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                                <button onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); handleRenameChat(chat._id, chat.title); }} className="w-full text-left px-3 py-2 text-[13px] text-slate-200 hover:bg-slate-700 flex items-center gap-3">
+                            <div className="absolute right-0 top-12 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-slate-100 dark:border-slate-700 py-1.5 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                                <button onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); handleRenameChat(chat._id, chat.title); }} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors">
                                     <Edit2 className="w-4 h-4 text-slate-400" /> Rename
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); handleDeleteChat(chat._id); }} className="w-full text-left px-3 py-2 text-[13px] text-red-400 hover:bg-slate-700 flex items-center gap-3">
-                                    <Trash2 className="w-4 h-4 text-red-400" /> Delete chat
+                                <button onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); handleDeleteChat(chat._id); }} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-3 transition-colors">
+                                    <Trash2 className="w-4 h-4 text-red-500" /> Delete chat
                                 </button>
                             </div>
                         </>
@@ -352,15 +352,15 @@ export default function GramSathiFullScreen() {
           </div>
         </div>
         
-        {/* User Profile / Settings at Bottom (Optional but looks premium) */}
-        <div className="p-3 border-t border-slate-200 dark:border-white/10">
-            <button className="w-full flex items-center gap-3 hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 py-2.5 px-3 rounded-lg transition-colors">
-                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border border-slate-300 dark:border-slate-700">
-                    <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+        {/* User Profile / Settings at Bottom */}
+        <div className="p-4 border-t border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-transparent">
+            <button className="w-full flex items-center gap-3.5 hover:bg-white dark:hover:bg-slate-800/50 hover:shadow-sm text-slate-700 dark:text-slate-300 py-3 px-3 rounded-xl transition-all duration-200 border border-transparent hover:border-slate-200 dark:hover:border-slate-700/50">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <User className="w-4.5 h-4.5 text-slate-500 dark:text-slate-400" />
                 </div>
                 <div className="flex-1 text-left">
-                    <div className="text-[13px] font-semibold text-slate-800 dark:text-white">GramSathi AI</div>
-                    <div className="text-[11px] text-slate-500">AgriSpine Core</div>
+                    <div className="text-[14px] font-bold tracking-wide text-slate-800 dark:text-white">GramSathi AI</div>
+                    <div className="text-[11px] font-medium text-slate-500 tracking-wider uppercase mt-0.5">AgriSpine Core</div>
                 </div>
             </button>
         </div>
@@ -426,67 +426,106 @@ export default function GramSathiFullScreen() {
 
         {/* Floating Input Area */}
         <div className="absolute bottom-0 left-0 w-full p-4 sm:p-6 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent dark:from-slate-900 dark:via-slate-900 pb-8 pt-12 pointer-events-none">
-          <div className="max-w-4xl mx-auto relative flex items-end shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] rounded-[24px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pointer-events-auto p-2 gap-2 transition-shadow hover:shadow-xl dark:hover:shadow-2xl">
-            {isSpeaking && (
-              <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-slate-800 dark:bg-slate-700 p-1.5 rounded-full shadow-lg animate-in slide-in-from-bottom-2 border border-slate-700 dark:border-slate-600 z-20">
-                {isPaused ? (
-                    <button onClick={resumeSpeaking} className="text-white hover:bg-slate-700 dark:hover:bg-slate-600 p-2 rounded-full transition">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          
+          {/* Conditionally Render Expense Action Input OR Normal Chat Input */}
+          {(() => {
+            const lastAiMessage = [...messages].reverse().find(m => m.sender === 'ai');
+            const isWaitingForExpense = lastAiMessage && lastAiMessage.intent === 'EXPENSE_ACTION';
+
+            if (isWaitingForExpense) {
+              return (
+                <div className="max-w-4xl mx-auto relative flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] rounded-[24px] bg-white dark:bg-slate-800 border border-green-200 dark:border-green-800 pointer-events-auto p-4 gap-3 transition-shadow hover:shadow-xl dark:hover:shadow-2xl animate-in slide-in-from-bottom-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
+                       <Bot className="w-4 h-4 text-green-600 dark:text-green-500" />
+                    </span>
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Please provide expense details</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="Amount (e.g. 5000)"
+                      className="flex-1 bg-slate-50 dark:bg-slate-900 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 text-[15px]"
+                      onChange={(e) => setInput(`Expense amount: ${e.target.value}`)}
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleSendMessage()}
+                      disabled={!input.trim() || isLoading}
+                      className="p-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-40 disabled:hover:bg-green-600 transition-all shadow-sm flex items-center justify-center flex-shrink-0"
+                    >
+                      <Send className="w-5 h-5 ml-0.5" />
                     </button>
-                ) : (
-                    <button onClick={pauseSpeaking} className="text-white hover:bg-slate-700 dark:hover:bg-slate-600 p-2 rounded-full transition">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="max-w-4xl mx-auto relative flex items-end shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] rounded-[24px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pointer-events-auto p-2 gap-2 transition-shadow hover:shadow-xl dark:hover:shadow-2xl">
+                {isSpeaking && (
+                  <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-slate-800 dark:bg-slate-700 p-1.5 rounded-full shadow-lg animate-in slide-in-from-bottom-2 border border-slate-700 dark:border-slate-600 z-20">
+                    {isPaused ? (
+                        <button onClick={resumeSpeaking} className="text-white hover:bg-slate-700 dark:hover:bg-slate-600 p-2 rounded-full transition">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                    ) : (
+                        <button onClick={pauseSpeaking} className="text-white hover:bg-slate-700 dark:hover:bg-slate-600 p-2 rounded-full transition">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                    )}
+                    <button onClick={stopSpeaking} className="text-white hover:bg-slate-700 dark:hover:bg-slate-600 p-2 rounded-full transition">
+                        <div className="w-3.5 h-3.5 bg-red-500 rounded-sm"></div>
                     </button>
+                    <button onClick={replaySpeech} className="text-white hover:bg-slate-700 dark:hover:bg-slate-600 p-2 rounded-full transition" title="Replay">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </button>
+                  </div>
                 )}
-                <button onClick={stopSpeaking} className="text-white hover:bg-slate-700 dark:hover:bg-slate-600 p-2 rounded-full transition">
-                    <div className="w-3.5 h-3.5 bg-red-500 rounded-sm"></div>
+                
+                <button
+                  onClick={handleMicClick}
+                  className={`p-3 rounded-full transition-all flex items-center justify-center flex-shrink-0 ${
+                    isListening ? "bg-red-100 dark:bg-red-900/30 text-red-500 animate-pulse scale-110" : "text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  }`}
+                >
+                  <Mic className="w-5 h-5" />
                 </button>
-                <button onClick={replaySpeech} className="text-white hover:bg-slate-700 dark:hover:bg-slate-600 p-2 rounded-full transition" title="Replay">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  className="flex-1 bg-transparent py-3 pl-3 pr-4 md:pr-6 focus:outline-none text-slate-800 dark:text-slate-200 placeholder-slate-400 text-[15px] resize-none overflow-y-auto min-h-[48px] max-h-[160px] custom-scrollbar self-center"
+                  placeholder="Ask GramSathi anything..."
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    if (isSpeaking) stopSpeaking();
+                    if (textareaRef.current) {
+                      textareaRef.current.style.height = "auto";
+                      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  autoFocus
+                />
+                
+                <button
+                  onClick={() => handleSendMessage()}
+                  disabled={!input.trim() || isLoading}
+                  className="p-3 mb-0.5 bg-green-600 text-white rounded-[16px] hover:bg-green-700 disabled:opacity-40 disabled:hover:bg-green-600 transition-all shadow-sm flex items-center justify-center flex-shrink-0"
+                >
+                  <Send className="w-5 h-5 ml-0.5" />
                 </button>
               </div>
-            )}
-            
-            <button
-              onClick={handleMicClick}
-              className={`p-3 rounded-full transition-all flex items-center justify-center flex-shrink-0 ${
-                isListening ? "bg-red-100 dark:bg-red-900/30 text-red-500 animate-pulse scale-110" : "text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-100 dark:hover:bg-slate-700"
-              }`}
-            >
-              <Mic className="w-5 h-5" />
-            </button>
-            
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              className="flex-1 bg-transparent py-3 pl-3 pr-4 md:pr-6 focus:outline-none text-slate-800 dark:text-slate-200 placeholder-slate-400 text-[15px] resize-none overflow-y-auto min-h-[48px] max-h-[160px] custom-scrollbar self-center"
-              placeholder="Ask GramSathi anything..."
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                if (isSpeaking) stopSpeaking();
-                if (textareaRef.current) {
-                  textareaRef.current.style.height = "auto";
-                  textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              autoFocus
-            />
-            
-            <button
-              onClick={() => handleSendMessage()}
-              disabled={!input.trim() || isLoading}
-              className="p-3 mb-0.5 bg-green-600 text-white rounded-[16px] hover:bg-green-700 disabled:opacity-40 disabled:hover:bg-green-600 transition-all shadow-sm flex items-center justify-center flex-shrink-0"
-            >
-              <Send className="w-5 h-5 ml-0.5" />
-            </button>
-          </div>
+            );
+          })()}
+
           <div className="text-center text-[11px] font-medium text-slate-500/70 dark:text-slate-500 mt-4 pointer-events-auto tracking-wide">
             GramSathi can make mistakes. Always verify important farming data.
           </div>
