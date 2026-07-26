@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sprout, TrendingUp, Tractor, Users, ArrowRight, ShieldCheck, Leaf, MessageSquare, Briefcase, Calendar, MapPin, IndianRupee, Bot, ChevronRight, CloudRain, Sun, CloudSun, ShoppingBag, Truck, CheckCircle2, BarChart3, LineChart, Stethoscope, Activity, Scale, Landmark, ScrollText } from "lucide-react";
+import { Sprout, TrendingUp, Tractor, Users, ArrowRight, ShieldCheck, Leaf, MessageSquare, Briefcase, Calendar, MapPin, IndianRupee, Bot, ChevronRight, CloudRain, Sun, CloudSun, ShoppingBag, Truck, CheckCircle2, BarChart3, LineChart, Stethoscope, Activity, Scale, Landmark, ScrollText, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -21,12 +21,12 @@ const GramSathiMock = () => (
             </div>
         </div>
         <div className="flex-1 p-6 space-y-6 overflow-hidden relative">
-            <div className="flex justify-end animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="flex justify-end">
                 <div className="bg-green-600 text-white rounded-2xl rounded-tr-sm px-5 py-3 max-w-[80%] shadow-md">
                     <p className="text-sm">What should I spray for leaf curl disease on my tomatoes?</p>
                 </div>
             </div>
-            <div className="flex gap-3 animate-in fade-in slide-in-from-left-4 duration-700 delay-300 fill-mode-both">
+            <div className="flex gap-3">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                     <Bot className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
@@ -107,7 +107,7 @@ const WorkGroupsMock = () => (
 const CropsMock = () => (
     <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 h-full w-full p-6 grid grid-cols-1 md:grid-cols-2 gap-4 shadow-2xl relative overflow-hidden min-h-[400px]">
         {/* Card 1 */}
-        <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 relative overflow-hidden flex flex-col justify-between group">
             <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full blur-2xl -mr-8 -mt-8"></div>
             <div>
                 <div className="relative z-10 flex justify-between items-start mb-4">
@@ -118,7 +118,7 @@ const CropsMock = () => (
                         <Sprout className="w-6 h-6 text-green-600 dark:text-green-500" />
                     </div>
                     <div>
-                        <h3 className="font-extrabold text-lg text-slate-800 dark:text-white">Tomato</h3>
+                        <h3 className="font-extrabold text-lg text-slate-800 dark:text-white group-hover:text-green-600 transition-colors">Tomato</h3>
                         <p className="text-xs font-medium text-slate-500 mt-0.5">5 Acres</p>
                     </div>
                 </div>
@@ -131,7 +131,7 @@ const CropsMock = () => (
             </div>
         </div>
         {/* Card 2 */}
-        <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 relative overflow-hidden flex flex-col justify-between group">
             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl -mr-8 -mt-8"></div>
             <div>
                 <div className="relative z-10 flex justify-between items-start mb-4">
@@ -142,7 +142,7 @@ const CropsMock = () => (
                         <CheckCircle2 className="w-6 h-6 text-blue-600 dark:text-blue-500" />
                     </div>
                     <div>
-                        <h3 className="font-extrabold text-lg text-slate-800 dark:text-white">Cotton</h3>
+                        <h3 className="font-extrabold text-lg text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors">Cotton</h3>
                         <p className="text-xs font-medium text-slate-500 mt-0.5">10 Acres</p>
                     </div>
                 </div>
@@ -227,12 +227,155 @@ const MachineryMock = () => (
     </div>
 );
 
+const MessengerMock = () => {
+    const messages = [
+        { sender: "Panchayat Office", text: "Ration distribution has started today.", time: "09:00 AM" },
+        { sender: "Agri Dept", text: "Free seed distribution tomorrow.", time: "10:30 AM" },
+        { sender: "Sarpanch", text: "Village meeting at 5 PM regarding water supply.", time: "11:45 AM" },
+        { sender: "Weather Alert", text: "Heavy rainfall expected tonight. Please secure harvested crops.", time: "02:15 PM" },
+        { sender: "Work Group", text: "Work Group Vari Natu starts at 7 AM tomorrow.", time: "04:30 PM" }
+    ];
+
+    return (
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 h-full w-full flex flex-col shadow-2xl relative overflow-hidden min-h-[400px]">
+            <div className="bg-white dark:bg-slate-950 p-4 border-b border-slate-200 dark:border-slate-800">
+                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-indigo-500" /> Village Broadcasts
+                </h3>
+            </div>
+            <div className="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar bg-slate-100/50 dark:bg-slate-900/50">
+                {messages.map((msg, idx) => (
+                    <div key={idx} className="bg-white dark:bg-slate-800 rounded-2xl p-3 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="flex justify-between items-start mb-1">
+                            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{msg.sender}</span>
+                            <span className="text-[10px] text-slate-400">{msg.time}</span>
+                        </div>
+                        <p className="text-sm text-slate-700 dark:text-slate-200">{msg.text}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const CommunityMock = () => (
+    <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 h-full w-full p-6 flex flex-col shadow-2xl relative overflow-hidden min-h-[400px]">
+        <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-500" /> Farmers Forum
+        </h3>
+        <div className="space-y-4 flex-1 overflow-y-auto">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600 text-xs">V</div>
+                    <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">Venkat Rao</p>
+                        <p className="text-[10px] text-slate-500">2 hours ago</p>
+                    </div>
+                </div>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">Has anyone tried the new organic fertilizer from the local mandi? Seeing good results on my paddy.</p>
+                <div className="flex gap-4 text-xs font-bold text-slate-500">
+                    <span className="flex items-center gap-1"><Check className="w-4 h-4"/> 12 Likes</span>
+                    <span className="flex items-center gap-1"><MessageSquare className="w-4 h-4"/> 4 Replies</span>
+                </div>
+            </div>
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-emerald-600 text-xs">M</div>
+                    <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">Mahesh N.</p>
+                        <p className="text-[10px] text-slate-500">5 hours ago</p>
+                    </div>
+                </div>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">Selling my used drip irrigation pipes. Good condition, enough for 2 acres. DM for price.</p>
+                <div className="flex gap-4 text-xs font-bold text-slate-500">
+                    <span className="flex items-center gap-1"><Check className="w-4 h-4"/> 5 Likes</span>
+                    <span className="flex items-center gap-1"><MessageSquare className="w-4 h-4"/> 2 Replies</span>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+const GovtSchemesMock = () => (
+    <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 h-full w-full p-6 flex flex-col shadow-2xl relative overflow-hidden min-h-[400px]">
+        <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+            <Landmark className="w-5 h-5 text-amber-500" /> Active Govt Schemes
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h4 className="font-bold text-sm text-slate-800 dark:text-white">PM-KISAN</h4>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">Financial benefit of ₹6,000 per year payable in three equal installments.</p>
+                </div>
+                <button className="mt-3 text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg w-fit">Apply Now</button>
+            </div>
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h4 className="font-bold text-sm text-slate-800 dark:text-white">Rythu Bandhu</h4>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">Investment support for agriculture and horticulture crops in Telangana.</p>
+                </div>
+                <button className="mt-3 text-[10px] font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg w-fit">Check Status</button>
+            </div>
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between sm:col-span-2">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h4 className="font-bold text-sm text-slate-800 dark:text-white">PM Fasal Bima Yojana</h4>
+                        <p className="text-xs text-slate-500 mt-1">Crop insurance scheme for protection against natural calamities.</p>
+                    </div>
+                    <ShieldCheck className="w-8 h-8 text-blue-500 opacity-20" />
+                </div>
+                <button className="mt-3 text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg w-fit">View Details</button>
+            </div>
+        </div>
+    </div>
+);
+
+const AnalyticsMock = () => (
+    <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 h-full w-full p-6 flex flex-col shadow-2xl relative overflow-hidden min-h-[400px]">
+        <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-purple-500" /> Farm Analytics
+        </h3>
+        
+        <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <p className="text-[10px] text-slate-500 font-bold uppercase">Total Revenue (YTD)</p>
+                <p className="text-xl font-bold text-slate-800 dark:text-white mt-1">₹3,45,000</p>
+                <p className="text-xs text-green-500 font-bold mt-1">↑ 12% vs Last Year</p>
+            </div>
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <p className="text-[10px] text-slate-500 font-bold uppercase">Total Expenses</p>
+                <p className="text-xl font-bold text-slate-800 dark:text-white mt-1">₹1,12,000</p>
+                <p className="text-xs text-slate-400 font-bold mt-1">Fertilizer & Labor</p>
+            </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex-1 flex flex-col">
+            <p className="text-[10px] text-slate-500 font-bold uppercase mb-4">Profit Margin Trend</p>
+            <div className="flex-1 flex items-end justify-between gap-2 px-2">
+                {/* Mock Chart Bars */}
+                {[40, 60, 30, 80, 50, 90, 70].map((height, i) => (
+                    <div key={i} className="w-full bg-purple-100 dark:bg-purple-900/30 rounded-t-md relative group">
+                        <div 
+                            className="absolute bottom-0 w-full bg-purple-500 rounded-t-md transition-all duration-1000" 
+                            style={{ height: `${height}%` }}
+                        ></div>
+                    </div>
+                ))}
+            </div>
+            <div className="flex justify-between mt-2 text-[10px] text-slate-400 px-2">
+                <span>Jan</span>
+                <span>Jul</span>
+            </div>
+        </div>
+    </div>
+);
+
 // ==========================================
 // LANDING PAGE COMPONENT
 // ==========================================
 
 const FeatureSection = ({ id, reverse, title, subtitle, icon: Icon, features, MockupComponent, bgColor = "bg-white dark:bg-slate-950" }) => (
-    <section id={id} className={`py-24 ${bgColor}`}>
+    <section id={id} className={`py-24 ${bgColor} scroll-mt-32`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className={`flex flex-col lg:flex-row items-center gap-16 ${reverse ? 'lg:flex-row-reverse' : ''}`}>
                 <div className="flex-1 space-y-6">
@@ -249,7 +392,7 @@ const FeatureSection = ({ id, reverse, title, subtitle, icon: Icon, features, Mo
                         {features.map((feature, idx) => (
                             <li key={idx} className="flex items-start gap-3">
                                 <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                <span className="text-slate-700 dark:text-slate-300">{feature}</span>
+                                <span className="text-slate-700 dark:text-slate-300 font-medium">{feature}</span>
                             </li>
                         ))}
                     </ul>
@@ -266,11 +409,45 @@ const FeatureSection = ({ id, reverse, title, subtitle, icon: Icon, features, Mo
 const Landing = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const [activeSection, setActiveSection] = useState("");
+
+    // Setup scroll spy for navigation
+    useEffect(() => {
+        const handleScroll = () => {
+            const sections = [
+                'crops', 'gramsathi', 'weather', 'workgroups', 'marketplace', 
+                'machinery', 'messenger', 'community', 'schemes', 'analytics'
+            ];
+            
+            let current = "";
+            for (const section of sections) {
+                const element = document.getElementById(section);
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    if (rect.top <= 200 && rect.bottom >= 200) {
+                        current = section;
+                        break;
+                    }
+                }
+            }
+            setActiveSection(current);
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollTo = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans selection:bg-green-200 selection:text-green-900">
             {/* Minimal Header */}
-            <header className="fixed top-0 inset-x-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 z-50">
+            <header className="fixed top-0 inset-x-0 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 z-50">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
@@ -284,40 +461,69 @@ const Landing = () => {
                         <ThemeToggle />
                         <LanguageSwitcher />
                         <button onClick={() => navigate('/login')} className="hidden sm:block text-slate-600 dark:text-slate-300 font-bold hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                            {t('landing.login')}
+                            {t('landing.login', 'Login')}
                         </button>
+                        {/* 1. FIX NAVBAR REGISTER BUTTON */}
                         <button onClick={() => navigate('/register')} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2.5 rounded-full font-bold hover:bg-green-600 dark:hover:bg-green-500 hover:text-white transition-all shadow-md">
-                            {t('landing.register')}
+                            {t('landing.register', 'Register')}
                         </button>
                     </div>
                 </div>
             </header>
 
             <main className="flex-1 pt-20">
-                {/* 0. Hero Section */}
-                <section className="relative overflow-hidden bg-white dark:bg-slate-950 pt-20 pb-32 lg:pt-32 lg:pb-40 border-b border-slate-100 dark:border-slate-900">
+                {/* Hero Section */}
+                <section className="relative overflow-hidden bg-white dark:bg-slate-950 pt-24 pb-32 lg:pt-40 lg:pb-48 border-b border-slate-100 dark:border-slate-900">
                     <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-green-50 dark:from-green-950/20 to-transparent"></div>
                     <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
+                        {/* 3. HERO SECTION TITLE */}
                         <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-8">
-                            The Complete <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Agri-SaaS</span> Platform
+                            AgriSpine — Your Complete <br className="hidden lg:block"/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Digital Farming</span> Companion
                         </h1>
-                        <p className="text-xl lg:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed">
-                            Manage crops, automate labor settlements, track market prices, and instantly identify plant diseases using AI—all in one premium dashboard.
+                        <p className="text-xl lg:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto mb-16 leading-relaxed font-medium">
+                            Manage crops, automate labor settlements, track market prices, and stay connected with your village—all in one premium platform.
                         </p>
-                        <div className="flex flex-col sm:flex-row justify-center gap-4">
-                            <button onClick={() => navigate('/register')} className="px-8 py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold text-lg transition-all shadow-lg shadow-green-600/30 flex items-center justify-center gap-2">
-                                Start Free Trial <ArrowRight className="w-5 h-5" />
+                        
+                        {/* 11. AUTHENTICATION UI (Hero Buttons) */}
+                        <div className="flex flex-col sm:flex-row justify-center gap-6">
+                            {/* 2. REMOVE START FREE TRIAL */}
+                            <button onClick={() => navigate('/register')} className="px-10 py-5 bg-green-600 hover:bg-green-700 text-white rounded-[2rem] font-black text-xl transition-all shadow-xl shadow-green-600/30 flex items-center justify-center gap-3 hover:scale-105 active:scale-95">
+                                Join AgriSpine <ArrowRight className="w-6 h-6" />
                             </button>
-                            <button onClick={() => {
-                                document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
-                            }} className="px-8 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                            <button onClick={() => scrollTo('crops')} className="px-10 py-5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-[2rem] font-black text-xl transition-all flex items-center justify-center gap-3 hover:scale-105 active:scale-95">
                                 Explore Features
                             </button>
                         </div>
                     </div>
                 </section>
 
-                <div id="features">
+                {/* 9. FEATURE NAVIGATION (Sticky Bar) */}
+                <div className="sticky top-20 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-x-auto custom-scrollbar">
+                    <div className="max-w-7xl mx-auto px-6 flex items-center gap-6 py-4 min-w-max">
+                        {[
+                            { id: 'crops', label: 'My Crops' },
+                            { id: 'gramsathi', label: 'GramSathi AI' },
+                            { id: 'weather', label: 'Weather' },
+                            { id: 'workgroups', label: 'Work Groups' },
+                            { id: 'marketplace', label: 'Marketplace' },
+                            { id: 'machinery', label: 'Rent Machinery' },
+                            { id: 'messenger', label: 'Messenger' },
+                            { id: 'community', label: 'Community' },
+                            { id: 'schemes', label: 'Govt Schemes' },
+                            { id: 'analytics', label: 'Analytics' }
+                        ].map(item => (
+                            <button
+                                key={item.id}
+                                onClick={() => scrollTo(item.id)}
+                                className={`text-sm font-bold whitespace-nowrap transition-colors px-3 py-1.5 rounded-full ${activeSection === item.id ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div id="features-container">
                     {/* 1. My Crops */}
                     <FeatureSection 
                         id="crops"
@@ -341,7 +547,7 @@ const Landing = () => {
                         bgColor="bg-white dark:bg-slate-950"
                     />
 
-                    {/* 3. Weather Intelligence */}
+                    {/* 3. Weather */}
                     <FeatureSection 
                         id="weather"
                         title="Weather Intelligence"
@@ -386,15 +592,61 @@ const Landing = () => {
                         MockupComponent={MachineryMock}
                         bgColor="bg-white dark:bg-slate-950"
                     />
+
+                    {/* 7. Messenger */}
+                    <FeatureSection 
+                        id="messenger"
+                        title="Village Messenger"
+                        subtitle="Stay connected with your local community. Receive official announcements from the Panchayat, Agriculture Department, and other verified local authorities."
+                        icon={MessageSquare}
+                        features={["Real-time village announcements", "Government alert broadcasts", "Work group notifications", "Secure and verified senders"]}
+                        MockupComponent={MessengerMock}
+                        bgColor="bg-slate-50 dark:bg-slate-900/20"
+                    />
+
+                    {/* 8. Community */}
+                    <FeatureSection 
+                        id="community"
+                        reverse={true}
+                        title="Farmers Forum"
+                        subtitle="Join the conversation. Share experiences, ask for advice, or post listings for used equipment in a vibrant community of fellow farmers."
+                        icon={Users}
+                        features={["Peer-to-peer knowledge sharing", "Equipment classifieds", "Upvote and reply system", "Regional networking"]}
+                        MockupComponent={CommunityMock}
+                        bgColor="bg-white dark:bg-slate-950"
+                    />
+
+                    {/* 9. Government Schemes */}
+                    <FeatureSection 
+                        id="schemes"
+                        title="Government Schemes"
+                        subtitle="Never miss out on financial aid or subsidies. Browse a curated list of active state and central government schemes with direct application links."
+                        icon={Landmark}
+                        features={["PM-KISAN tracking", "Crop insurance details", "State-specific subsidies", "Direct eligibility checks"]}
+                        MockupComponent={GovtSchemesMock}
+                        bgColor="bg-slate-50 dark:bg-slate-900/20"
+                    />
+
+                    {/* 10. Analytics */}
+                    <FeatureSection 
+                        id="analytics"
+                        reverse={true}
+                        title="Farm Analytics"
+                        subtitle="Understand your farm's financial health. Track total revenues, expenses, and profit margins over time with beautiful, easy-to-read charts."
+                        icon={BarChart3}
+                        features={["Revenue vs Expense tracking", "Profit margin trends", "Year-over-year comparisons", "Exportable reports"]}
+                        MockupComponent={AnalyticsMock}
+                        bgColor="bg-white dark:bg-slate-950"
+                    />
                 </div>
             </main>
 
             {/* Simple Footer */}
-            <footer className="bg-slate-900 dark:bg-black py-12 border-t border-slate-800">
+            <footer className="bg-slate-900 dark:bg-black py-16 border-t border-slate-800">
                 <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-3">
-                        <Leaf className="w-6 h-6 text-green-500" />
-                        <span className="text-xl font-black tracking-tight text-white">
+                        <Leaf className="w-8 h-8 text-green-500" />
+                        <span className="text-2xl font-black tracking-tight text-white">
                             Agri<span className="text-green-500">Spine</span>
                         </span>
                     </div>

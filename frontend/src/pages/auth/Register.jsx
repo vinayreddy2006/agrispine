@@ -105,8 +105,14 @@ const Register = () => {
 
         {error && <div className="mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 text-center animate-pulse">{error}</div>}
 
-        <p className="mt-6 text-center text-sm text-gray-500">
-          {t('auth.have_account', { defaultValue: 'Already have an account?' })} <span onClick={() => navigate("/login")} className="text-green-600 font-bold cursor-pointer hover:underline inline-block p-2 -my-2">{t('auth.login_here', { defaultValue: 'Login here' })}</span>
+        <p className="mt-10 text-center text-gray-500">
+          {t('auth.have_account', { defaultValue: 'Already have an account?' })} 
+          <span 
+            onClick={() => navigate("/login")} 
+            className="text-green-600 text-lg font-black cursor-pointer hover:underline block mt-3 p-3 bg-green-50 rounded-xl transition-colors hover:bg-green-100"
+          >
+            {t('auth.login_here', { defaultValue: 'Login here' })}
+          </span>
         </p>
       </div>
     </div>
