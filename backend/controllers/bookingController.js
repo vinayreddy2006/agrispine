@@ -14,9 +14,22 @@ export const createBooking = async (req, res) => {
     const machine = await Machine.findById(machineId);
     if (!machine) return res.status(404).json({ message: "Machine not found" });
 
+    // Check if machine listing is currently available
+    if (machine.available === false) {
+      return res.status(400).json({ message: "This machinery listing is currently marked unavailable for rent by the owner." });
+    }
+
     // Prevent booking your own machine
     if (machine.user.toString() === req.user.id) {
       return res.status(400).json({ message: "You cannot book your own machine" });
+    }
+
+    // Check if the requested agricultural task is enabled
+    if (task && task.name && Array.isArray(machine.tasks)) {
+      const existingTask = machine.tasks.find(t => t.name.toLowerCase() === task.name.toLowerCase());
+      if (existingTask && existingTask.available === false) {
+        return res.status(400).json({ message: `The agricultural service "${existingTask.name}" is currently disabled for this machine.` });
+      }
     }
 
     // Historical agreed task rate locking

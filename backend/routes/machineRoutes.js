@@ -7,7 +7,11 @@ import {
   updateMachine,
   deleteMachine, 
   getMachinesByType, 
-  getMyMachines 
+  getMyMachines,
+  getMachineServices,
+  addMachineService,
+  updateMachineService,
+  deleteMachineService
 } from "../controllers/machineController.js";
 
 const router = express.Router();
@@ -32,5 +36,11 @@ router.get("/type/:type", optionalFetchUser, getMachinesByType);
 
 // ROUTE 7: Get Logged-in Provider's Machines
 router.get("/own", fetchUser, getMyMachines);
+
+// ROUTE 8: Service / Task Management Endpoints (Owner Only)
+router.get("/:id/services", fetchUser, getMachineServices);
+router.post("/:id/services", fetchUser, addMachineService);
+router.put("/:id/services/:serviceId", fetchUser, updateMachineService);
+router.delete("/:id/services/:serviceId", fetchUser, deleteMachineService);
 
 export default router;

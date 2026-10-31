@@ -51,7 +51,7 @@ function App() {
               <Route path="/rent-machinery" element={<RentCategories />} />
               <Route path="/rent/list/:type" element={<RentListing />} />
               <Route path="/rent/details/:id" element={<RentDetails />} />
-              <Route path="/my-machines" element={<MyMachines />} />
+              <Route path="/my-machines" element={<RentCategories defaultMode="owner" defaultTab="fleet" />} />
               <Route path="/manage-machine/:id" element={<ManageMachine />} />
               <Route path="/add-machine" element={<AddMachine />} />
               <Route path="/community" element={<Community />} />
@@ -63,7 +63,7 @@ function App() {
               <Route path="/doctor" element={<PlantDoctor />} />
               <Route path="/my-crops" element={<MyCrops />} />
               <Route path="/buyer-market" element={<BuyerMarket />} />
-              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/my-bookings" element={<RentCategories defaultMode="rent" defaultTab="bookings" />} />
               <Route path="/messages" element={<Messenger />} />
               <Route path="/weather" element={<Weather />} />
               <Route path="/ai-chat" element={<GramSathiFullScreen />} />

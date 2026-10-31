@@ -248,14 +248,14 @@ const LocationConfirmationModal = ({ isOpen, onClose, onLocationConfirmed, initi
               Quick Search (Village, Mandal or District)
             </label>
             <div className="relative">
+              <Search className="w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none shrink-0" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => handleQueryChange(e.target.value)}
                 placeholder="Type village or town name..."
-                className="w-full pl-10 pr-24 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                className="w-full !pl-11 pr-24 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition min-h-[44px]"
               />
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
               <button
                 type="button"
                 onClick={handleDetectGps}

@@ -6,12 +6,14 @@ import { translateText } from "../../utils/translateHelper";
 import api from "../../utils/api";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/ui/EmptyState";
+import SearchInput from "../../components/common/SearchInput";
 
 const Schemes = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const [expandedId, setExpandedId] = useState(null);
     const [schemes, setSchemes] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
 
     const Card = ({ children, className = '' }) => (
@@ -64,7 +66,14 @@ const Schemes = () => {
         processSchemes();
     }, [i18n.language]);
 
-
+    const filteredSchemes = schemes.filter(s => {
+        if (!searchTerm.trim()) return true;
+        const q = searchTerm.toLowerCase();
+        return (s.name || "").toLowerCase().includes(q) ||
+               (s.provider || "").toLowerCase().includes(q) ||
+               (s.amount || "").toLowerCase().includes(q) ||
+               (s.description || "").toLowerCase().includes(q);
+    });
 
     return (
         <div className="w-full h-full pb-20">
@@ -74,22 +83,30 @@ const Schemes = () => {
             />
 
             {/* Content */}
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 max-w-5xl mx-auto">
+                {/* Search Bar */}
+                <SearchInput 
+                    placeholder="Search government schemes by name, provider or benefit..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
 
                 {loading ? (
                     <div className="flex justify-center items-center py-20">
                         <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
                         <span className="ml-2 text-gray-500">Translating content...</span>
                     </div>
-                ) : schemes.length === 0 ? (
+                ) : filteredSchemes.length === 0 ? (
                     <EmptyState 
-                        title="No Government Schemes Available" 
-                        description="New government schemes will appear here when published." 
+                        title="No Government Schemes Found" 
+                        description={searchTerm ? "Try searching with different keywords." : "New government schemes will appear here when published."}
                         icon={Landmark}
+                        actionText={searchTerm ? "Clear Search" : undefined}
+                        onAction={searchTerm ? () => setSearchTerm("") : undefined}
                     />
                 ) : (
                     <div className="space-y-4">
-                        {schemes.map((scheme) => (
+                        {filteredSchemes.map((scheme) => (
                             <Card
                                 key={scheme._id}
                                 className={`transition-all duration-300 overflow-hidden ${expandedId === scheme._id ? 'border-primary ring-1 ring-primary/20 shadow-md' : 'hover:border-primary/50'}`}
@@ -105,9 +122,9 @@ const Schemes = () => {
                                             </span>
                                         </div>
                                         {/* Dynamic Scheme Name */}
-                                        <h3 className="text-lg font-bold text-gray-800">{scheme.name}</h3>
+                                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{scheme.name}</h3>
                                         {/* Dynamic Amount */}
-                                        <p className="text-green-700 font-bold text-sm mt-1 bg-green-50 inline-block px-2 py-0.5 rounded-md border border-green-100">
+                                        <p className="text-green-700 dark:text-green-400 font-bold text-sm mt-1 bg-green-50 dark:bg-green-950/60 inline-block px-2 py-0.5 rounded-md border border-green-100 dark:border-green-900">
                                             💰 {scheme.amount}
                                         </p>
                                     </div>
@@ -148,15 +165,15 @@ const Schemes = () => {
                                             <div className="grid md:grid-cols-2 gap-4">
                                                 <div className="space-y-1">
                                                     {/* STATIC HEADER: Details */}
-                                                    <h4 className="font-semibold text-gray-500 text-xs uppercase flex items-center gap-1"><Info className="w-3 h-3" /> {t('schemes.details', { defaultValue: 'Details' })}</h4>
+                                                    <h4 className="font-semibold text-gray-500 text-xs uppercase flex items-center gap-1"><Info className="w-4 h-4" /> {t('schemes.details', { defaultValue: 'Details' })}</h4>
                                                     {/* DYNAMIC CONTENT */}
-                                                    <p className="text-gray-700 text-sm leading-relaxed">{scheme.description}</p>
+                                                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{scheme.description}</p>
                                                 </div>
                                                 <div className="space-y-1">
                                                     {/* STATIC HEADER: Eligibility */}
-                                                    <h4 className="font-semibold text-gray-500 text-xs uppercase flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {t('schemes.eligibility', { defaultValue: 'Eligibility' })}</h4>
+                                                    <h4 className="font-semibold text-gray-500 text-xs uppercase flex items-center gap-1"><CheckCircle className="w-4 h-4 text-green-600" /> {t('schemes.eligibility', { defaultValue: 'Eligibility' })}</h4>
                                                     {/* DYNAMIC CONTENT */}
-                                                    <p className="text-gray-700 text-sm leading-relaxed">{scheme.eligibility}</p>
+                                                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{scheme.eligibility}</p>
                                                 </div>
                                             </div>
 

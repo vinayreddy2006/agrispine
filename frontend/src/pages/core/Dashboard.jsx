@@ -19,14 +19,20 @@ import EmptyState from "../../components/ui/EmptyState";
 import LoadingState from "../../components/ui/LoadingState";
 import LocationConfirmationModal from "../../components/common/LocationConfirmationModal";
 
+const API_KEY = "35e669987b8f3f982e649b224ed22c0c";
+
 const Dashboard = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [weather, setWeather] = useState(null);
   const [translatedName, setTranslatedName] = useState("");
+
+  // Weather state
+  const [weather, setWeather] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weatherError, setWeatherError] = useState(null);
 
   // Location Confirmation Modal & Non-Intrusive Reminder
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -42,7 +48,14 @@ const Dashboard = () => {
         return;
       }
 
-      const parsedUser = JSON.parse(userData);
+      let parsedUser = {};
+      try {
+        parsedUser = JSON.parse(userData);
+      } catch (e) {
+        navigate("/");
+        return;
+      }
+
       setUser(parsedUser);
 
       // Check if location confirmation is needed and not skipped for this session
@@ -67,32 +80,122 @@ const Dashboard = () => {
         setLoading(false);
       }
 
-      // 2. Fetch Weather using confirmed location if available, otherwise district
-      const weatherTarget = parsedUser.village || parsedUser.district || "Hyderabad";
-      fetchWeather(weatherTarget);
+      // 2. Fetch Weather using accurate multi-tier location resolution
+      fetchWeather(parsedUser);
     };
 
     fetchData();
+
+    // Listen to real-time location confirmation events
+    const onLocationConfirmed = (e) => {
+      const updated = e.detail;
+      if (updated) {
+        setUser(updated);
+        setShowLocationBanner(false);
+        fetchWeather(updated);
+      }
+    };
+    window.addEventListener("agrispine_location_confirmed", onLocationConfirmed);
+
+    return () => {
+      window.removeEventListener("agrispine_location_confirmed", onLocationConfirmed);
+    };
   }, [navigate, i18n.language]);
 
-  const fetchWeather = async (targetLocation) => {
+  // Robust location resolution & weather fetcher (matches Weather page accuracy)
+  const fetchWeather = async (targetUser) => {
+    if (!targetUser) return;
+    setWeatherLoading(true);
+    setWeatherError(null);
+
     try {
-      const API_KEY = "35e669987b8f3f982e649b224ed22c0c";
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(targetLocation)}&units=metric&appid=${API_KEY}`;
-      const response = await axios.get(url);
+      let lat = null;
+      let lon = null;
+      let locationLabel = [targetUser.village, targetUser.mandal, targetUser.district]
+        .filter(Boolean)
+        .join(", ") || targetUser.district || "Hyderabad";
 
+      // 1. Direct coordinates check
+      if (targetUser.locationCoordinates?.lat && targetUser.locationCoordinates?.lng) {
+        lat = Number(targetUser.locationCoordinates.lat);
+        lon = Number(targetUser.locationCoordinates.lng);
+      } else if (targetUser.lat && targetUser.lon) {
+        lat = Number(targetUser.lat);
+        lon = Number(targetUser.lon);
+      }
+
+      let res = null;
+
+      // 2. If coordinates available, fetch weather directly by coordinates (most accurate!)
+      if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
+        try {
+          res = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`);
+        } catch (e) {
+          console.warn("Coordinate weather fetch failed:", e.message);
+        }
+      }
+
+      // 3. If no coords or failed, try geocoding village with district and state
+      if (!res && targetUser.village) {
+        const queries = [
+          [targetUser.village, targetUser.district, targetUser.state, "IN"].filter(Boolean).join(", "),
+          [targetUser.village, targetUser.district, "IN"].filter(Boolean).join(", "),
+          [targetUser.village, "IN"].filter(Boolean).join(", ")
+        ];
+
+        for (const q of queries) {
+          try {
+            const geoRes = await axios.get(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=1&appid=${API_KEY}`);
+            if (geoRes.data && geoRes.data.length > 0) {
+              const item = geoRes.data[0];
+              res = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${item.lat}&lon=${item.lon}&units=metric&appid=${API_KEY}`);
+              if (res) break;
+            }
+          } catch (e) {}
+        }
+      }
+
+      // 4. Fallback to district name (districts like Suryapet, Warangal, Nalgonda always resolve in OWM)
+      if (!res && targetUser.district) {
+        try {
+          res = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(targetUser.district)}&units=metric&appid=${API_KEY}`);
+        } catch (e) {
+          console.warn("District weather fetch failed:", e.message);
+        }
+      }
+
+      // 5. Ultimate fallback to Hyderabad
+      if (!res) {
+        res = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=Hyderabad&units=metric&appid=${API_KEY}`);
+        if (!locationLabel) locationLabel = "Hyderabad, Telangana";
+      }
+
+      if (res && res.data && res.data.main) {
+        setWeather({
+          temp: Math.round(res.data.main.temp),
+          condition: res.data.weather?.[0]?.main || "Clear",
+          humidity: res.data.main.humidity,
+          wind: res.data.wind?.speed || 0,
+          temp_min: Math.round(res.data.main.temp_min),
+          temp_max: Math.round(res.data.main.temp_max),
+          locationName: locationLabel,
+          isLocationConfirmed: !!targetUser.isLocationConfirmed,
+          status: 'success'
+        });
+      } else {
+        throw new Error("Invalid weather data format received");
+      }
+
+    } catch (err) {
+      console.error("Dashboard weather fetch failed:", err);
       setWeather({
-        temp: Math.round(response.data.main.temp),
-        condition: response.data.weather[0].main,
-        humidity: response.data.main.humidity,
-        wind: response.data.wind.speed,
-        temp_min: Math.round(response.data.main.temp_min),
-        temp_max: Math.round(response.data.main.temp_max)
+        status: 'error',
+        errorMessage: 'Unable to retrieve weather. Please verify internet connection or location.',
+        isLocationConfirmed: !!targetUser.isLocationConfirmed
       });
-
-    } catch (error) {
-      console.error("Weather Error:", error);
-      setWeather({ temp: "--", condition: "Active" });
+      setWeatherError("Weather data currently unavailable");
+    } finally {
+      setWeatherLoading(false);
     }
   };
 
@@ -104,8 +207,7 @@ const Dashboard = () => {
   const handleLocationConfirmed = (updatedUser) => {
     setUser(updatedUser);
     setShowLocationBanner(false);
-    const newTarget = updatedUser.village || updatedUser.district || "Hyderabad";
-    fetchWeather(newTarget);
+    fetchWeather(updatedUser);
   };
 
   const handleLogout = () => {
@@ -184,9 +286,10 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-green-700 to-green-600 rounded-2xl p-8 text-white shadow-lg">
           <h1 className="text-3xl font-bold mb-2">{t('dashboard.welcome')}, {translatedName || user.name}! 🙏</h1>
-          <p className="opacity-90 flex items-center gap-1.5">
+          <p className="opacity-90 flex items-center gap-1.5 flex-wrap">
             <MapPin className="w-4 h-4 text-emerald-200" />
             <span>{t('dashboard.location')}: </span>
             <span className="font-semibold">
@@ -207,6 +310,7 @@ const Dashboard = () => {
           </p>
         </div>
 
+        {/* Active Crops Section */}
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -259,11 +363,18 @@ const Dashboard = () => {
           )}
         </div>
 
+        {/* Quick Actions & Weather Grid */}
         <div>
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
             <Tractor className="text-blue-600" /> {t('dashboard.quick')}
           </h2>
-          <QuickActions weather={weather} />
+          <QuickActions 
+            weather={weather} 
+            weatherLoading={weatherLoading} 
+            weatherError={weatherError} 
+            onConfirmLocation={() => setShowLocationModal(true)} 
+            onRetryWeather={() => fetchWeather(user)} 
+          />
         </div>
       </main>
 

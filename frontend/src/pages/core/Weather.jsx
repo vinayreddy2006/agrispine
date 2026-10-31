@@ -173,6 +173,8 @@ const Weather = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [searching, setSearching] = useState(false);
+    const [searchHasSearched, setSearchHasSearched] = useState(false);
+    const weatherSearchTimerRef = useRef(null);
 
     // Recommendations state
     const [recommendations, setRecommendations] = useState([]);
@@ -578,40 +580,83 @@ const Weather = () => {
         setRecomModel('Agrometeorological Rules Engine');
     };
 
-    // Location search handler using OpenWeatherMap Direct Geocoding API
-    const handleLocationSearch = async (e) => {
-        e.preventDefault();
-        if (!searchQuery.trim() || searchQuery.length < 2) return;
+    // Real-time location search handler (Debounced Nominatim geocoding responding to every keystroke & backspace)
+    const handleLocationQueryChange = (text) => {
+        setSearchQuery(text);
+
+        if (weatherSearchTimerRef.current) {
+            clearTimeout(weatherSearchTimerRef.current);
+        }
+
+        if (!text || text.trim().length < 2) {
+            setSearchResults([]);
+            setSearching(false);
+            setSearchHasSearched(false);
+            return;
+        }
 
         setSearching(true);
-        try {
-            const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(searchQuery)}&limit=5&appid=${API_KEY}`;
-            const res = await axios.get(geoUrl);
-            setSearchResults(res.data || []);
-        } catch (err) {
-            console.error('Location search error:', err);
-            setSearchResults([]);
-        } finally {
-            setSearching(false);
-        }
+        setSearchHasSearched(true);
+
+        weatherSearchTimerRef.current = setTimeout(async () => {
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=in&limit=7&q=${encodeURIComponent(text.trim())}`,
+                    { headers: { 'Accept-Language': 'en' } }
+                );
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    const formatted = data.map(item => {
+                        const addr = item.address || {};
+                        const village = addr.village || addr.suburb || addr.neighbourhood || addr.hamlet || addr.town || addr.city || item.name || '';
+                        const mandal = addr.county || addr.subdistrict || addr.taluk || '';
+                        const district = addr.state_district || addr.district || '';
+                        const state = addr.state || '';
+                        return {
+                            name: village || item.name,
+                            displayName: item.display_name,
+                            village,
+                            mandal,
+                            district,
+                            state,
+                            country: 'IN',
+                            lat: parseFloat(item.lat),
+                            lon: parseFloat(item.lon)
+                        };
+                    });
+                    setSearchResults(formatted);
+                } else {
+                    setSearchResults([]);
+                }
+            } catch (err) {
+                console.error('Real-time location search error:', err);
+                setSearchResults([]);
+            } finally {
+                setSearching(false);
+            }
+        }, 350);
     };
 
-    // Select Temporary Location (Scenario B & C: Updates weather, does NOT modify user profile)
+    // Select Location for Weather View (Never alters user profile location)
     const handleSelectLocation = (place) => {
         const selected = {
-            name: place.name,
-            displayName: [place.name, place.state, place.country].filter(Boolean).join(', '),
-            isFarmLocation: false, // Explicitly marked as temporary alternative
+            name: place.name || place.village || place.district,
+            displayName: place.displayName || [place.name, place.mandal, place.district, place.state].filter(Boolean).join(', '),
+            isFarmLocation: false, // Viewing temporary weather without modifying farm location
             lat: place.lat,
             lon: place.lon,
-            country: place.country || 'IN',
-            state: place.state
+            village: place.village,
+            mandal: place.mandal,
+            district: place.district,
+            state: place.state,
+            country: 'IN'
         };
 
         setCurrentLocation(selected);
         setSearchOpen(false);
         setSearchQuery('');
         setSearchResults([]);
+        setSearchHasSearched(false);
         fetchWeatherForLocation(selected);
     };
 
@@ -790,63 +835,87 @@ const Weather = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleLocationSearch} className="flex gap-2">
-                            <div className="relative flex-1">
+                        <div className="space-y-2">
+                            <div className="relative">
+                                <Search className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none shrink-0" />
                                 <input
                                     ref={searchInputRef}
                                     type="text"
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Enter village, mandal, district (e.g. Warangal, Khammam, Nizamabad, Guntur)..."
-                                    className="w-full pl-4 pr-10 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-emerald-500 transition"
+                                    onChange={(e) => handleLocationQueryChange(e.target.value)}
+                                    placeholder="Type village, mandal or district (e.g. Lingamvarigudem, Miryalaguda, Warangal)..."
+                                    className="w-full !pl-11 pr-10 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition min-h-[44px]"
                                     autoFocus
                                 />
                                 {searchQuery && (
-                                    <button type="button" onClick={() => setSearchQuery('')} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => {
+                                            setSearchQuery('');
+                                            setSearchResults([]);
+                                            setSearchHasSearched(false);
+                                        }} 
+                                        className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
+                                    >
                                         <X className="w-4 h-4" />
                                     </button>
                                 )}
                             </div>
-                            <button
-                                type="submit"
-                                disabled={searching || !searchQuery.trim()}
-                                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-sm transition"
-                            >
-                                {searching ? 'Searching...' : 'Search'}
-                            </button>
-                        </form>
 
-                        <div className="mt-3 flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700 text-xs text-slate-500">
-                            <span className="italic">Note: Searching another location is temporary and will never alter your saved profile.</span>
-                            <button
-                                onClick={handleUseDeviceLocation}
-                                className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
-                            >
-                                <Navigation className="w-3.5 h-3.5" /> Use Current Device Location
-                            </button>
-                        </div>
+                            {/* Searching indicator */}
+                            {searching && (
+                                <div className="flex items-center gap-2 p-3 text-xs text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                    <div className="w-3.5 h-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                                    <span>Finding matching villages & areas...</span>
+                                </div>
+                            )}
 
-                        {/* Search Results List */}
-                        {searchResults.length > 0 && (
-                            <div className="mt-3 space-y-1.5 max-h-48 overflow-y-auto pt-2 border-t border-slate-100 dark:border-slate-700">
-                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Select Place:</span>
-                                {searchResults.map((item, index) => (
-                                    <button
-                                        key={index}
-                                        onClick={() => handleSelectLocation(item)}
-                                        className="w-full text-left p-2.5 rounded-xl hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium text-sm flex items-center justify-between transition group"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-emerald-600" />
-                                            <span>{item.name} {item.state ? <span className="text-xs text-slate-500">({item.state})</span> : ''}</span>
-                                        </div>
-                                        <span className="text-xs text-slate-400 group-hover:text-emerald-600 flex items-center gap-1 font-semibold">
-                                            View Weather <ChevronRight className="w-3.5 h-3.5" />
-                                        </span>
-                                    </button>
-                                ))}
+                            {/* No results message */}
+                            {!searching && searchHasSearched && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+                                <div className="p-4 text-center text-xs text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
+                                    No locations found matching "{searchQuery}". Try typing your mandal, district or nearby town.
+                                </div>
+                            )}
+
+                            {/* Dynamic Real-time Autocomplete Suggestions */}
+                            {searchResults.length > 0 && (
+                                <div className="border border-emerald-100 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-900 shadow-md divide-y divide-slate-100 dark:divide-slate-800 max-h-56 overflow-y-auto">
+                                    {searchResults.map((item, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleSelectLocation(item)}
+                                            className="w-full text-left p-3 hover:bg-emerald-50/80 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition flex items-center justify-between group"
+                                        >
+                                            <div className="flex items-start gap-2.5 overflow-hidden pr-2">
+                                                <MapPin className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                                                <div>
+                                                    <span className="font-bold text-sm text-slate-900 dark:text-white block group-hover:text-emerald-600 transition">
+                                                        {item.name}
+                                                    </span>
+                                                    <span className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                                                        {[item.mandal, item.district, item.state].filter(Boolean).join(", ")}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span className="text-xs text-emerald-600 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5 flex-shrink-0">
+                                                <span>View Weather</span>
+                                                <ChevronRight className="w-3.5 h-3.5" />
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="flex items-center justify-between pt-2 text-xs text-slate-500">
+                                <span className="italic text-[11px]">Previewing another location is temporary and never changes your saved farm profile.</span>
+                                <button
+                                    onClick={handleUseDeviceLocation}
+                                    className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 flex-shrink-0"
+                                >
+                                    <Navigation className="w-3.5 h-3.5" /> Use Current Device GPS
+                                </button>
                             </div>
-                        )}
+                        </div>
                     </div>
                 )}
             </div>
