@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bot } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
+import OfflineBanner from '../components/common/OfflineBanner';
 
 const AppLayout = ({ children }) => {
   const location = useLocation();
@@ -16,6 +17,9 @@ const AppLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-agriBg font-sans text-gray-800">
+      {/* Principle 4: Global Offline & Slow Network Detection Banner */}
+      <OfflineBanner />
+
       {/* 
         For non-auth pages (Landing, Login), we don't apply the max-w constraints here 
         because Landing has its own full-width sections. 

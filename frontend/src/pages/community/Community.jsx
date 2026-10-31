@@ -11,6 +11,9 @@ import {
 import api from '../../utils/api';
 import PageHeader from '../../components/common/PageHeader';
 import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
+import NoSearchResults from '../../components/ui/NoSearchResults';
+import { PostSkeleton } from '../../components/ui/LoadingSkeleton';
 import PostCard from './components/PostCard';
 import CreatePostModal from './components/CreatePostModal';
 import MediaLightbox from './components/MediaLightbox';
@@ -720,52 +723,55 @@ const Community = () => {
 
                                 {/* 3. Post Feed List */}
                                 {loading ? (
-                                    <div className="space-y-4">
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700/80 animate-pulse space-y-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700"></div>
-                                                    <div className="space-y-2 flex-1">
-                                                        <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                                                        <div className="h-3 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                                                    </div>
-                                                </div>
-                                                <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                                                <div className="h-20 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : filteredPosts.length === 0 ? (
-                                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-sm text-center">
-                                        <EmptyState
-                                            icon={activeTab === 'my_posts' ? BookOpen : MessageSquare}
-                                            title={
-                                                activeTab === 'my_posts'
-                                                    ? "You haven't published any posts yet"
-                                                    : activeTab === 'my_discussions'
-                                                    ? "No discussion activity yet"
-                                                    : "No posts match your filters"
-                                            }
-                                            description={
-                                                activeTab === 'my_posts'
-                                                    ? "Share your farming advice, pest remedies, or questions to help the community."
-                                                    : activeTab === 'my_discussions'
-                                                    ? "Join any ongoing agricultural discussion or reply to questions in the community feed!"
-                                                    : "Try searching with different keywords or switch back to 'All' topics."
-                                            }
-                                            actionText={activeTab === 'my_posts' ? "Create First Post" : "Explore Community Feed"}
-                                            onAction={() => {
-                                                if (activeTab === 'my_posts') {
-                                                    setCreateModalType('general');
-                                                    setCreateModalOpen(true);
-                                                } else {
-                                                    setActiveTab('all');
-                                                    setSelectedCategory('All');
-                                                    setSearchQuery('');
-                                                }
-                                            }}
+                                    <PostSkeleton count={3} />
+                                ) : errorMessage ? (
+                                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
+                                        <ErrorState
+                                            title="Failed to Load Community Feed"
+                                            message={errorMessage}
+                                            onRetry={() => fetchPosts()}
                                         />
                                     </div>
+                                ) : filteredPosts.length === 0 ? (
+                                    searchQuery ? (
+                                        <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
+                                            <NoSearchResults
+                                                query={searchQuery}
+                                                onClear={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+                                                suggestions={[
+                                                    "Search by farming topic like Cotton, Pest, Urea, or Rain",
+                                                    "Set the category filter back to 'All' categories",
+                                                    "Clear your query to see recent questions from fellow farmers"
+                                                ]}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-sm text-center">
+                                            <EmptyState
+                                                icon={activeTab === 'my_posts' ? BookOpen : MessageSquare}
+                                                title={
+                                                    activeTab === 'my_posts'
+                                                        ? "You haven't published any posts yet"
+                                                        : activeTab === 'my_discussions'
+                                                        ? "No discussion activity yet"
+                                                        : "No community posts in this category yet"
+                                                }
+                                                description={
+                                                    activeTab === 'my_posts'
+                                                        ? "Share your farming advice, pest remedies, or questions to help the community."
+                                                        : activeTab === 'my_discussions'
+                                                        ? "Join any ongoing agricultural discussion or reply to questions in the community feed!"
+                                                        : "Be the first in your farming circle to start a discussion or ask an agronomy question."
+                                                }
+                                                tip="Posts with clear photos of crops or pest damage receive responses from agronomists and local farmers 3x faster."
+                                                actionText={activeTab === 'my_posts' ? "Create First Post" : "Ask a Question"}
+                                                onAction={() => {
+                                                    setCreateModalType('general');
+                                                    setCreateModalOpen(true);
+                                                }}
+                                            />
+                                        </div>
+                                    )
                                 ) : (
                                     <div className="space-y-5">
                                         {filteredPosts.map(post => (

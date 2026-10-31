@@ -17,6 +17,8 @@ import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import EmptyState from "../../components/ui/EmptyState";
 import LoadingState from "../../components/ui/LoadingState";
+import ErrorState from "../../components/ui/ErrorState";
+import { CardSkeleton } from "../../components/ui/LoadingSkeleton";
 import LocationConfirmationModal from "../../components/common/LocationConfirmationModal";
 
 const API_KEY = "35e669987b8f3f982e649b224ed22c0c";
@@ -27,6 +29,7 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cropsError, setCropsError] = useState(null);
   const [translatedName, setTranslatedName] = useState("");
 
   // Weather state
@@ -69,16 +72,7 @@ const Dashboard = () => {
       setTranslatedName(name);
 
       // 1. Fetch Crops
-      try {
-        const { data } = await api.get("/crops/fetchall", {
-          headers: { "auth-token": token }
-        });
-        setCrops(data);
-      } catch (err) {
-        console.error("Failed to fetch crops", err);
-      } finally {
-        setLoading(false);
-      }
+      loadCrops(token);
 
       // 2. Fetch Weather using accurate multi-tier location resolution
       fetchWeather(parsedUser);
@@ -101,6 +95,23 @@ const Dashboard = () => {
       window.removeEventListener("agrispine_location_confirmed", onLocationConfirmed);
     };
   }, [navigate, i18n.language]);
+
+  const loadCrops = async (authToken) => {
+    const token = authToken || localStorage.getItem("token");
+    setLoading(true);
+    setCropsError(null);
+    try {
+      const { data } = await api.get("/crops/fetchall", {
+        headers: { "auth-token": token }
+      });
+      setCrops(data);
+    } catch (err) {
+      console.error("Failed to fetch crops", err);
+      setCropsError("Unable to retrieve your active crops right now. Please verify your connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Robust location resolution & weather fetcher (matches Weather page accuracy)
   const fetchWeather = async (targetUser) => {
@@ -322,11 +333,19 @@ const Dashboard = () => {
           </div>
 
           {loading ? (
-            <LoadingState message="Loading crops..." />
+            <CardSkeleton count={2} />
+          ) : cropsError ? (
+            <ErrorState
+              title="Unable to load crops"
+              message={cropsError}
+              onRetry={() => loadCrops()}
+              showHome={false}
+            />
           ) : crops.filter(c => c.status === 'active').length === 0 ? (
             <EmptyState 
               title={t('dashboard.no_crops')}
               description={t('dashboard.add_first_crop')}
+              tip="Recording your crops unlocks AI pest diagnostics, mandi rate alerts, and machinery scheduling tailored to your farm."
               icon={Sprout}
               actionText="Add Crop"
               onAction={() => navigate("/add-crop")}

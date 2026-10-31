@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import api from "../../utils/api";
 import { useNavigate } from "react-router-dom";
-import { Phone, MapPin, ShoppingBag, Filter, Calendar, Tag, ShieldCheck, User } from "lucide-react";
+import { Phone, MapPin, ShoppingBag, Filter, Calendar, Tag, ShieldCheck, User, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import PageHeader from "../../components/common/PageHeader";
 import SearchInput from "../../components/common/SearchInput";
 import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
+import NoSearchResults from "../../components/ui/NoSearchResults";
+import { CardSkeleton } from "../../components/ui/LoadingSkeleton";
 
 const BuyerMarket = () => {
     const { t } = useTranslation();
@@ -13,20 +16,25 @@ const BuyerMarket = () => {
     const [listings, setListings] = useState([]);
     const [filteredListings, setFilteredListings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
 
+    const fetchListings = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const { data } = await api.get("/crops/market/listings");
+            setListings(Array.isArray(data) ? data : []);
+            setFilteredListings(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Failed to fetch market listings:", err);
+            setError("Could not load fresh market produce listings. Please check your network connection.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchListings = async () => {
-            try {
-                const { data } = await api.get("/crops/market/listings");
-                setListings(Array.isArray(data) ? data : []);
-                setFilteredListings(Array.isArray(data) ? data : []);
-            } catch (err) {
-                console.error("Failed to fetch market listings:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchListings();
     }, []);
 
@@ -59,17 +67,32 @@ const BuyerMarket = () => {
 
             <div className="p-4 md:p-6 max-w-5xl mx-auto">
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="h-44 bg-white dark:bg-slate-900 rounded-3xl animate-pulse border border-slate-200 dark:border-slate-800"></div>
-                        ))}
-                    </div>
-                ) : filteredListings.length === 0 ? (
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200/80 dark:border-slate-800">
+                    <CardSkeleton count={4} />
+                ) : error ? (
+                    <ErrorState
+                        title="Failed to Load Farm Listings"
+                        message={error}
+                        onRetry={fetchListings}
+                    />
+                ) : searchTerm && filteredListings.length === 0 ? (
+                    <NoSearchResults
+                        query={searchTerm}
+                        onClear={() => setSearchTerm("")}
+                        suggestions={[
+                            "Search by crop type like Paddy, Cotton, or Maize",
+                            "Search by farmer's village or mandal name",
+                            "Clear your search to view all active farmer listings"
+                        ]}
+                    />
+                ) : listings.length === 0 ? (
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center border border-slate-200/80 dark:border-slate-800">
                         <EmptyState 
-                            title={t('market.no_crops', { defaultValue: "No crops available in the market" })}
-                            description="Farm produce listed by local farmers for sale will appear here."
+                            title={t('market.no_crops', { defaultValue: "No crops listed in the market yet" })}
+                            description="Direct harvest listings published by local farmers will be displayed here for buyers and traders."
+                            tip="Are you a farmer? List your harvested crops directly from My Crops to connect with wholesale buyers."
                             icon={ShoppingBag}
+                            actionText="Go to My Crops"
+                            onAction={() => navigate("/my-crops")}
                         />
                     </div>
                 ) : (

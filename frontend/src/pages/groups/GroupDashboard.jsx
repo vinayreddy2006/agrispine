@@ -6,6 +6,11 @@ import {
     Shield, UserCheck, AlertCircle, Filter, X
 } from 'lucide-react';
 import Card from '../../components/ui/Card';
+import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
+import NoSearchResults from '../../components/ui/NoSearchResults';
+import PermissionDenied from '../../components/ui/PermissionDenied';
+import { CardSkeleton, StatCardSkeleton, TableRowSkeleton } from '../../components/ui/LoadingSkeleton';
 import { getUserGroups, getPersonalDashboard } from '../../api/groupService';
 
 const GroupDashboard = () => {
@@ -13,6 +18,7 @@ const GroupDashboard = () => {
     const [groups, setGroups] = useState([]);
     const [personalStats, setPersonalStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Navigation and View state
     // activeSection: 'my_groups' | 'admin_dashboard'
@@ -59,21 +65,25 @@ const GroupDashboard = () => {
         return groups.filter(g => isUserAdminOfGroup(g));
     }, [groups, currentUserId]);
 
+    const fetchData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const [groupsRes, statsRes] = await Promise.all([
+                getUserGroups(),
+                getPersonalDashboard()
+            ]);
+            setGroups(Array.isArray(groupsRes.data?.groups) ? groupsRes.data.groups : []);
+            setPersonalStats(statsRes.data?.data || statsRes.data?.stats || null);
+        } catch (err) {
+            console.error("Failed to fetch dashboard data", err);
+            setError("Could not load workgroup information. Please verify your connection.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [groupsRes, statsRes] = await Promise.all([
-                    getUserGroups(),
-                    getPersonalDashboard()
-                ]);
-                setGroups(Array.isArray(groupsRes.data?.groups) ? groupsRes.data.groups : []);
-                setPersonalStats(statsRes.data?.data || statsRes.data?.stats || null);
-            } catch (error) {
-                console.error("Failed to fetch dashboard data", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchData();
     }, []);
 
@@ -106,8 +116,25 @@ const GroupDashboard = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-[50vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+            <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+                <div className="space-y-2">
+                    <div className="h-8 w-64 bg-gray-200 dark:bg-slate-700/60 rounded-xl animate-pulse" />
+                    <div className="h-4 w-96 bg-gray-200 dark:bg-slate-700/60 rounded-lg animate-pulse" />
+                </div>
+                <StatCardSkeleton count={3} />
+                <CardSkeleton count={3} />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="pb-24 max-w-2xl mx-auto px-4 pt-16">
+                <ErrorState
+                    title="Unable to Load Workgroups"
+                    message={error}
+                    onRetry={fetchData}
+                />
             </div>
         );
     }
@@ -371,35 +398,35 @@ const GroupDashboard = () => {
             {/* ============================================================== */}
             {/* WORKGROUPS DISPLAY: Card View or Table View                    */}
             {/* ============================================================== */}
-            {displayedGroups.length === 0 ? (
-                <div className="bg-white dark:bg-slate-800 rounded-3xl p-10 border border-slate-200/80 dark:border-slate-700/80 text-center">
-                    <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                    <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-                        {searchQuery || roleFilter !== 'all' ? 'No workgroups match your filter' : 'No workgroups found'}
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                        {searchQuery || roleFilter !== 'all'
-                            ? 'Try clearing your search query or changing the role filter to view other workgroups.'
-                            : 'Create a new team of agricultural laborers or ask your village group admin to add you.'}
-                    </p>
-                    <div className="mt-4 flex items-center justify-center gap-3">
-                        {(searchQuery || roleFilter !== 'all') && (
-                            <button
-                                onClick={() => { setSearchQuery(''); setRoleFilter('all'); }}
-                                className="px-4 py-2 border rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                            >
-                                Reset Filters
-                            </button>
-                        )}
-                        <button
-                            onClick={() => navigate('/groups/create')}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
-                        >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>Create New Group</span>
-                        </button>
-                    </div>
-                </div>
+            {activeSection === 'admin_dashboard' && !hasAdminAccess ? (
+                <PermissionDenied
+                    title="Group Admin Privileges Required"
+                    message="You do not currently own or manage any agricultural workgroups. Create a workgroup to manage member attendance and payouts."
+                    requiredRole="Workgroup Admin / Owner"
+                />
+            ) : displayedGroups.length === 0 ? (
+                searchQuery || roleFilter !== 'all' ? (
+                    <NoSearchResults
+                        query={searchQuery || (roleFilter !== 'all' ? `Role: ${roleFilter}` : '')}
+                        onClear={() => { setSearchQuery(''); setRoleFilter('all'); }}
+                        suggestions={[
+                            "Search by workgroup name or village location",
+                            "Set the role filter dropdown back to 'All Roles'",
+                            "Clear your search query to see all your active workgroups"
+                        ]}
+                    />
+                ) : (
+                    <EmptyState
+                        title={activeSection === 'admin_dashboard' ? "No Admin Workgroups" : "No Workgroups Joined Yet"}
+                        description={activeSection === 'admin_dashboard' 
+                            ? "You do not currently manage any workgroups as an admin or owner."
+                            : "Form a collaborative farm labor team for daily field operations or ask your village group admin to add your phone number."}
+                        tip="Workgroups help farmers coordinate seasonal harvesting labor, record daily field work, and compute transparent wage settlements."
+                        icon={Users}
+                        actionText="Create New Group"
+                        onAction={() => navigate('/groups/create')}
+                    />
+                )
             ) : viewMode === 'card' ? (
                 /* CARD VIEW (Responsive Grid) */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">

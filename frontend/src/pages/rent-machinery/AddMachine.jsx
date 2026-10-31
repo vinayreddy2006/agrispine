@@ -10,6 +10,7 @@ import {
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import PageHeader from "../../components/common/PageHeader";
+import InlineFormError from "../../components/ui/InlineFormError";
 
 // Preset operation templates common in rural agriculture (e.g. Telangana, Andhra, Maharashtra, Punjab)
 const SUGGESTED_OPERATIONS = [
@@ -34,6 +35,7 @@ const AddMachine = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
     const [imageFile, setImageFile] = useState(null);
     const [preview, setPreview] = useState(null);
 
@@ -60,7 +62,11 @@ const AddMachine = () => {
     ]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: null }));
+        }
     };
 
     const handleFileChange = (e) => {
@@ -102,13 +108,16 @@ const AddMachine = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const newErrors = {};
         if (!formData.name.trim()) {
-            Swal.fire('Error', 'Please enter a machine name', 'error');
-            return;
+            newErrors.name = 'Please enter a machine title or model name (e.g. Mahindra 575 DI)';
+        }
+        if (!formData.price || Number(formData.price) <= 0) {
+            newErrors.price = 'Please specify a valid base rental rate greater than ₹0';
         }
 
-        if (!formData.price || Number(formData.price) <= 0) {
-            Swal.fire('Error', 'Please specify a valid base price', 'error');
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
             return;
         }
 
@@ -211,8 +220,9 @@ const AddMachine = () => {
                                     value={formData.name}
                                     onChange={handleChange}
                                     placeholder="e.g. Mahindra 575 DI Sarpanch"
-                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                                    className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border ${errors.name ? 'border-red-400 focus:ring-red-400' : 'border-slate-200 dark:border-slate-700 focus:ring-emerald-500'} rounded-xl text-sm focus:ring-2 focus:bg-white outline-none`}
                                 />
+                                <InlineFormError error={errors.name} />
                             </div>
 
                             <div>
@@ -289,8 +299,9 @@ const AddMachine = () => {
                                     value={formData.price}
                                     onChange={handleChange}
                                     placeholder="e.g. 750"
-                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                                    className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border ${errors.price ? 'border-red-400 focus:ring-red-400' : 'border-slate-200 dark:border-slate-700 focus:ring-emerald-500'} rounded-xl text-sm focus:ring-2 outline-none`}
                                 />
+                                <InlineFormError error={errors.price} />
                             </div>
 
                             <div>

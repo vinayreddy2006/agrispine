@@ -6,6 +6,9 @@ import { translateText } from "../../utils/translateHelper";
 import api from "../../utils/api";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
+import NoSearchResults from "../../components/ui/NoSearchResults";
+import { CardSkeleton } from "../../components/ui/LoadingSkeleton";
 import SearchInput from "../../components/common/SearchInput";
 
 const Schemes = () => {
@@ -15,9 +18,10 @@ const Schemes = () => {
     const [schemes, setSchemes] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const Card = ({ children, className = '' }) => (
-        <div className={`bg-surface rounded-xl shadow-sm border border-border ${className}`}>
+        <div className={`bg-surface dark:bg-slate-800 rounded-xl shadow-xs border border-border dark:border-slate-700 ${className}`}>
             {children}
         </div>
     );
@@ -26,43 +30,44 @@ const Schemes = () => {
         setExpandedId(expandedId === id ? null : id);
     };
 
+    const processSchemes = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Fetch from real backend
+            const { data: rawSchemesData } = await api.get("/admin/schemes");
+
+            const currentLang = i18n.language;
+
+            if (currentLang === 'en') {
+                setSchemes(rawSchemesData);
+                return;
+            }
+
+            const translatedData = await Promise.all(rawSchemesData.map(async (item) => {
+                return {
+                    ...item,
+                    name: await translateText(item.name, currentLang),
+                    provider: await translateText(item.provider, currentLang),
+                    amount: await translateText(item.amount, currentLang),
+                    description: await translateText(item.description, currentLang),
+                    eligibility: await translateText(item.eligibility, currentLang),
+                    applyDate: await translateText(item.applyDate, currentLang),
+                    paymentDate: await translateText(item.paymentDate, currentLang),
+                };
+            }));
+
+            setSchemes(translatedData);
+        } catch (err) {
+            console.error("Failed to fetch schemes:", err);
+            setError("Could not load government schemes. Please verify your connection.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // EFFECT: Fetch & Translate
     useEffect(() => {
-        const processSchemes = async () => {
-            setLoading(true);
-            try {
-                // Fetch from real backend
-                const { data: rawSchemesData } = await api.get("/admin/schemes");
-
-                const currentLang = i18n.language;
-
-                if (currentLang === 'en') {
-                    setSchemes(rawSchemesData);
-                    setLoading(false);
-                    return;
-                }
-
-                const translatedData = await Promise.all(rawSchemesData.map(async (item) => {
-                    return {
-                        ...item,
-                        name: await translateText(item.name, currentLang),
-                        provider: await translateText(item.provider, currentLang),
-                        amount: await translateText(item.amount, currentLang),
-                        description: await translateText(item.description, currentLang),
-                        eligibility: await translateText(item.eligibility, currentLang),
-                        applyDate: await translateText(item.applyDate, currentLang),
-                        paymentDate: await translateText(item.paymentDate, currentLang),
-                    };
-                }));
-
-                setSchemes(translatedData);
-            } catch (err) {
-                console.error("Failed to fetch schemes:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         processSchemes();
     }, [i18n.language]);
 
@@ -92,99 +97,112 @@ const Schemes = () => {
                 />
 
                 {loading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
-                        <span className="ml-2 text-gray-500">Translating content...</span>
-                    </div>
-                ) : filteredSchemes.length === 0 ? (
+                    <CardSkeleton count={3} />
+                ) : error ? (
+                    <ErrorState
+                        title="Unable to Load Schemes"
+                        message={error}
+                        onRetry={processSchemes}
+                    />
+                ) : searchTerm && filteredSchemes.length === 0 ? (
+                    <NoSearchResults
+                        query={searchTerm}
+                        onClear={() => setSearchTerm("")}
+                        suggestions={[
+                            "Search for major schemes like Rythu Bandhu, PM-Kisan, or Drip Irrigation",
+                            "Search by authority like Central Government or State Agriculture Department",
+                            "Clear your search query to view all active farmer support programs"
+                        ]}
+                    />
+                ) : schemes.length === 0 ? (
                     <EmptyState 
-                        title="No Government Schemes Found" 
-                        description={searchTerm ? "Try searching with different keywords." : "New government schemes will appear here when published."}
+                        title="No Government Schemes Published Yet" 
+                        description="Verified state and central agricultural subsidy programs will appear here with application deadlines and direct portals."
+                        tip="AgriSpine synchronizes official DBT and subsidy announcements directly from government gazettes."
                         icon={Landmark}
-                        actionText={searchTerm ? "Clear Search" : undefined}
-                        onAction={searchTerm ? () => setSearchTerm("") : undefined}
+                        actionText="Refresh Schemes"
+                        onAction={processSchemes}
                     />
                 ) : (
                     <div className="space-y-4">
                         {filteredSchemes.map((scheme) => (
                             <Card
                                 key={scheme._id}
-                                className={`transition-all duration-300 overflow-hidden ${expandedId === scheme._id ? 'border-primary ring-1 ring-primary/20 shadow-md' : 'hover:border-primary/50'}`}
+                                className="transition-all duration-200 hover:shadow-md border-l-4 border-l-orange-500 overflow-hidden"
                             >
-
-                                {/* Card Header */}
-                                <div onClick={() => toggleScheme(scheme._id)} className="p-5 flex justify-between items-start cursor-pointer select-none">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            {/* Dynamic Provider Name */}
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${scheme.providerColor}`}>
+                                <div
+                                    onClick={() => toggleScheme(scheme._id)}
+                                    className="p-5 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4"
+                                >
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300">
                                                 {scheme.provider}
                                             </span>
+                                            {scheme.status && (
+                                                <span className={`text-xs px-2 py-0.5 rounded-full ${scheme.status === 'Active' ? 'bg-green-100 dark:bg-emerald-950/60 text-green-700 dark:text-emerald-300' : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300'}`}>
+                                                    {scheme.status}
+                                                </span>
+                                            )}
                                         </div>
-                                        {/* Dynamic Scheme Name */}
-                                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{scheme.name}</h3>
-                                        {/* Dynamic Amount */}
-                                        <p className="text-green-700 dark:text-green-400 font-bold text-sm mt-1 bg-green-50 dark:bg-green-950/60 inline-block px-2 py-0.5 rounded-md border border-green-100 dark:border-green-900">
-                                            💰 {scheme.amount}
-                                        </p>
+                                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                                            {scheme.name}
+                                        </h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-1">{scheme.description}</p>
                                     </div>
 
-                                    <div className={`p-2 rounded-full transition-colors ${expandedId === scheme._id ? 'bg-primary/10 text-primary' : 'text-gray-400'}`}>
-                                        {expandedId === scheme._id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                    <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-3 md:pt-0">
+                                        <div className="text-left md:text-right">
+                                            <span className="text-xs text-gray-400 block">{t('schemes.financial_benefit', { defaultValue: 'Financial Benefit' })}</span>
+                                            <span className="text-lg font-bold text-green-600 dark:text-green-400">{scheme.amount}</span>
+                                        </div>
+                                        <div className="text-gray-400">
+                                            {expandedId === scheme._id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Expanded Details */}
+                                {/* Expanded Content */}
                                 {expandedId === scheme._id && (
-                                    <div className="px-5 pb-6 pt-0 animate-in fade-in slide-in-from-top-1">
-                                        <div className="border-t border-border pt-4 space-y-4">
+                                    <div className="px-5 pb-5 pt-2 border-t border-gray-100 dark:border-slate-700/60 bg-gray-50/50 dark:bg-slate-900/40 space-y-4">
+                                        <div>
+                                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t('schemes.about', { defaultValue: 'About the Scheme' })}</h4>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{scheme.description}</p>
+                                        </div>
 
-                                            {/* Dates Section */}
-                                            <div className="bg-primary/5 dark:bg-primary/10 p-4 rounded-lg border border-primary/20 space-y-3">
-                                                <div className="flex gap-3">
-                                                    <div className="mt-0.5"><Calendar className="w-4 h-4 text-primary" /></div>
-                                                    <div>
-                                                        {/* STATIC HEADER: Application Period */}
-                                                        <h4 className="font-bold text-gray-700 dark:text-gray-300 text-xs uppercase">{t('schemes.app_period', { defaultValue: 'Application Period' })}</h4>
-                                                        {/* DYNAMIC CONTENT */}
-                                                        <p className="text-gray-800 dark:text-gray-100 text-sm font-medium">{scheme.applyDate}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-3">
-                                                    <div className="mt-0.5"><Clock className="w-4 h-4 text-primary" /></div>
-                                                    <div>
-                                                        {/* STATIC HEADER: Expected Payment */}
-                                                        <h4 className="font-bold text-gray-700 dark:text-gray-300 text-xs uppercase">{t('schemes.exp_payment', { defaultValue: 'Expected Payment' })}</h4>
-                                                        {/* DYNAMIC CONTENT */}
-                                                        <p className="text-gray-800 dark:text-gray-100 text-sm font-medium">{scheme.paymentDate}</p>
-                                                    </div>
-                                                </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-100 dark:border-slate-700">
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                                    <CheckCircle className="w-3.5 h-3.5 text-green-500" /> {t('schemes.eligibility', { defaultValue: 'Eligibility Criteria' })}
+                                                </h4>
+                                                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{scheme.eligibility}</p>
                                             </div>
 
-                                            {/* Standard Details */}
-                                            <div className="grid md:grid-cols-2 gap-4">
-                                                <div className="space-y-1">
-                                                    {/* STATIC HEADER: Details */}
-                                                    <h4 className="font-semibold text-gray-500 text-xs uppercase flex items-center gap-1"><Info className="w-4 h-4" /> {t('schemes.details', { defaultValue: 'Details' })}</h4>
-                                                    {/* DYNAMIC CONTENT */}
-                                                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{scheme.description}</p>
+                                            <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-100 dark:border-slate-700 space-y-2">
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                                    <Clock className="w-3.5 h-3.5 text-orange-500" /> {t('schemes.important_timeline', { defaultValue: 'Important Timeline' })}
+                                                </h4>
+                                                <div className="flex justify-between text-sm py-1 border-b border-gray-50 dark:border-slate-700">
+                                                    <span className="text-gray-500 dark:text-gray-400">{t('schemes.application_window', { defaultValue: 'Application Window' })}:</span>
+                                                    <span className="font-medium text-gray-800 dark:text-gray-200">{scheme.applyDate || 'Always Open'}</span>
                                                 </div>
-                                                <div className="space-y-1">
-                                                    {/* STATIC HEADER: Eligibility */}
-                                                    <h4 className="font-semibold text-gray-500 text-xs uppercase flex items-center gap-1"><CheckCircle className="w-4 h-4 text-green-600" /> {t('schemes.eligibility', { defaultValue: 'Eligibility' })}</h4>
-                                                    {/* DYNAMIC CONTENT */}
-                                                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{scheme.eligibility}</p>
+                                                <div className="flex justify-between text-sm py-1">
+                                                    <span className="text-gray-500 dark:text-gray-400">{t('schemes.disbursement_window', { defaultValue: 'Disbursement Window' })}:</span>
+                                                    <span className="font-medium text-gray-800 dark:text-gray-200">{scheme.paymentDate || 'Direct Benefit Transfer (DBT)'}</span>
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            {/* Action Button */}
-                                            <div className="pt-2 flex justify-end">
-                                                <a href={scheme.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-primary border border-primary/30 hover:bg-primary/5 font-semibold px-4 py-2 rounded-lg transition text-sm min-h-[44px]">
-                                                    {/* STATIC BUTTON TEXT */}
-                                                    {t('schemes.website', { defaultValue: 'Official Website' })} <ExternalLink className="w-4 h-4" />
-                                                </a>
-                                            </div>
-
+                                        <div className="pt-2 flex justify-end">
+                                            <a
+                                                href={scheme.link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition active:scale-95"
+                                            >
+                                                <span>{t('schemes.apply_official', { defaultValue: 'Apply on Official Portal' })}</span>
+                                                <ExternalLink className="w-4 h-4" />
+                                            </a>
                                         </div>
                                     </div>
                                 )}
@@ -193,7 +211,6 @@ const Schemes = () => {
                     </div>
                 )}
             </div>
-            
         </div>
     );
 };

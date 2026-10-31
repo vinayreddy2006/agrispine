@@ -13,6 +13,8 @@ import {
 import { useTranslation } from "react-i18next";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/ui/EmptyState";
+import NoSearchResults from "../../components/ui/NoSearchResults";
+import { CardSkeleton } from "../../components/ui/LoadingSkeleton";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import BookingCalendar from "./components/BookingCalendar";
 import ReviewModal from "./components/ReviewModal";
@@ -741,23 +743,35 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
 
                                 {/* Machine Cards Grid */}
                                 {loadingMachines ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                                        {[1, 2, 3, 4, 5, 6].map(i => (
-                                            <div key={i} className="h-72 rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 animate-pulse"></div>
-                                        ))}
-                                    </div>
+                                    <CardSkeleton count={6} />
                                 ) : filteredMachines.length === 0 ? (
-                                    <EmptyState
-                                        title="No Machinery Found"
-                                        description="No equipment matches your search or filters. Try adjusting your search query or location settings."
-                                        icon={Tractor}
-                                        actionText="Reset Filters"
-                                        onAction={() => {
-                                            setSearchQuery("");
-                                            setSelectedCategory("All");
-                                            setProximityFilter("all");
-                                        }}
-                                    />
+                                    searchQuery || selectedCategory !== "All" || proximityFilter !== "all" ? (
+                                        <NoSearchResults
+                                            query={searchQuery || (selectedCategory !== "All" ? selectedCategory : "")}
+                                            onClear={() => {
+                                                setSearchQuery("");
+                                                setSelectedCategory("All");
+                                                setProximityFilter("all");
+                                            }}
+                                            suggestions={[
+                                                "Switch category back to 'All' to view all available machines",
+                                                "Broaden your proximity radius to check machinery in neighboring villages",
+                                                "Clear keyword search to explore the entire active fleet"
+                                            ]}
+                                        />
+                                    ) : (
+                                        <EmptyState
+                                            title="No Machinery Found"
+                                            description="No equipment matches your search or filters. Try adjusting your search query or location settings."
+                                            icon={Tractor}
+                                            actionText="Reset Filters"
+                                            onAction={() => {
+                                                setSearchQuery("");
+                                                setSelectedCategory("All");
+                                                setProximityFilter("all");
+                                            }}
+                                        />
+                                    )
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                                         {filteredMachines.map(m => {

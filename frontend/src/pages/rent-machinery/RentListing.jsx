@@ -10,6 +10,9 @@ import {
 import { useTranslation } from "react-i18next";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
+import NoSearchResults from "../../components/ui/NoSearchResults";
+import { CardSkeleton } from "../../components/ui/LoadingSkeleton";
 
 const CATEGORIES = [
     "All",
@@ -56,6 +59,7 @@ const RentListing = () => {
     // Raw Data State
     const [machines, setMachines] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
 
     // Selected location (Defaults to user profile village, customizable by user)
@@ -102,22 +106,25 @@ const RentListing = () => {
         }
     }, []);
 
+    const fetchMachines = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem("token");
+            const headers = token ? { "auth-token": token } : {};
+
+            const { data } = await api.get('/machines/fetchall', { headers });
+            setMachines(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Failed to fetch machinery listings:", err);
+            setError("Could not retrieve farm machinery listings. Please check your network connection.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Fetch All Machines from Backend so that all public listings remain accessible
     useEffect(() => {
-        const fetchMachines = async () => {
-            setLoading(true);
-            try {
-                const token = localStorage.getItem("token");
-                const headers = token ? { "auth-token": token } : {};
-
-                const { data } = await api.get('/machines/fetchall', { headers });
-                setMachines(Array.isArray(data) ? data : []);
-            } catch (err) {
-                console.error("Failed to fetch machinery listings:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchMachines();
     }, []);
 
@@ -775,26 +782,40 @@ const RentListing = () => {
                 {/* 3. EQUIPMENT LISTINGS GRID                                      */}
                 {/* ============================================================== */}
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 animate-pulse space-y-4">
-                                <div className="h-48 bg-slate-200 dark:bg-slate-700 rounded-2xl w-full"></div>
-                                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
-                                <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl w-full"></div>
-                            </div>
-                        ))}
-                    </div>
-                ) : filteredAndSortedMachines.length === 0 ? (
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-12 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-xs">
-                        <EmptyState 
-                            title={t('rent.no_found', { defaultValue: 'No machinery found matching your filters' })}
-                            description="Try clearing your search keyword, adjusting the price range, or selecting another equipment category."
-                            icon={Tractor}
-                            actionText="Reset All Filters"
-                            onAction={handleResetFilters}
+                    <CardSkeleton count={6} />
+                ) : error ? (
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-700/80">
+                        <ErrorState
+                            title="Failed to Load Machinery"
+                            message={error}
+                            onRetry={fetchMachines}
                         />
                     </div>
+                ) : filteredAndSortedMachines.length === 0 ? (
+                    activeFiltersCount > 0 || searchQuery ? (
+                        <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-700/80">
+                            <NoSearchResults
+                                query={searchQuery || (selectedCategory !== 'All' ? selectedCategory : '')}
+                                onClear={handleResetFilters}
+                                suggestions={[
+                                    "Switch category filter back to 'All' to view all available machines",
+                                    "Change your location filter or proximity radius to see nearby equipment",
+                                    "Clear custom price or rating filters to broaden matching machinery"
+                                ]}
+                            />
+                        </div>
+                    ) : (
+                        <div className="bg-white dark:bg-slate-800 rounded-3xl p-12 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-xs">
+                            <EmptyState 
+                                title={t('rent.no_found', { defaultValue: 'No machinery listed in the marketplace yet' })}
+                                description="Farm machinery listed by local machine owners will appear here for rent."
+                                tip="Own a tractor, harvester, or drone? Add your equipment to start receiving rental booking requests from nearby farmers."
+                                icon={Tractor}
+                                actionText="Add My Machine"
+                                onAction={() => navigate('/add-machine')}
+                            />
+                        </div>
+                    )
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
                         {filteredAndSortedMachines.map((machine) => {

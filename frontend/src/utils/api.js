@@ -10,6 +10,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 25000, // 25s timeout to catch hanging slow network
 });
 
 // Attach auth token to outgoing requests automatically
@@ -24,8 +25,35 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Centralized Expired JWT / 401 Handling
+// Centralized Expired JWT / 401 Handling (Principle 8)
 let isSessionExpiredAlertOpen = false;
+
+/**
+ * Capture active form inputs so farmer's draft is not lost when session expires
+ */
+const preserveDraftForm = () => {
+  try {
+    const activeForm = document.querySelector("form");
+    if (activeForm) {
+      const formData = new FormData(activeForm);
+      const draft = {};
+      formData.forEach((val, key) => {
+        if (typeof val === 'string' && val.length > 0 && !key.includes('password')) {
+          draft[key] = val;
+        }
+      });
+      if (Object.keys(draft).length > 0) {
+        sessionStorage.setItem("agrispine_draft_backup", JSON.stringify({
+          path: window.location.pathname,
+          timestamp: Date.now(),
+          data: draft,
+        }));
+      }
+    }
+  } catch (err) {
+    console.debug("Draft preservation skipped:", err);
+  }
+};
 
 api.interceptors.response.use(
   (response) => response,
@@ -43,9 +71,14 @@ api.interceptors.response.use(
       const hasStoredToken = !!localStorage.getItem("token");
 
       if (isExpired || hasStoredToken) {
+        preserveDraftForm();
+
         // Clear expired credentials immediately
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+
+        // Notify app listeners if any
+        window.dispatchEvent(new CustomEvent("agrispine_session_expired"));
 
         // Avoid alert loops or duplicates across parallel failing calls
         const currentPath = window.location.pathname + window.location.search;
@@ -57,9 +90,9 @@ api.interceptors.response.use(
           Swal.fire({
             icon: "warning",
             title: "Session Expired",
-            text: "Your login session has expired. Please log in again to continue.",
+            text: "Your login session has expired. For your security, please log in again.",
             confirmButtonColor: "#16a34a",
-            confirmButtonText: "Log In",
+            confirmButtonText: "Log In Again",
             allowOutsideClick: false,
           }).then(() => {
             isSessionExpiredAlertOpen = false;
