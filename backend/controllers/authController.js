@@ -1,4 +1,6 @@
 import User from "../models/User.js";
+import CropCycle from "../models/CropCycle.js";
+import Post from "../models/Post.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -19,7 +21,7 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 3. Create User
+    // 3. Create User (registration location remains untouched per requirements)
     const newUser = new User({
       name,
       phone,
@@ -27,6 +29,7 @@ export const register = async (req, res) => {
       userType,
       village,
       district,
+      isLocationConfirmed: false
     });
 
     const savedUser = await newUser.save();
@@ -42,7 +45,7 @@ export const register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Register Error:", error); // Log for developer
+    console.error("❌ Register Error:", error);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
@@ -80,7 +83,14 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         userType: user.userType,
-        village: user.village
+        village: user.village || "",
+        mandal: user.mandal || "",
+        district: user.district || "",
+        state: user.state || "",
+        isLocationConfirmed: !!user.isLocationConfirmed,
+        locationCoordinates: user.locationCoordinates,
+        placeId: user.placeId || "",
+        formattedAddress: user.formattedAddress || ""
       },
     });
 
@@ -105,6 +115,40 @@ export const getUser = async (req, res) => {
   }
 };
 
+/* -------------------------------------------------------------------------- */
+/* CONFIRM LOCATION (PUT /api/auth/confirm-location)                           */
+/* -------------------------------------------------------------------------- */
+export const confirmLocation = async (req, res) => {
+  try {
+    const { village, mandal, district, state, coordinates, placeId, formattedAddress } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        $set: {
+          village: village || "",
+          mandal: mandal || "",
+          district: district || "",
+          state: state || "",
+          isLocationConfirmed: true,
+          locationCoordinates: coordinates || undefined,
+          placeId: placeId || "",
+          formattedAddress: formattedAddress || ""
+        }
+      },
+      { new: true }
+    ).select("-password");
+
+    res.json({
+      success: true,
+      message: "Location confirmed successfully",
+      user
+    });
+  } catch (error) {
+    console.error("Error confirming location:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
 
 /* -------------------------------------------------------------------------- */
 /* UPDATE USER PROFILE                                                        */
@@ -112,28 +156,35 @@ export const getUser = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { 
-      name, village, district, bio, profileImage,
+      name, village, mandal, district, state, bio, profileImage,
       farmingStartYear, landPlots,
-      mainCrops, farmingStyle, preferredLanguage
+      mainCrops, farmingStyle, preferredLanguage,
+      locationCoordinates, placeId, formattedAddress, isLocationConfirmed
     } = req.body;
     
     const newDetails = {};
     if (name) newDetails.name = name;
-    if (village) newDetails.village = village;
-    if (district) newDetails.district = district;
-    if (bio) newDetails.bio = bio;
-    if (profileImage) newDetails.profileImage = profileImage;
+    if (village !== undefined) newDetails.village = village;
+    if (mandal !== undefined) newDetails.mandal = mandal;
+    if (district !== undefined) newDetails.district = district;
+    if (state !== undefined) newDetails.state = state;
+    if (bio !== undefined) newDetails.bio = bio;
+    if (profileImage !== undefined) newDetails.profileImage = profileImage;
     if (farmingStartYear !== undefined) newDetails.farmingStartYear = farmingStartYear;
     if (landPlots !== undefined) newDetails.landPlots = landPlots;
-    if (mainCrops) newDetails.mainCrops = mainCrops;
-    if (farmingStyle) newDetails.farmingStyle = farmingStyle;
-    if (preferredLanguage) newDetails.preferredLanguage = preferredLanguage;
+    if (mainCrops !== undefined) newDetails.mainCrops = mainCrops;
+    if (farmingStyle !== undefined) newDetails.farmingStyle = farmingStyle;
+    if (preferredLanguage !== undefined) newDetails.preferredLanguage = preferredLanguage;
+    if (locationCoordinates !== undefined) newDetails.locationCoordinates = locationCoordinates;
+    if (placeId !== undefined) newDetails.placeId = placeId;
+    if (formattedAddress !== undefined) newDetails.formattedAddress = formattedAddress;
+    if (isLocationConfirmed !== undefined) newDetails.isLocationConfirmed = isLocationConfirmed;
 
     const user = await User.findByIdAndUpdate(
       req.user.id, 
       { $set: newDetails }, 
       { new: true }
-    ).select("-password"); // Don't send back password
+    ).select("-password");
 
     res.json({ success: true, user });
 
@@ -148,7 +199,6 @@ export const getVillageMembers = async (req, res) => {
   try {
     const { village } = req.params;
     
-    // Find users in this village, select specific fields (exclude password)
     const members = await User.find({ village })
       .select("name phone userType profileImage bio village");
 
@@ -176,24 +226,17 @@ export const searchUsers = async (req, res) => {
   }
 };
 
-import CropCycle from "../models/CropCycle.js";
-import Post from "../models/Post.js";
-
 /* GET PROFILE ANALYTICS */
 export const getProfileAnalytics = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 1. Get Crop Stats
     const crops = await CropCycle.find({ user: userId });
     
     const activeCrops = crops.filter(c => c.status === 'active').length;
     const completedCrops = crops.filter(c => c.status === 'harvested' || c.status === 'sold').length;
     
-    // 2. Get Expenses Recorded
     const expensesRecorded = crops.reduce((total, crop) => total + crop.expenses.length, 0);
-
-    // 3. Get Forum Posts
     const forumPosts = await Post.countDocuments({ user: userId });
 
     res.json({

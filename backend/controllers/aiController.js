@@ -1,6 +1,9 @@
 import FormData from "form-data";
 import AIChat from "../models/AIChat.js";
+import User from "../models/User.js";
+import CropCycle from "../models/CropCycle.js";
 import { getUserContext, forwardToFastAPI, forwardVoiceToFastAPI, findMessengerConversations } from "../services/aiService.js";
+import { getAgriculturalRecommendations } from "../services/recommendationService.js";
 
 // 1. GET ALL CHATS
 export const getAllChats = async (req, res) => {
@@ -207,5 +210,49 @@ export const getMessengerConversationByName = async (req, res) => {
     } catch (error) {
         console.error("Messenger AI ConvByName Error:", error);
         res.status(500).json({ error: "Failed to fetch conversation by name" });
+    }
+};
+
+// 8. INTELLIGENT AGRICULTURAL RECOMMENDATIONS
+export const getWeatherRecommendations = async (req, res) => {
+    try {
+        const { weather, forecast, locationName } = req.body;
+        if (!weather) {
+            return res.status(400).json({ error: "Weather data is required" });
+        }
+
+        let userCrops = [];
+        let userProfile = {};
+
+        if (req.user && req.user.id) {
+            try {
+                const [crops, user] = await Promise.all([
+                    CropCycle.find({ user: req.user.id, status: 'active' }).select('cropName area sowingDate status'),
+                    User.findById(req.user.id).select('name village district landPlots mainCrops farmingStyle')
+                ]);
+                userCrops = crops || [];
+                userProfile = user || {};
+            } catch (err) {
+                console.warn("Could not fetch user crop context for recommendations:", err.message);
+            }
+        }
+
+        const result = await getAgriculturalRecommendations({
+            weather,
+            forecast,
+            userCrops,
+            userProfile,
+            locationName: locationName || weather?.name || ''
+        });
+
+        res.json({
+            success: true,
+            ...result,
+            locationName: locationName || weather?.name || '',
+            generatedAt: new Date()
+        });
+    } catch (error) {
+        console.error("Weather recommendations error:", error);
+        res.status(500).json({ error: "Failed to generate agricultural recommendations", details: error.message });
     }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ToggleLeft, ToggleRight, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Users, ShieldCheck } from 'lucide-react';
 import { getGroupById, getGroupAnalytics, getGroupWorkRecords } from '../../api/groupService';
 
 import AdminDashboard from './admin/AdminDashboard';
@@ -108,12 +108,36 @@ const GroupDetails = () => {
                 </div>
                 
                 {isAdmin && (
-                    <div className="flex items-center gap-3 bg-white dark:bg-slate-800/90 px-5 py-2.5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80">
-                        <span className={`text-sm font-bold tracking-wide transition-colors ${viewMode === 'member' ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>My View</span>
-                        <button onClick={handleViewModeToggle} className="text-slate-300 hover:text-green-500 transition-colors drop-shadow-sm">
-                            {viewMode === 'admin' ? <ToggleRight className="w-9 h-9 text-green-500" /> : <ToggleLeft className="w-9 h-9" />}
+                    <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl shadow-inner border border-slate-200/50 dark:border-slate-700/50">
+                        <button
+                            onClick={() => {
+                                setViewMode('member');
+                                localStorage.setItem('groupViewMode', 'member');
+                            }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${
+                                viewMode === 'member'
+                                    ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                        >
+                            <Users className="w-4 h-4 text-emerald-600" />
+                            <span>My Workgroup</span>
                         </button>
-                        <span className={`text-sm font-bold tracking-wide transition-colors ${viewMode === 'admin' ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>Admin View</span>
+
+                        <button
+                            onClick={() => {
+                                setViewMode('admin');
+                                localStorage.setItem('groupViewMode', 'admin');
+                            }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${
+                                viewMode === 'admin'
+                                    ? 'bg-emerald-600 text-white shadow-sm'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                        >
+                            <ShieldCheck className="w-4 h-4" />
+                            <span>Admin Dashboard</span>
+                        </button>
                     </div>
                 )}
             </div>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, TrendingUp, LogOut, Users, MessageSquare, BarChart2, Megaphone, Calendar, Menu, X } from "lucide-react";
+import { LayoutDashboard, FileText, TrendingUp, LogOut, Users, MessageSquare, BarChart2, Megaphone, Calendar, Menu, X, ShieldAlert } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
 
 const AdminLayout = () => {
@@ -35,6 +35,7 @@ const AdminLayout = () => {
         { path: "/events", label: "Events", icon: Calendar },
         { path: "/schemes", label: "Govt Schemes", icon: FileText },
         { path: "/mandi-rates", label: "Mandi Rates", icon: TrendingUp },
+        { path: "/moderation", label: "Community Moderation", icon: ShieldAlert },
     ];
 
     return (

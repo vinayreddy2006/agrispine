@@ -1,5 +1,15 @@
 {
-  "common": { "back": "Back", "save": "Save", "cancel": "Cancel", "edit": "Edit", "delete": "Delete", "logout": "Log Out", "yes": "Yes", "no": "No", "all": "All" },
+  "common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "logout": "Log Out",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All"
+  },
   "landing": {
     "badge": "The Future of Farming is Here",
     "hero_title_1": "Smart Tech for",
@@ -139,8 +149,8 @@
     "title": "Farmers Forum",
     "ask": "Ask Question",
     "global": "Global Feed",
-    "my_q": "My Questions",
-    "my_a": "My Participation",
+    "my_q": "My Posts",
+    "my_a": "My Discussions",
     "create": "Create Discussion",
     "post": "Post Discussion",
     "no_posts": "No posts found",
@@ -149,9 +159,9 @@
     "desc_ph": "Describe details...",
     "posted_title": "Posted!",
     "posted_msg": "Your question is live.",
-    "empty_all": "Be the first to ask!",
-    "empty_q": "You haven't asked anything yet.",
-    "empty_a": "No replies yet.",
+    "empty_all": "Be the first to post in the community!",
+    "empty_q": "You haven't published any posts yet.",
+    "empty_a": "You haven't participated in any discussions yet.",
     "replies": "Replies",
     "reply": "Reply",
     "no_replies_yet": "No replies yet.",
@@ -280,5 +290,4 @@
     "soybean": "Soybean",
     "turmeric": "Turmeric"
   }
-  
 }

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import api from "../../utils/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Sprout, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 const Login = () => {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({ phone: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +27,13 @@ const Login = () => {
       const { data } = await api.post("/auth/login", formData);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/dashboard");
+      
+      const redirectTarget = searchParams.get("redirect");
+      if (redirectTarget && !redirectTarget.startsWith("/login") && !redirectTarget.startsWith("/register")) {
+        navigate(redirectTarget);
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError(err.response?.data?.message || t('auth.login_fail', { defaultValue: "Login failed" }));
     } finally {

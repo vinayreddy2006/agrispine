@@ -19,13 +19,22 @@ const userSchema = new mongoose.Schema({
     enum: ['farmer', 'provider', 'buyer'], 
     default: 'farmer' 
   },
-  village: { type: String },
-  district: { type: String },
+  village: { type: String, default: "" },
+  mandal: { type: String, default: "" },
+  district: { type: String, default: "" },
+  state: { type: String, default: "" },
+  isLocationConfirmed: { type: Boolean, default: false },
+  locationCoordinates: {
+    lat: { type: Number },
+    lng: { type: Number },
+  },
+  placeId: { type: String, default: "" },
+  formattedAddress: { type: String, default: "" },
   bio: { type: String, default: "" },
   profileImage: { type: String, default: "" },
   
   // Rich Profile Additions
-  farmingStartYear: { type: Number }, // Replaces farmingExperience
+  farmingStartYear: { type: Number },
   landPlots: [
     {
       name: { type: String, default: 'Main Plot' },

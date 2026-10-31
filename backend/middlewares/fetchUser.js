@@ -28,8 +28,33 @@ const fetchUser = (req, res, next) => {
     
   } catch (error) {
     console.error("Token Verification Error:", error.message);
-    res.status(401).json({ error: "Invalid Token" });
+    const isExpired = error.name === "TokenExpiredError" || (error.message && error.message.toLowerCase().includes("jwt expired"));
+    res.status(401).json({ 
+      error: isExpired ? "jwt expired" : "Invalid Token",
+      message: isExpired ? "Your login session has expired. Please log in again to continue." : "Invalid Token"
+    });
   }
+};
+
+export const optionalFetchUser = (req, res, next) => {
+  const token = req.header("auth-token");
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+  try {
+    const data = jwt.verify(token, process.env.JWT_SECRET);
+    if (data.user) {
+      req.user = data.user;
+    } else if (data.id) {
+      req.user = { id: data.id };
+    } else {
+      req.user = null;
+    }
+  } catch (err) {
+    req.user = null;
+  }
+  next();
 };
 
 export default fetchUser;

@@ -10,6 +10,7 @@ import AdminGroups from "./pages/admin/AdminGroups";
 import AdminPolls from "./pages/admin/AdminPolls";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminEvents from "./pages/admin/AdminEvents";
+import AdminModeration from "./pages/admin/AdminModeration";
 import AdminLanding from "./pages/admin/AdminLanding";
 import AdminRegister from "./pages/admin/AdminRegister";
 
@@ -30,6 +31,7 @@ const App = () => {
           <Route path="/events" element={<AdminEvents />} />
           <Route path="/schemes" element={<AdminSchemes />} />
           <Route path="/mandi-rates" element={<AdminMandiRates />} />
+          <Route path="/moderation" element={<AdminModeration />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

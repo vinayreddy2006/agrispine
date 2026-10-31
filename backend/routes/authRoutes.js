@@ -1,7 +1,18 @@
 import express from "express";
-import { register, login, getUser, updateProfile, getVillageMembers, getProfileAnalytics, searchUsers, blockUser, unblockUser, getBlockedUsers } from "../controllers/authController.js";
+import { 
+  register, 
+  login, 
+  getUser, 
+  confirmLocation, 
+  updateProfile, 
+  getVillageMembers, 
+  getProfileAnalytics, 
+  searchUsers, 
+  blockUser, 
+  unblockUser, 
+  getBlockedUsers 
+} from "../controllers/authController.js";
 import fetchUser from "../middlewares/fetchUser.js";
-
 
 const router = express.Router();
 
@@ -9,6 +20,7 @@ const router = express.Router();
 router.post("/register", register);
 router.post("/login", login);
 router.post("/getuser", fetchUser, getUser);
+router.put("/confirm-location", fetchUser, confirmLocation);
 router.put("/updateprofile", fetchUser, updateProfile);
 router.get("/members/:village", fetchUser, getVillageMembers);
 router.get("/profile-analytics", fetchUser, getProfileAnalytics);

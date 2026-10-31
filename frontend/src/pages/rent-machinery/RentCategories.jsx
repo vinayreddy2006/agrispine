@@ -1,12 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Tractor, ChevronRight, Plus, ClipboardList, Settings, PlusCircle, Search } from "lucide-react";
-import { useTranslation } from "react-i18next"; // 1. Import Hook
-import LanguageSwitcher from "../../components/LanguageSwitcher"; // 2. Import Switcher
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/ui/EmptyState";
 
-// Matches your "Add Machine" dropdown exactly
 const CATEGORIES = [
     { name: "Tractor", img: "/machines/tractor.png", color: "group-hover:text-blue-600" },
     { name: "Harvester", img: "/machines/harvestor.png", color: "group-hover:text-green-600" },
@@ -20,7 +19,7 @@ const CATEGORIES = [
 ];
 
 const RentCategories = () => {
-    const { t } = useTranslation(); // 3. Initialize Hook
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = React.useState("");
 
@@ -91,7 +90,22 @@ const RentCategories = () => {
                             className="w-full !pl-14 pr-4 py-4 rounded-2xl text-gray-800 focus:outline-none focus:ring-4 focus:ring-green-400/50 shadow-2xl text-lg border-0"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && searchQuery.trim()) {
+                                    navigate(`/rent/list/all?q=${encodeURIComponent(searchQuery.trim())}`);
+                                }
+                            }}
                         />
+                    </div>
+
+                    <div className="mt-5 flex items-center justify-center gap-3">
+                        <button
+                            onClick={() => navigate("/rent/list/all")}
+                            className="px-6 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold backdrop-blur-md transition shadow-md inline-flex items-center gap-2 text-sm"
+                        >
+                            <span>Browse All Machinery</span>
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
             </div>
@@ -113,7 +127,6 @@ const RentCategories = () => {
                             {/* Text */}
                             <div className="text-center">
                                 <h3 className={`font-bold text-gray-800 text-lg transition-colors ${cat.color}`}>
-                                    {/* Dynamic Translation: 'machines.tractor', 'machines.rice_planter' */}
                                     {t(`machines.${cat.name.toLowerCase().replace(" ", "_")}`, { defaultValue: cat.name })}
                                 </h3>
                                 <p className="text-xs text-gray-400 mt-1 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity font-medium uppercase tracking-wide">

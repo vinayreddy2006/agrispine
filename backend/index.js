@@ -21,6 +21,7 @@ import pollRoutes from "./routes/pollRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 import Message from "./models/Message.js";
 
 // 👇 DEFINE __dirname MANUALLY (Required for ES Modules)
@@ -162,7 +163,6 @@ const connectDB = async (retries = 5, delay = 5000) => {
       setTimeout(() => connectDB(retries - 1, delay), delay);
     } else {
       console.error("❌ MongoDB Connection Failed after retries. Operating in degraded mode.");
-      // DO NOT process.exit(1);
     }
   }
 };
@@ -187,6 +187,9 @@ app.use("/api/groups", groupRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/bookings", bookingRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/reviews", reviewRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 let currentPort = process.env.PORT || 5000;
 

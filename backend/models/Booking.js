@@ -23,14 +23,35 @@ const BookingSchema = new mongoose.Schema({
     type: Date, 
     required: true 
   },
+
+  // Selected task / operation
+  task: {
+    name: { type: String, default: "General Work" },
+    price: { type: Number },
+    priceUnit: { type: String, default: "hour" }
+  },
+
+  duration: {
+    type: Number,
+    default: 1
+  },
+
+  totalAmount: {
+    type: Number
+  },
   
   status: { 
     type: String, 
-    enum: ['pending', 'confirmed', 'rejected', 'completed'], 
+    enum: ['pending', 'confirmed', 'accepted', 'rejected', 'cancelled', 'completed'], 
     default: 'pending' 
   },
   
-  notes: { type: String } // e.g., "Need it for 3 hours"
+  notes: { type: String }, // e.g., "Need it for 3 hours, start at 7 AM"
+
+  reviewSubmitted: {
+    type: Boolean,
+    default: false
+  }
 
 }, { timestamps: true });
 

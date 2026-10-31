@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import fetchuser from "../middlewares/fetchUser.js";
+import fetchuser, { optionalFetchUser } from "../middlewares/fetchUser.js";
 import {
     getAllChats,
     createChat,
@@ -10,7 +10,8 @@ import {
     processChat,
     processVoice,
     getAllMessengerConversations,
-    getMessengerConversationByName
+    getMessengerConversationByName,
+    getWeatherRecommendations
 } from "../controllers/aiController.js";
 
 const router = express.Router();
@@ -30,5 +31,8 @@ router.post("/voice", fetchuser, upload.single("audio_file"), processVoice);
 // Messenger AI Endpoints
 router.get("/messenger/conversations", fetchuser, getAllMessengerConversations);
 router.get("/messenger/conversation-by-name", fetchuser, getMessengerConversationByName);
+
+// Agricultural Weather Recommendations Endpoint
+router.post("/weather-recommendations", optionalFetchUser, getWeatherRecommendations);
 
 export default router;

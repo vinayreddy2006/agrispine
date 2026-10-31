@@ -19,20 +19,30 @@ const WorkHistory = ({ records, group, onUpdate }) => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex items-center gap-4">
                     <h3 className="text-xl font-bold text-slate-800 dark:text-white">Work History</h3>
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                    <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
                         <button 
                             onClick={() => setViewMode('list')}
-                            className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-green-600' : 'text-slate-500 hover:text-slate-700'}`}
-                            title="List View"
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                viewMode === 'list' 
+                                    ? 'bg-white dark:bg-slate-700 shadow-sm text-emerald-600 dark:text-emerald-400' 
+                                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                            }`}
+                            title="Switch to Card/List View"
                         >
-                            <List className="w-5 h-5" />
+                            <List className="w-4 h-4" />
+                            <span>Card View</span>
                         </button>
                         <button 
                             onClick={() => setViewMode('table')}
-                            className={`p-2 rounded-lg transition-colors ${viewMode === 'table' ? 'bg-white dark:bg-slate-700 shadow-sm text-green-600' : 'text-slate-500 hover:text-slate-700'}`}
-                            title="Table View"
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                viewMode === 'table' 
+                                    ? 'bg-white dark:bg-slate-700 shadow-sm text-emerald-600 dark:text-emerald-400' 
+                                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                            }`}
+                            title="Switch to Table View"
                         >
-                            <TableProperties className="w-5 h-5" />
+                            <TableProperties className="w-4 h-4" />
+                            <span>Table View</span>
                         </button>
                     </div>
                 </div>

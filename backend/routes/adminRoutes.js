@@ -12,7 +12,10 @@ import {
     getMandiRates,
     createMandiRate,
     updateMandiRate,
-    deleteMandiRate
+    deleteMandiRate,
+    getCommunityReports,
+    updateReportStatus,
+    takeModerationAction
 } from "../controllers/adminController.js";
 
 const router = express.Router();
@@ -51,5 +54,10 @@ router.get("/mandi-rates", getMandiRates);
 router.post("/mandi-rates", adminAuth, createMandiRate);
 router.put("/mandi-rates/:id", adminAuth, updateMandiRate);
 router.delete("/mandi-rates/:id", adminAuth, deleteMandiRate);
+
+// ---------------- COMMUNITY MODERATION ---------------- //
+router.get("/reports", adminAuth, getCommunityReports);
+router.put("/reports/:id/status", adminAuth, updateReportStatus);
+router.post("/reports/:id/action", adminAuth, takeModerationAction);
 
 export default router;
