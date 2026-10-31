@@ -5,7 +5,7 @@ import {
     MapPin, User, Filter, Search, Tractor, IndianRupee, 
     Calendar, CheckCircle, Clock, ShieldCheck, ArrowRight, 
     X, Phone, MessageSquare, ChevronDown, SlidersHorizontal, 
-    RotateCcw, Sparkles, Star, Tag, Eye, Info
+    RotateCcw, Sparkles, Star, Tag, Eye, Info, LayoutGrid
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import PageHeader from "../../components/common/PageHeader";
@@ -542,8 +542,8 @@ const RentListing = () => {
                         </button>
                     </div>
 
-                    {/* Horizontal Scrollable Category Pills */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-1 text-xs">
+                    {/* Horizontal Scrollable Category Pills with prominent 30-36px equipment illustrations */}
+                    <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1 text-xs">
                         {CATEGORIES.map((cat) => {
                             const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase();
                             const count = cat === 'All' 
@@ -553,13 +553,27 @@ const RentListing = () => {
                             return (
                                 <button
                                     key={cat}
+                                    type="button"
                                     onClick={() => handleCategoryChange(cat)}
-                                    className={`px-3 py-1.5 rounded-full whitespace-nowrap font-bold transition flex items-center gap-1.5 ${
+                                    className={`px-3.5 py-1.5 rounded-2xl whitespace-nowrap font-bold transition flex items-center gap-2.5 shrink-0 select-none border min-h-[40px] ${
                                         isSelected
-                                            ? 'bg-emerald-600 text-white shadow-xs'
-                                            : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                            : 'bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-600 hover:bg-slate-200'
                                     }`}
                                 >
+                                    {cat === 'All' ? (
+                                        <LayoutGrid 
+                                            className={`w-6 h-6 shrink-0 stroke-[2.2] ${isSelected ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} 
+                                            style={{ width: '22px', height: '22px', minWidth: '22px', minHeight: '22px' }}
+                                        />
+                                    ) : (
+                                        <img 
+                                            src={CATEGORY_IMAGES[cat.toLowerCase()] || '/machines/tractor.png'} 
+                                            alt={cat}
+                                            className="w-9 h-[26px] shrink-0 object-contain drop-shadow-xs"
+                                            style={{ width: '36px', height: '26px', minWidth: '36px', minHeight: '26px', maxWidth: '36px', maxHeight: '26px' }}
+                                        />
+                                    )}
                                     <span>{cat}</span>
                                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
                                         isSelected ? 'bg-emerald-700 text-white' : 'bg-slate-200/80 dark:bg-slate-600 text-slate-500 dark:text-slate-300'

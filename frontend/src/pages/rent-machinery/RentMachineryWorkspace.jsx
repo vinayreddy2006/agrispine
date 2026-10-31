@@ -8,7 +8,7 @@ import {
     MapPin, IndianRupee, Layers, PlusCircle, Filter, ArrowRight, 
     RotateCcw, SlidersHorizontal, ChevronRight, Eye, Sparkles, 
     Check, X, ShieldCheck, Tag, Trash2, Edit3, Power, Compass,
-    CheckCircle
+    CheckCircle, LayoutGrid
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import PageHeader from "../../components/common/PageHeader";
@@ -16,7 +16,6 @@ import EmptyState from "../../components/ui/EmptyState";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import BookingCalendar from "./components/BookingCalendar";
 import ReviewModal from "./components/ReviewModal";
-import ManageServicesModal from "./components/ManageServicesModal";
 
 // Machine categories
 const CATEGORIES = [
@@ -99,9 +98,6 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
 
     // Review Modal
     const [selectedBookingForReview, setSelectedBookingForReview] = useState(null);
-
-    // Manage Services Modal for Owner
-    const [selectedMachineForServices, setSelectedMachineForServices] = useState(null);
 
     // Sync Mode & Sub-tab with URL
     useEffect(() => {
@@ -708,22 +704,35 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                         </div>
                                     </div>
 
-                                    {/* Category Chips Carousel */}
-                                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                                    {/* Category Chips Carousel with prominent 30-36px equipment illustrations */}
+                                    <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 scrollbar-none">
                                         {CATEGORIES.map(cat => {
                                             const isActive = selectedCategory.toLowerCase() === cat.name.toLowerCase();
                                             return (
                                                 <button
                                                     key={cat.name}
+                                                    type="button"
                                                     onClick={() => setSelectedCategory(cat.name)}
-                                                    className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition flex-shrink-0 border ${
+                                                    className={`px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all shrink-0 border select-none min-h-[42px] ${
                                                         isActive 
                                                             ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
-                                                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                                                            : 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700 hover:bg-slate-100 hover:border-slate-300'
                                                     }`}
                                                 >
-                                                    <img src={cat.img} alt="" className="w-4 h-4 object-contain" />
-                                                    <span>{cat.name}</span>
+                                                    {cat.name === 'All' ? (
+                                                        <LayoutGrid 
+                                                            className={`w-6 h-6 shrink-0 stroke-[2.2] ${isActive ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} 
+                                                            style={{ width: '24px', height: '24px', minWidth: '24px', minHeight: '24px' }}
+                                                        />
+                                                    ) : (
+                                                        <img 
+                                                            src={cat.img} 
+                                                            alt={cat.name} 
+                                                            className="w-9 h-[26px] shrink-0 object-contain drop-shadow-xs" 
+                                                            style={{ width: '36px', height: '26px', minWidth: '36px', minHeight: '26px', maxWidth: '36px', maxHeight: '26px' }}
+                                                        />
+                                                    )}
+                                                    <span className="leading-none">{cat.name}</span>
                                                 </button>
                                             );
                                         })}
@@ -1264,34 +1273,22 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                                         </div>
                                                     )}
 
-                                                    {/* Actions Row */}
-                                                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
-                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setSelectedMachineForServices(m)}
-                                                                className="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 text-xs font-bold transition flex items-center gap-1.5 min-h-[36px]"
-                                                                title="Manage agricultural tasks, rates and availability"
-                                                            >
-                                                                <Wrench className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[2.2]" />
-                                                                <span>Manage & Edit Tasks</span>
-                                                            </button>
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => navigate(`/manage-machine/${m._id}`, { state: { machine: m } })}
-                                                                className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 min-h-[36px]"
-                                                                title="View full booking requests and calendar schedule"
-                                                            >
-                                                                <Eye className="w-4 h-4 text-slate-500 stroke-[2.2]" />
-                                                                <span>Details & Schedule</span>
-                                                            </button>
-                                                        </div>
+                                                    {/* Actions Row: Details & Schedule is the single entry point for viewing and managing machine services, bookings and calendar schedule */}
+                                                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => navigate(`/manage-machine/${m._id}`, { state: { machine: m } })}
+                                                            className="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center gap-2 min-h-[40px] border border-slate-200/80 dark:border-slate-700"
+                                                            title="View and manage agricultural services/tasks, incoming requests, and equipment calendar schedule"
+                                                        >
+                                                            <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[2.2]" />
+                                                            <span>Details & Schedule</span>
+                                                        </button>
 
                                                         <button
                                                             type="button"
                                                             onClick={() => handleDeleteMachine(m._id, m.name)}
-                                                            className="p-2.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                                                            className="p-2.5 rounded-xl border border-rose-200/80 dark:border-rose-900/40 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center"
                                                             title="Delete Listing"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
@@ -1499,21 +1496,6 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                     booking={selectedBookingForReview}
                     onReviewSubmitted={(bookingId) => {
                         setRenterBookings(prev => prev.map(b => b._id === bookingId ? { ...b, reviewed: true } : b));
-                    }}
-                />
-            )}
-
-            {/* Manage Services Modal for Owner */}
-            {selectedMachineForServices && (
-                <ManageServicesModal
-                    isOpen={Boolean(selectedMachineForServices)}
-                    onClose={() => setSelectedMachineForServices(null)}
-                    machine={selectedMachineForServices}
-                    onServicesUpdated={(updatedTasks) => {
-                        setOwnerMachines(prev => prev.map(m => 
-                            m._id === selectedMachineForServices._id ? { ...m, tasks: updatedTasks } : m
-                        ));
-                        setSelectedMachineForServices(prev => prev ? { ...prev, tasks: updatedTasks } : null);
                     }}
                 />
             )}
