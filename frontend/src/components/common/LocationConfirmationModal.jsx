@@ -402,3 +402,4 @@ const LocationConfirmationModal = ({ isOpen, onClose, onLocationConfirmed, initi
 };
 
 export default LocationConfirmationModal;
+

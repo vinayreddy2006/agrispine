@@ -76,6 +76,7 @@ const RentListing = () => {
     const [selectedAvailability, setSelectedAvailability] = useState('all'); // 'all' | 'available' | 'booked'
     const [selectedUnit, setSelectedUnit] = useState('all'); // 'all' | 'hour' | 'acre' | 'day'
     const [selectedCondition, setSelectedCondition] = useState('all'); // 'all' | 'Excellent' | 'Good' | 'Fair'
+    const [selectedRating, setSelectedRating] = useState('all'); // 'all' | '4' | '3'
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [sortBy, setSortBy] = useState('recommended'); // 'recommended' | 'nearest' | 'price_asc' | 'price_desc' | 'rating_desc'
@@ -101,7 +102,7 @@ const RentListing = () => {
         }
     }, []);
 
-    // Fetch Machines from Backend
+    // Fetch All Machines from Backend so that all public listings remain accessible
     useEffect(() => {
         const fetchMachines = async () => {
             setLoading(true);
@@ -109,12 +110,7 @@ const RentListing = () => {
                 const token = localStorage.getItem("token");
                 const headers = token ? { "auth-token": token } : {};
 
-                // If type is 'all' or empty, fetch all; otherwise fetch by category
-                const endpoint = (!type || type.toLowerCase() === 'all') 
-                    ? '/machines/fetchall' 
-                    : `/machines/type/${type}`;
-
-                const { data } = await api.get(endpoint, { headers });
+                const { data } = await api.get('/machines/fetchall', { headers });
                 setMachines(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Failed to fetch machinery listings:", err);
@@ -123,7 +119,13 @@ const RentListing = () => {
             }
         };
         fetchMachines();
-    }, [type]);
+    }, []);
+
+    const handleCategoryChange = (cat) => {
+        setSelectedCategory(cat);
+        const target = (!cat || cat.toLowerCase() === 'all') ? '/rent/list/all' : `/rent/list/${encodeURIComponent(cat)}`;
+        navigate(target, { replace: true });
+    };
 
     // Keep Category in sync with route param if changed
     useEffect(() => {
@@ -247,6 +249,13 @@ const RentListing = () => {
             list = list.filter(m => (m.condition || 'Good').toLowerCase() === selectedCondition.toLowerCase());
         }
 
+        // 6b. Rating Filter
+        if (selectedRating === '4') {
+            list = list.filter(m => (m.rating || 0) >= 4);
+        } else if (selectedRating === '3') {
+            list = list.filter(m => (m.rating || 0) >= 3);
+        }
+
         // 7. Price Range Filter
         if (minPrice) {
             list = list.filter(m => Number(m.price) >= Number(minPrice));
@@ -295,7 +304,7 @@ const RentListing = () => {
         return list;
     }, [
         machines, selectedCategory, selectedVillage, selectedProximity, 
-        selectedAvailability, selectedUnit, selectedCondition, 
+        selectedAvailability, selectedUnit, selectedCondition, selectedRating, 
         minPrice, maxPrice, searchQuery, sortBy, userLocation, 
         minPriceAcrossList, maxPriceAcrossList
     ]);
@@ -309,6 +318,7 @@ const RentListing = () => {
         if (selectedAvailability !== 'all') count++;
         if (selectedUnit !== 'all') count++;
         if (selectedCondition !== 'all') count++;
+        if (selectedRating !== 'all') count++;
         if (minPrice || maxPrice) count++;
         if (searchQuery.trim()) count++;
         return count;
@@ -321,6 +331,7 @@ const RentListing = () => {
         setSelectedAvailability('all');
         setSelectedUnit('all');
         setSelectedCondition('all');
+        setSelectedRating('all');
         setMinPrice('');
         setMaxPrice('');
         setSearchQuery('');
@@ -542,7 +553,7 @@ const RentListing = () => {
                             return (
                                 <button
                                     key={cat}
-                                    onClick={() => setSelectedCategory(cat)}
+                                    onClick={() => handleCategoryChange(cat)}
                                     className={`px-3 py-1.5 rounded-full whitespace-nowrap font-bold transition flex items-center gap-1.5 ${
                                         isSelected
                                             ? 'bg-emerald-600 text-white shadow-xs'
@@ -628,6 +639,22 @@ const RentListing = () => {
                                     <option value="Excellent">Excellent</option>
                                     <option value="Good">Good</option>
                                     <option value="Fair">Fair</option>
+                                </select>
+                            </div>
+
+                            {/* Minimum Rating */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                                    Minimum Rating
+                                </label>
+                                <select
+                                    value={selectedRating}
+                                    onChange={(e) => setSelectedRating(e.target.value)}
+                                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
+                                >
+                                    <option value="all">All Ratings</option>
+                                    <option value="4">⭐ 4.0+ Stars</option>
+                                    <option value="3">⭐ 3.0+ Stars</option>
                                 </select>
                             </div>
 
@@ -842,6 +869,19 @@ const RentListing = () => {
                                                     / {machine.priceUnit === 'hour' ? 'hr' : machine.priceUnit === 'acre' ? 'acre' : 'day'}
                                                 </span>
                                             </div>
+
+                                            {/* Agricultural Tasks Badge */}
+                                            {machine.tasks && machine.tasks.length > 0 && (
+                                                <div className="mb-3 px-3 py-1.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/50 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+                                                    <span className="font-bold flex items-center gap-1">
+                                                        <Sparkles className="w-3 h-3 text-emerald-600" />
+                                                        <span>{machine.tasks.length} Operations Offered</span>
+                                                    </span>
+                                                    <span className="text-slate-500 text-[10px] truncate max-w-[140px]">
+                                                        {machine.tasks.map(t => t.name).slice(0, 2).join(', ')}{machine.tasks.length > 2 ? '...' : ''}
+                                                    </span>
+                                                </div>
+                                            )}
 
                                             {/* Specifications / Condition Pill */}
                                             <div className="flex items-center gap-2 mb-4 text-xs flex-wrap">

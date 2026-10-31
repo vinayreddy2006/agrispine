@@ -11,3 +11,4 @@ router.post("/add", fetchUser, addReview);
 router.get("/machine/:machineId", optionalFetchUser, getMachineReviews);
 
 export default router;
+

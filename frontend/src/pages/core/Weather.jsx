@@ -207,7 +207,10 @@ const Weather = () => {
                         village = user.village?.trim() || '';
                         district = user.district?.trim() || '';
                         state = user.state?.trim() || '';
-                        if (user.lat && user.lon) {
+                        if (user.locationCoordinates?.lat && user.locationCoordinates?.lng) {
+                            savedLat = Number(user.locationCoordinates.lat);
+                            savedLon = Number(user.locationCoordinates.lng);
+                        } else if (user.lat && user.lon) {
                             savedLat = Number(user.lat);
                             savedLon = Number(user.lon);
                         }
@@ -225,7 +228,10 @@ const Weather = () => {
                             if (u.village) village = u.village.trim();
                             if (u.district) district = u.district.trim();
                             if (u.state) state = u.state.trim();
-                            if (u.lat && u.lon) {
+                            if (u.locationCoordinates?.lat && u.locationCoordinates?.lng) {
+                                savedLat = Number(u.locationCoordinates.lat);
+                                savedLon = Number(u.locationCoordinates.lng);
+                            } else if (u.lat && u.lon) {
                                 savedLat = Number(u.lat);
                                 savedLon = Number(u.lon);
                             }
@@ -307,8 +313,36 @@ const Weather = () => {
 
         initProfileWeather();
 
+        const onLocationConfirmed = (e) => {
+            const u = e.detail;
+            if (u) {
+                const v = u.village?.trim() || '';
+                const d = u.district?.trim() || '';
+                const s = u.state?.trim() || '';
+                const coords = u.locationCoordinates;
+                if (coords?.lat && coords?.lng) {
+                    const farmLoc = {
+                        name: v || d || 'My Farm',
+                        displayName: [v, d, s, 'IN'].filter(Boolean).join(', '),
+                        village: v,
+                        district: d,
+                        state: s,
+                        country: 'IN',
+                        isFarmLocation: true,
+                        lat: coords.lat,
+                        lon: coords.lng
+                    };
+                    setProfileLocation(farmLoc);
+                    setCurrentLocation(farmLoc);
+                    fetchWeatherForLocation(farmLoc);
+                }
+            }
+        };
+        window.addEventListener("agrispine_location_confirmed", onLocationConfirmed);
+
         return () => {
             isMounted = false;
+            window.removeEventListener("agrispine_location_confirmed", onLocationConfirmed);
         };
     }, []);
 

@@ -3,16 +3,21 @@ import api from "../../utils/api";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User, Sprout, Tractor, CloudSun, Users, PlusCircle, Trash2, Droplets, Wind, Landmark, TrendingUp, BarChart3, ShoppingBag, MessageCircle } from "lucide-react";
+import { 
+  LogOut, User, Sprout, Tractor, CloudSun, Users, PlusCircle, 
+  Trash2, Droplets, Wind, Landmark, TrendingUp, BarChart3, 
+  ShoppingBag, MessageCircle, MapPin, CheckCircle2, ChevronRight, X 
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
-import { translateText } from "../../utils/translateHelper"; // New helper
+import { translateText } from "../../utils/translateHelper";
 import PageHeader from "../../components/common/PageHeader";
 import QuickActions from "../../components/dashboard/QuickActions";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import EmptyState from "../../components/ui/EmptyState";
 import LoadingState from "../../components/ui/LoadingState";
+import LocationConfirmationModal from "../../components/common/LocationConfirmationModal";
 
 const Dashboard = () => {
   const { t, i18n } = useTranslation();
@@ -22,6 +27,10 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [weather, setWeather] = useState(null);
   const [translatedName, setTranslatedName] = useState("");
+
+  // Location Confirmation Modal & Non-Intrusive Reminder
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showLocationBanner, setShowLocationBanner] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,6 +44,12 @@ const Dashboard = () => {
 
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+
+      // Check if location confirmation is needed and not skipped for this session
+      const hasSkipped = sessionStorage.getItem("agrispine_skip_location_prompt") === "true";
+      if (!parsedUser.isLocationConfirmed && !hasSkipped) {
+        setShowLocationBanner(true);
+      }
 
       // Dynamic Translation for Name
       const name = await translateText(parsedUser.name, i18n.language);
@@ -52,18 +67,18 @@ const Dashboard = () => {
         setLoading(false);
       }
 
-      // 2. Fetch Weather
-      const district = parsedUser.district || "Hyderabad";
-      fetchWeather(district);
+      // 2. Fetch Weather using confirmed location if available, otherwise district
+      const weatherTarget = parsedUser.village || parsedUser.district || "Hyderabad";
+      fetchWeather(weatherTarget);
     };
 
     fetchData();
   }, [navigate, i18n.language]);
 
-  const fetchWeather = async (district) => {
+  const fetchWeather = async (targetLocation) => {
     try {
       const API_KEY = "35e669987b8f3f982e649b224ed22c0c";
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${district}&units=metric&appid=${API_KEY}`;
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(targetLocation)}&units=metric&appid=${API_KEY}`;
       const response = await axios.get(url);
 
       setWeather({
@@ -77,16 +92,27 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error("Weather Error:", error);
-      setWeather({ temp: "--", condition: "Key Inactive" });
+      setWeather({ temp: "--", condition: "Active" });
     }
+  };
+
+  const handleSkipLocation = () => {
+    sessionStorage.setItem("agrispine_skip_location_prompt", "true");
+    setShowLocationBanner(false);
+  };
+
+  const handleLocationConfirmed = (updatedUser) => {
+    setUser(updatedUser);
+    setShowLocationBanner(false);
+    const newTarget = updatedUser.village || updatedUser.district || "Hyderabad";
+    fetchWeather(newTarget);
   };
 
   const handleLogout = () => {
     localStorage.clear();
+    sessionStorage.clear();
     navigate("/");
   };
-
-
 
   if (!user) return null;
 
@@ -118,10 +144,67 @@ const Dashboard = () => {
         }
       />
 
-      <main className="w-full p-4 md:p-6 space-y-8">
+      <main className="w-full p-4 md:p-6 space-y-6">
+        
+        {/* Non-intrusive Location Confirmation Reminder Banner */}
+        {showLocationBanner && (
+          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-200 dark:border-emerald-800/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-fadeIn">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 bg-emerald-600 text-white rounded-2xl shadow-sm flex-shrink-0">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Confirm Your Farm Location</span>
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
+                    Recommended
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  Confirming your village enables hyper-local weather alerts, spray advisories, and nearby machinery rental recommendations.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <button
+                onClick={handleSkipLocation}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 transition"
+              >
+                Skip for Now
+              </button>
+              <button
+                onClick={() => setShowLocationModal(true)}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm shadow-emerald-600/20 flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Confirm Location</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-gradient-to-r from-green-700 to-green-600 rounded-2xl p-8 text-white shadow-lg">
           <h1 className="text-3xl font-bold mb-2">{t('dashboard.welcome')}, {translatedName || user.name}! 🙏</h1>
-          <p className="opacity-90">{t('dashboard.location')}: <span className="font-semibold">{user.district || "Hyderabad"}</span></p>
+          <p className="opacity-90 flex items-center gap-1.5">
+            <MapPin className="w-4 h-4 text-emerald-200" />
+            <span>{t('dashboard.location')}: </span>
+            <span className="font-semibold">
+              {[user.village, user.mandal, user.district].filter(Boolean).join(", ") || user.district || "Hyderabad"}
+            </span>
+            {user.isLocationConfirmed ? (
+              <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold ml-1">
+                Verified Farm
+              </span>
+            ) : (
+              <button 
+                onClick={() => setShowLocationModal(true)} 
+                className="text-[11px] underline text-emerald-200 hover:text-white ml-2 font-bold cursor-pointer"
+              >
+                Confirm Now
+              </button>
+            )}
+          </p>
         </div>
 
         <div>
@@ -176,8 +259,6 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Crop History removed per user request, will be added to My Crops page instead */}
-
         <div>
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
             <Tractor className="text-blue-600" /> {t('dashboard.quick')}
@@ -185,6 +266,15 @@ const Dashboard = () => {
           <QuickActions weather={weather} />
         </div>
       </main>
+
+      {/* Location Confirmation Modal */}
+      <LocationConfirmationModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onLocationConfirmed={handleLocationConfirmed}
+        initialData={user}
+      />
+
     </div>
   );
 };
