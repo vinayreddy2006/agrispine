@@ -16,6 +16,7 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import groupService from '../../services/groupService';
 import { useAuth } from '../../hooks/useAuth';
+import { navigateAfterComplete } from '../../utils/navigationUtils';
 
 const CreateGroupScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -56,7 +57,7 @@ const CreateGroupScreen = ({ navigation }) => {
         [
           {
             text: 'Go to Workgroups',
-            onPress: () => navigation.navigate('Groups'),
+            onPress: () => navigateAfterComplete(navigation, 'Groups'),
           },
         ]
       );
@@ -170,4 +171,3 @@ const styles = StyleSheet.create({
 });
 
 export default CreateGroupScreen;
-

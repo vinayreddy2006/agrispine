@@ -38,7 +38,7 @@ const PostSchema = new mongoose.Schema({
   media: [
     {
       url: { type: String, required: true },
-      type: { type: String, enum: ['image', 'video'], default: 'image' },
+      type: { type: String, enum: ['image', 'video', 'document', 'file'], default: 'image' },
       name: { type: String },
       size: { type: Number }
     }

@@ -83,9 +83,11 @@ export const uploadMedia = async (req, res) => {
 
     const files = req.files.map(file => {
       const isVideo = file.mimetype.startsWith("video/");
+      const isImage = file.mimetype.startsWith("image/");
+      const type = isVideo ? "video" : isImage ? "image" : "document";
       return {
         url: `${protocol}://${host}/uploads/${file.filename}`,
-        type: isVideo ? "video" : "image",
+        type,
         name: file.originalname,
         size: file.size,
         mimeType: file.mimetype

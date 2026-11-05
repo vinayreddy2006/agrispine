@@ -101,6 +101,7 @@ export const API_ENDPOINTS = {
   AI_NEW_CHAT: '/api/ai/chats/new',
   AI_CHAT_DETAIL: (id) => `/api/ai/chats/${id}`,
   AI_CHAT_SEND: '/api/ai/chat',
+  AI_VOICE: '/api/ai/voice',
   AI_WEATHER_ADVISORY: '/api/ai/weather-recommendations',
 
   // Notifications

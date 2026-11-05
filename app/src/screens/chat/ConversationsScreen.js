@@ -429,7 +429,7 @@ const ConversationsScreen = ({ navigation }) => {
       )}
 
       {/* New Chat User Search Modal */}
-      <Modal visible={isNewChatModalOpen} animationType="slide" transparent>
+      <Modal visible={isNewChatModalOpen} animationType="slide" transparent onRequestClose={() => setIsNewChatModalOpen(false)}>
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>

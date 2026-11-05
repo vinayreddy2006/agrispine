@@ -14,6 +14,7 @@ import {
   Modal,
   ScrollView,
   Linking,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -70,6 +71,17 @@ const ChatScreen = ({ route, navigation }) => {
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
   const [creatingPoll, setCreatingPoll] = useState(false);
+
+  // Attachment Options Menu Modal
+  const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
+
+  // Image Review & Composition Modal
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewImageUri, setReviewImageUri] = useState(null);
+  const [reviewImageAsset, setReviewImageAsset] = useState(null);
+  const [reviewCaption, setReviewCaption] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
   const flatListRef = useRef(null);
   const currentUserId = user?._id || user?.id;
@@ -232,50 +244,101 @@ const ChatScreen = ({ route, navigation }) => {
     setReplyingTo(null);
   };
 
-  // 5. Image Attachment via Camera/Gallery
-  const handlePickImage = async () => {
+  // 5. Separate Media Handlers: Camera vs Gallery vs Files
+  const handleCaptureCamera = async () => {
     try {
+      setIsAttachMenuOpen(false);
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Camera permission is required to capture photos.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        quality: 0.85,
+        allowsEditing: false,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setReviewImageAsset(result.assets[0]);
+        setReviewImageUri(result.assets[0].uri);
+        setReviewCaption('');
+        setUploadError(null);
+        setIsReviewModalOpen(true);
+      }
+    } catch (err) {
+      console.log('Error launching camera:', err);
+      Alert.alert('Error', 'Unable to open camera.');
+    }
+  };
+
+  const handleSelectGallery = async () => {
+    try {
+      setIsAttachMenuOpen(false);
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Camera roll access is required to send photos.');
+        Alert.alert('Permission Denied', 'Gallery access is required to select photos.');
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        allowsEditing: true,
-        quality: 0.8,
+        quality: 0.85,
+        allowsEditing: false,
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        await uploadAndSendImage(result.assets[0]);
+        setReviewImageAsset(result.assets[0]);
+        setReviewImageUri(result.assets[0].uri);
+        setReviewCaption('');
+        setUploadError(null);
+        setIsReviewModalOpen(true);
       }
     } catch (err) {
-      console.log('Error picking image:', err);
-      Alert.alert('Error', 'Unable to select image.');
+      console.log('Error selecting from gallery:', err);
+      Alert.alert('Error', 'Unable to select photo from gallery.');
     }
   };
 
-  const uploadAndSendImage = async (assetOrUri) => {
+  const handleCropReviewImage = async () => {
     try {
-      setUploading(true);
-      const isAssetObj = typeof assetOrUri === 'object' && assetOrUri !== null;
-      const localUri = isAssetObj ? assetOrUri.uri : assetOrUri;
-      if (!localUri) return;
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.85,
+      });
 
-      // Determine clean filename and extension
-      let filename = isAssetObj && assetOrUri.fileName ? assetOrUri.fileName : '';
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setReviewImageAsset(result.assets[0]);
+        setReviewImageUri(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.log('Crop image error:', err);
+    }
+  };
+
+  const uploadAndSendReviewedImage = async () => {
+    if (!reviewImageUri) return;
+
+    try {
+      setUploadingImage(true);
+      setUploadError(null);
+
+      const localUri = reviewImageUri;
+      const isAssetObj = typeof reviewImageAsset === 'object' && reviewImageAsset !== null;
+
+      // Extract filename and mime type
+      let filename = isAssetObj && reviewImageAsset.fileName ? reviewImageAsset.fileName : '';
       if (!filename) {
         const cleanUri = localUri.split('?')[0];
         const lastPart = cleanUri.split('/').pop() || '';
         filename = lastPart;
       }
 
-      // Check for file extension
       const match = /\.([a-zA-Z0-9]+)$/.exec(filename);
       let ext = match ? match[1].toLowerCase() : null;
-
-      let mimeType = isAssetObj && assetOrUri.mimeType ? assetOrUri.mimeType : null;
+      let mimeType = isAssetObj && reviewImageAsset.mimeType ? reviewImageAsset.mimeType : null;
 
       if (!ext) {
         if (mimeType && mimeType.includes('/')) {
@@ -298,21 +361,23 @@ const ChatScreen = ({ route, navigation }) => {
             : 'image/jpeg';
       }
 
+      const cleanUri = Platform.OS === 'android' ? localUri : localUri.replace('file://', '');
       const formData = new FormData();
       formData.append('file', {
-        uri: localUri,
+        uri: cleanUri,
         name: filename,
         type: mimeType,
       });
 
       const res = await chatService.uploadFile(formData);
       if (res && res.fileUrl) {
+        const captionText = (reviewCaption || '').trim();
         const payload = {
           senderId: currentUserId,
           senderName: user?.name || 'Farmer',
           village: user?.village || '',
           conversationId,
-          text: '',
+          text: captionText,
           image: res.fileUrl,
         };
 
@@ -320,27 +385,35 @@ const ChatScreen = ({ route, navigation }) => {
           socket.emit('send_message', payload);
         }
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            ...payload,
-            _id: `temp_${Date.now()}`,
-            createdAt: new Date().toISOString(),
-            readBy: [currentUserId],
-          },
-        ]);
+        const optimisticMsg = {
+          ...payload,
+          _id: `temp_${Date.now()}`,
+          createdAt: new Date().toISOString(),
+          readBy: [currentUserId],
+          starredBy: [],
+          reactions: [],
+        };
+
+        setMessages((prev) => [...prev, optimisticMsg]);
+        setIsReviewModalOpen(false);
+        setReviewImageUri(null);
+        setReviewImageAsset(null);
+        setReviewCaption('');
+      } else {
+        throw new Error('Server returned invalid upload response');
       }
     } catch (err) {
-      console.log('Image upload error:', err);
-      Alert.alert('Error', 'Failed to upload photo.');
+      console.log('Image review upload error:', err);
+      setUploadError('Failed to upload photo. Please check connection and retry.');
     } finally {
-      setUploading(false);
+      setUploadingImage(false);
     }
   };
 
   // 6. Document / File Attachment
   const handlePickDocument = async () => {
     try {
+      setIsAttachMenuOpen(false);
       const result = await DocumentPicker.getDocumentAsync({
         type: '*/*',
         copyToCacheDirectory: true,
@@ -350,9 +423,10 @@ const ChatScreen = ({ route, navigation }) => {
         const file = result.assets[0];
         setUploading(true);
 
+        const cleanUri = Platform.OS === 'android' ? file.uri : file.uri.replace('file://', '');
         const formData = new FormData();
         formData.append('file', {
-          uri: file.uri,
+          uri: cleanUri,
           name: file.name,
           type: file.mimeType || 'application/octet-stream',
         });
@@ -671,9 +745,10 @@ const ChatScreen = ({ route, navigation }) => {
           ) : null}
 
           {/* Poll Component */}
-          {item.poll ? (
-            renderPollCard(item.poll, isMe)
-          ) : item.image ? (
+          {item.poll ? renderPollCard(item.poll, isMe) : null}
+
+          {/* Image Component */}
+          {item.image ? (
             <AppImage
               source={item.image}
               style={styles.messageImage}
@@ -681,7 +756,10 @@ const ChatScreen = ({ route, navigation }) => {
               enablePreview
               borderRadius={12}
             />
-          ) : item.file ? (
+          ) : null}
+
+          {/* Document / File Component */}
+          {item.file ? (
             <TouchableOpacity
               style={styles.fileContainer}
               onPress={() => {
@@ -700,7 +778,10 @@ const ChatScreen = ({ route, navigation }) => {
               </View>
               <MaterialCommunityIcons name="download" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
-          ) : item.audio ? (
+          ) : null}
+
+          {/* Audio Component */}
+          {item.audio ? (
             <View style={styles.audioRow}>
               <MaterialCommunityIcons name="microphone" size={22} color={colors.primary} />
               <Text style={styles.audioText}>Voice Note</Text>
@@ -713,17 +794,21 @@ const ChatScreen = ({ route, navigation }) => {
                 <MaterialCommunityIcons name="play-circle" size={28} color={colors.primary} />
               </TouchableOpacity>
             </View>
-          ) : (
+          ) : null}
+
+          {/* Text Content or Media Caption */}
+          {item.text ? (
             <Text
               style={[
                 styles.messageText,
+                (item.image || item.file || item.audio) && { marginTop: 6 },
                 isMe ? styles.messageTextMe : styles.messageTextOther,
                 item.isDeleted && styles.deletedText,
               ]}
             >
               {item.text}
             </Text>
-          )}
+          ) : null}
 
           {/* Bottom Timestamp & Read/Star Icons */}
           <View style={styles.messageFooter}>
@@ -885,33 +970,34 @@ const ChatScreen = ({ route, navigation }) => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={styles.inputContainer}>
-          {/* Attachment button */}
+          {/* Attachment Paperclip / Menu button */}
           <TouchableOpacity
             style={styles.attachBtn}
-            onPress={handlePickImage}
+            onPress={() => setIsAttachMenuOpen(true)}
             disabled={uploading}
+            accessibilityLabel="Attachments"
           >
-            {uploading ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <MaterialCommunityIcons name="camera" size={22} color={colors.textSecondary} />
-            )}
+            <MaterialCommunityIcons name="paperclip" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
 
+          {/* Quick Direct Camera Button */}
           <TouchableOpacity
             style={styles.attachBtn}
-            onPress={handlePickDocument}
+            onPress={handleCaptureCamera}
             disabled={uploading}
+            accessibilityLabel="Open Camera"
           >
-            <MaterialCommunityIcons name="file-document-outline" size={22} color={colors.textSecondary} />
+            <MaterialCommunityIcons name="camera" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
 
+          {/* Quick Direct Gallery Button */}
           <TouchableOpacity
             style={styles.attachBtn}
-            onPress={() => setIsPollModalOpen(true)}
+            onPress={handleSelectGallery}
             disabled={uploading}
+            accessibilityLabel="Open Gallery"
           >
-            <MaterialCommunityIcons name="poll" size={22} color={colors.primary} />
+            <MaterialCommunityIcons name="image-outline" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
 
           {/* Text Input */}
@@ -933,6 +1019,7 @@ const ChatScreen = ({ route, navigation }) => {
             ]}
             onPress={handleSendMessage}
             disabled={!inputText.trim()}
+            accessibilityLabel="Send"
           >
             <MaterialCommunityIcons name="send" size={20} color="#FFFFFF" />
           </TouchableOpacity>
@@ -940,7 +1027,7 @@ const ChatScreen = ({ route, navigation }) => {
       </KeyboardAvoidingView>
 
       {/* Message Action Sheet Modal */}
-      <Modal visible={isActionModalOpen} transparent animationType="fade">
+      <Modal visible={isActionModalOpen} transparent animationType="fade" onRequestClose={() => setIsActionModalOpen(false)}>
         <TouchableOpacity
           style={styles.actionModalOverlay}
           activeOpacity={1}
@@ -1002,7 +1089,7 @@ const ChatScreen = ({ route, navigation }) => {
       </Modal>
 
       {/* Create Poll Modal */}
-      <Modal visible={isPollModalOpen} transparent animationType="slide">
+      <Modal visible={isPollModalOpen} transparent animationType="slide" onRequestClose={() => setIsPollModalOpen(false)}>
         <SafeAreaView style={styles.pollModalOverlay}>
           <View style={styles.pollModalContent}>
             <View style={styles.pollModalHeader}>
@@ -1091,6 +1178,185 @@ const ChatScreen = ({ route, navigation }) => {
               </TouchableOpacity>
             </ScrollView>
           </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Attachment Options Action Sheet */}
+      <Modal
+        visible={isAttachMenuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsAttachMenuOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.attachMenuOverlay}
+          activeOpacity={1}
+          onPress={() => setIsAttachMenuOpen(false)}
+        >
+          <View style={styles.attachMenuContent}>
+            <View style={styles.attachMenuHeader}>
+              <Text style={styles.attachMenuTitle}>Share Attachment</Text>
+              <TouchableOpacity onPress={() => setIsAttachMenuOpen(false)}>
+                <MaterialCommunityIcons name="close" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.attachMenuGrid}>
+              <TouchableOpacity
+                style={styles.attachMenuItem}
+                onPress={handleCaptureCamera}
+              >
+                <View style={[styles.attachMenuIconBox, { backgroundColor: '#10b981' }]}>
+                  <MaterialCommunityIcons name="camera" size={26} color="#FFFFFF" />
+                </View>
+                <Text style={styles.attachMenuItemLabel}>Camera</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.attachMenuItem}
+                onPress={handleSelectGallery}
+              >
+                <View style={[styles.attachMenuIconBox, { backgroundColor: '#3b82f6' }]}>
+                  <MaterialCommunityIcons name="image" size={26} color="#FFFFFF" />
+                </View>
+                <Text style={styles.attachMenuItemLabel}>Gallery</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.attachMenuItem}
+                onPress={handlePickDocument}
+              >
+                <View style={[styles.attachMenuIconBox, { backgroundColor: '#f59e0b' }]}>
+                  <MaterialCommunityIcons name="file-document" size={26} color="#FFFFFF" />
+                </View>
+                <Text style={styles.attachMenuItemLabel}>Document</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.attachMenuItem}
+                onPress={() => {
+                  setIsAttachMenuOpen(false);
+                  setIsPollModalOpen(true);
+                }}
+              >
+                <View style={[styles.attachMenuIconBox, { backgroundColor: '#8b5cf6' }]}>
+                  <MaterialCommunityIcons name="poll" size={26} color="#FFFFFF" />
+                </View>
+                <Text style={styles.attachMenuItemLabel}>Poll</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Image Review & Composition Modal */}
+      <Modal
+        visible={isReviewModalOpen}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => {
+          if (!uploadingImage) {
+            setIsReviewModalOpen(false);
+            setReviewImageUri(null);
+            setReviewImageAsset(null);
+          }
+        }}
+      >
+        <SafeAreaView style={styles.reviewSafeArea}>
+          <StatusBar barStyle="light-content" backgroundColor="#0b141a" />
+
+          {/* Top Bar */}
+          <View style={styles.reviewHeader}>
+            <TouchableOpacity
+              style={styles.reviewHeaderBtn}
+              onPress={() => {
+                if (!uploadingImage) {
+                  setIsReviewModalOpen(false);
+                  setReviewImageUri(null);
+                  setReviewImageAsset(null);
+                }
+              }}
+              disabled={uploadingImage}
+            >
+              <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <Text style={styles.reviewHeaderTitle}>Review Photo</Text>
+
+            <View style={styles.reviewHeaderRight}>
+              <TouchableOpacity
+                style={styles.reviewHeaderBtn}
+                onPress={handleCropReviewImage}
+                disabled={uploadingImage}
+                accessibilityLabel="Crop Photo"
+              >
+                <MaterialCommunityIcons name="crop" size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.reviewHeaderBtn}
+                onPress={handleSelectGallery}
+                disabled={uploadingImage}
+                accessibilityLabel="Change Photo"
+              >
+                <MaterialCommunityIcons name="image-edit-outline" size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Image Canvas Preview */}
+          <View style={styles.reviewImageContainer}>
+            {reviewImageUri ? (
+              <Image
+                source={{ uri: reviewImageUri }}
+                style={styles.reviewImage}
+                resizeMode="contain"
+              />
+            ) : null}
+          </View>
+
+          {/* Error Banner */}
+          {uploadError && (
+            <View style={styles.reviewErrorBanner}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#fca5a5" />
+              <Text style={styles.reviewErrorText}>{uploadError}</Text>
+            </View>
+          )}
+
+          {/* Caption Input & Send Controls */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
+          >
+            <View style={styles.reviewBottomBar}>
+              <View style={styles.reviewInputWrapper}>
+                <TextInput
+                  style={styles.reviewCaptionInput}
+                  placeholder="Add a caption..."
+                  placeholderTextColor="rgba(255,255,255,0.6)"
+                  value={reviewCaption}
+                  onChangeText={setReviewCaption}
+                  multiline
+                  maxLength={500}
+                  editable={!uploadingImage}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.reviewSendBtn,
+                  uploadingImage && { opacity: 0.6 },
+                ]}
+                onPress={uploadAndSendReviewedImage}
+                disabled={uploadingImage}
+              >
+                {uploadingImage ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <MaterialCommunityIcons name="send" size={22} color="#FFFFFF" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -1586,6 +1852,137 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
+  },
+  // Attachment Menu Action Sheet
+  attachMenuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  attachMenuContent: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+  },
+  attachMenuHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  attachMenuTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  attachMenuGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  attachMenuItem: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  attachMenuIconBox: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  attachMenuItemLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  // Image Review Screen
+  reviewSafeArea: {
+    flex: 1,
+    backgroundColor: '#0b141a',
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  reviewHeaderBtn: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  reviewHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  reviewHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  reviewImageContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  reviewErrorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#7f1d1d',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  reviewErrorText: {
+    color: '#fecaca',
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+  },
+  reviewBottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#111b21',
+    gap: 10,
+  },
+  reviewInputWrapper: {
+    flex: 1,
+    backgroundColor: '#202c33',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    maxHeight: 100,
+  },
+  reviewCaptionInput: {
+    fontSize: 15,
+    color: '#FFFFFF',
+  },
+  reviewSendBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

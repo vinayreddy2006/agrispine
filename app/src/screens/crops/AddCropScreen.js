@@ -17,6 +17,7 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import cropService from '../../services/cropService';
 import { useTranslation } from '../../hooks/useTranslation';
+import { navigateAfterComplete } from '../../utils/navigationUtils';
 
 const SUGGESTED_CROPS = [
   'Paddy (Rice)',
@@ -92,7 +93,7 @@ const AddCropScreen = ({ navigation }) => {
         [
           {
             text: 'Go to My Crops',
-            onPress: () => navigation.navigate('Crops'),
+            onPress: () => navigateAfterComplete(navigation, 'Crops'),
           },
         ]
       );
@@ -268,4 +269,3 @@ const styles = StyleSheet.create({
 });
 
 export default AddCropScreen;
-

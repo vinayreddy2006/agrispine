@@ -8,6 +8,9 @@ import {
   StatusBar,
   RefreshControl,
   Image,
+  BackHandler,
+  ToastAndroid,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,6 +25,7 @@ import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 import LocationConfirmationModal from '../../components/LocationConfirmationModal';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useFocusEffect } from '@react-navigation/native';
 import cropService from '../../services/cropService';
 import weatherService from '../../services/weatherService';
 import marketService from '../../services/marketService';
@@ -29,6 +33,37 @@ import notificationService from '../../services/notificationService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 const DashboardScreen = ({ navigation }) => {
+  // Android hardware back button handling on root dashboard
+  useFocusEffect(
+    useCallback(() => {
+      let backPressCount = 0;
+      let timer = null;
+
+      const onBackPress = () => {
+        if (backPressCount === 0) {
+          backPressCount++;
+          if (Platform.OS === 'android') {
+            ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+          }
+          timer = setTimeout(() => {
+            backPressCount = 0;
+          }, 2000);
+          return true;
+        } else {
+          if (timer) clearTimeout(timer);
+          BackHandler.exitApp();
+          return true;
+        }
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => {
+        if (timer) clearTimeout(timer);
+        subscription.remove();
+      };
+    }, [])
+  );
+
   const { user } = useAuth();
   const { t, language } = useTranslation();
 

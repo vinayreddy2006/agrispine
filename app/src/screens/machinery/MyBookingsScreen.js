@@ -355,7 +355,7 @@ const MyBookingsScreen = ({ navigation }) => {
       )}
 
       {/* Review Modal */}
-      <Modal visible={isReviewModalOpen} animationType="slide" transparent>
+      <Modal visible={isReviewModalOpen} animationType="slide" transparent onRequestClose={() => setIsReviewModalOpen(false)}>
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>

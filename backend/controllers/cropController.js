@@ -144,14 +144,15 @@ export const sellCrop = async (req, res) => {
     const { yieldQty, revenue } = req.body;
     
     // Find and update
-    // We set status to 'sold', save the yield and revenue
+    // We set status to 'sold', save the yield and revenue, and delist from market
     const crop = await CropCycle.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id }, // Ensure ownership
       { 
         $set: { 
           status: 'sold',
           yieldQty: yieldQty,
-          revenue: revenue
+          revenue: revenue,
+          isListed: false // Sold crops cannot remain active on the market
         } 
       },
       { new: true }
@@ -175,15 +176,57 @@ export const toggleListing = async (req, res) => {
     const { id } = req.params;
     const { isListed, expectedPrice, quantityAvailable, description } = req.body;
 
-    const crop = await CropCycle.findOneAndUpdate(
-      { _id: id, user: req.user.id },
-      { $set: { isListed, expectedPrice, quantityAvailable, description } },
-      { new: true }
-    );
+    const existingCrop = await CropCycle.findOne({ _id: id, user: req.user.id });
+    if (!existingCrop) {
+      return res.status(404).json({ message: "Crop not found or unauthorized" });
+    }
 
-    if (!crop) return res.status(404).send("Crop not found");
-    res.json(crop);
+    if (existingCrop.status === 'sold') {
+      return res.status(400).json({ message: "Sold crops cannot be listed on the marketplace." });
+    }
+
+    if (isListed === true || isListed === 'true') {
+      const price = Number(expectedPrice);
+      const qty = Number(quantityAvailable);
+
+      if (isNaN(price) || price <= 0) {
+        return res.status(400).json({ message: "Please provide a valid asking price per quintal greater than 0." });
+      }
+      if (isNaN(qty) || qty <= 0) {
+        return res.status(400).json({ message: "Please provide a valid quantity available greater than 0." });
+      }
+
+      // Atomic check and set: only allow listing if isListed is not already true and status is not sold
+      const updatedCrop = await CropCycle.findOneAndUpdate(
+        { _id: id, user: req.user.id, isListed: { $ne: true }, status: { $ne: 'sold' } },
+        { 
+          $set: { 
+            isListed: true, 
+            expectedPrice: price, 
+            quantityAvailable: qty, 
+            description: description ? description.trim() : "" 
+          } 
+        },
+        { new: true }
+      );
+
+      if (!updatedCrop) {
+        return res.status(400).json({ message: "This crop is already actively listed on the market." });
+      }
+
+      return res.json(updatedCrop);
+    } else {
+      // Unlist the crop
+      const updatedCrop = await CropCycle.findOneAndUpdate(
+        { _id: id, user: req.user.id },
+        { $set: { isListed: false } },
+        { new: true }
+      );
+
+      return res.json(updatedCrop);
+    }
   } catch (error) {
+    console.error("toggleListing error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -193,13 +236,14 @@ export const toggleListing = async (req, res) => {
 /* -------------------------------------------------------------------------- */
 export const getMarketListings = async (req, res) => {
   try {
-    // Find all crops where isListed = true, and populate user details (phone/name)
-    const listings = await CropCycle.find({ isListed: true })
-      .populate("user", "name phone district village") // We need phone number to contact!
-      .sort({ createdAt: -1 });
+    // Find all active crops where isListed = true and status is not sold, and populate user details
+    const listings = await CropCycle.find({ isListed: true, status: { $ne: 'sold' } })
+      .populate("user", "name phone district village profileImage")
+      .sort({ updatedAt: -1, createdAt: -1 });
 
     res.json(listings);
   } catch (error) {
+    console.error("getMarketListings error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };

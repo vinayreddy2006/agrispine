@@ -44,3 +44,18 @@ All standardized UI/UX components are located in:
 - **Do Not Break Existing Functionality**: Verify that existing routes, translations (`react-i18next`), dark mode classes, and backend schemas remain intact.
 - **Verification Requirement**: Before marking any task complete, always verify that the frontend builds cleanly without errors (`npm --prefix frontend run build`) and server syntax checks pass.
 
+---
+
+## 4. Permanent Web-Mobile Consistency Rule (Mandatory 5-Step Process)
+
+To maintain absolute architectural, functional, and lexical parity between the AgriSpine Web platform and the Android Mobile app, **all agents and contributors must execute the following 5-step process whenever touching any mobile feature:**
+
+1. **Inspect Mobile**: Review current mobile screen components, state management, handlers, and navigation stacks. Identify missing logic, incorrect field assumptions, or broken hardware interactions.
+2. **Inspect Web & Schema**: Inspect the corresponding web pages (`frontend/src/pages/`), backend controllers (`backend/controllers/`), and Mongoose models (`backend/models/`). Verify exact API payloads, URL endpoints, and response structures.
+3. **Compare**: Compare field names, action labels, status badges, and workflow states side-by-side. Never invent alternative names (e.g. use `expectedPrice`, `quantityAvailable`, and `isListed` consistently across backend, web, and mobile).
+4. **Implement / Reconcile**: Update mobile (and backend if needed) to align 1:1 with web conventions:
+   - Enforce server-side atomicity to avoid duplicate records or concurrent state conflicts.
+   - Guard hardware back buttons using `navigateAfterComplete` so completed form screens are never revisited.
+   - Supply `onRequestClose` to all React Native `<Modal>` instances to cleanly close overlays on Android back press.
+   - Implement root dashboard double-press-back-to-exit.
+5. **Test / Verify**: Perform AST/syntax verification on modified files (`node -c`, `@babel/parser`), verify the web production build (`npm --prefix frontend run build`), and test error handling paths.

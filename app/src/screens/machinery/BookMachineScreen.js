@@ -18,6 +18,7 @@ import Button from '../../components/Button';
 import bookingService from '../../services/bookingService';
 import { useTranslation } from '../../hooks/useTranslation';
 import { formatCurrency } from '../../utils/formatters';
+import { navigateAfterComplete } from '../../utils/navigationUtils';
 
 const BookMachineScreen = ({ route, navigation }) => {
   const { machine, selectedTask, availableServices = [], bookedDates = [] } = route.params || {};
@@ -97,7 +98,7 @@ const BookMachineScreen = ({ route, navigation }) => {
         [
           {
             text: 'View My Bookings',
-            onPress: () => navigation.navigate('MyBookings'),
+            onPress: () => navigateAfterComplete(navigation, 'MyBookings'),
           },
         ]
       );

@@ -12,7 +12,9 @@ import {
   StatusBar,
   RefreshControl,
   Image,
+  Linking,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import colors from '../../constants/colors';
@@ -78,6 +80,12 @@ const CommunityScreen = ({ navigation }) => {
   useEffect(() => {
     loadPosts();
   }, [loadPosts]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadPosts();
+    }, [loadPosts])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -262,6 +270,27 @@ const CommunityScreen = ({ navigation }) => {
             {mediaList.map((m, idx) => {
               const url = typeof m === 'string' ? m : m?.url;
               if (!url) return null;
+              const isDoc = (typeof m === 'object' && (m?.type === 'document' || m?.type === 'file')) ||
+                /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$/i.test(url);
+
+              if (isDoc) {
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.postDocCard}
+                    onPress={() => Linking.openURL(url)}
+                  >
+                    <MaterialCommunityIcons name="file-document-outline" size={26} color={colors.primary} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.postDocName} numberOfLines={1}>
+                        {(typeof m === 'object' && m?.name) || 'Document'}
+                      </Text>
+                      <Text style={styles.postDocMeta}>Tap to open</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              }
+
               return (
                 <AppImage
                   key={idx}
@@ -379,7 +408,7 @@ const CommunityScreen = ({ navigation }) => {
       )}
 
       {/* Comments Modal */}
-      <Modal visible={!!activeCommentsPost} animationType="slide" transparent>
+      <Modal visible={!!activeCommentsPost} animationType="slide" transparent onRequestClose={() => setActiveCommentsPost(null)}>
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -438,7 +467,7 @@ const CommunityScreen = ({ navigation }) => {
       </Modal>
 
       {/* Report Post Modal */}
-      <Modal visible={!!activeReportPost} animationType="fade" transparent>
+      <Modal visible={!!activeReportPost} animationType="fade" transparent onRequestClose={() => setActiveReportPost(null)}>
         <View style={styles.reportModalOverlay}>
           <View style={styles.reportCard}>
             <Text style={styles.reportTitle}>Report Post</Text>

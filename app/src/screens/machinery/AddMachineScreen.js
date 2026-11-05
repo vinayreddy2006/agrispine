@@ -16,6 +16,7 @@ import Input from '../../components/Input';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import machineService from '../../services/machineService';
+import { navigateAfterComplete } from '../../utils/navigationUtils';
 
 const MACHINE_TYPES = [
   { key: 'tractor', label: 'Tractor' },
@@ -91,7 +92,7 @@ const AddMachineScreen = ({ navigation }) => {
         [
           {
             text: 'Go to Fleet',
-            onPress: () => navigation.navigate('MyFleet'),
+            onPress: () => navigateAfterComplete(navigation, 'MyFleet'),
           },
         ]
       );
@@ -305,4 +306,3 @@ const styles = StyleSheet.create({
 });
 
 export default AddMachineScreen;
-

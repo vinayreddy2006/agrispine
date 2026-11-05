@@ -219,7 +219,7 @@ const SchemesScreen = ({ navigation }) => {
       )}
 
       {/* Scheme Details Modal */}
-      <Modal visible={!!selectedScheme} animationType="slide" transparent>
+      <Modal visible={!!selectedScheme} animationType="slide" transparent onRequestClose={() => setSelectedScheme(null)}>
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>

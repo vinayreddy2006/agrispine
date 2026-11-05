@@ -180,3 +180,93 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
    - 24–48 Hour Forecast Timeline grouped with day transition headers ("TODAY", "TOMORROW") and horizontal scroll cards with rain probabilities.
    - Atmospherics & Air Observations Card (Wind velocity, direction, gusts, dew point, visibility, barometric pressure, cloud cover).
    - Temporary location previewing never overwrites the farmer's saved farm profile.
+
+
+---
+
+## 7. Crop Marketplace Single-Listing Enforcement, Buyer Market Parity & Hardware Back Navigation Fixes
+
+### 1. Single Active Marketplace Listing Per Crop (Backend & Mobile)
+- **Problem:** In Crops module, farmers could tap "Sell on Market" repeatedly, spawning duplicate active listings for the same crop. Additionally, mobile sent mismatched fields (`isListedOnMarket`, `marketPrice`, `availableQuantity`) instead of backend schema fields (`isListed`, `expectedPrice`, `quantityAvailable`).
+- **Root Cause:**
+  - `CropCycle.js` stores `isListed`, `expectedPrice`, `quantityAvailable`, and `description`.
+  - Mobile sent `{ isListedOnMarket: true }`, which MongoDB ignored.
+  - Button state checked `crop.isListedOnMarket`, which was always undefined, leaving "Sell on Market" button permanently visible.
+  - Backend `cropController.js` lacked atomic single-listing checks.
+- **Fix:**
+  - **Backend (`cropController.js`):**
+    - Updated `toggleListing`: When `isListed === true`, validates positive `expectedPrice` and `quantityAvailable`. Uses atomic query `{ _id: id, user: req.user.id, isListed: { $ne: true }, status: { $ne: 'sold' } }` to ensure only one active listing can exist per crop. Returns HTTP 400 if already listed or if crop is sold.
+    - Updated `sellCrop`: Sets `isListed: false` atomically so harvested/sold crops cannot remain listed on the market.
+    - Updated `getMarketListings`: Filters `{ isListed: true, status: { $ne: 'sold' } }`, populates `user` (`name phone district village profileImage`), and sorts by `{ updatedAt: -1, createdAt: -1 }`.
+  - **Mobile (`CropDetailsScreen.js`):**
+    - Renamed button from "Sell on Market" to **"List on Market"** (matching web convention).
+    - If `crop.isListed && !isSold`, the "List on Market" button is hidden. A dedicated orange-themed **"Listed on Market"** card is rendered showing `ACTIVE` badge, price per quintal, available volume, optional description, and a confirmation-gated **Unlist** button.
+    - If `crop.status === 'sold'`, all market listing controls and active cards are completely hidden.
+
+### 2. Buyer Market Parity & Field Resolution
+- **Problem:** Listings published on mobile never appeared in Buyer Market, and existing listings showed incomplete farmer contact information.
+- **Root Cause:** Mobile was reading `item.village`, `item.farmerName`, `item.farmerPhone`, `item.marketPrice`, and `item.availableQuantity` at top level, whereas backend populated the `user` document (`item.user.name`, `item.user.phone`, `item.user.village`, `item.user.district`, `item.user.profileImage`) and returned `expectedPrice` and `quantityAvailable`.
+- **Fix (`BuyerMarketScreen.js`):**
+  - Resolved `user` fields with graceful fallbacks: `item.user?.name || item.farmerName`, `item.user?.phone || item.farmerPhone`, `item.user?.village || item.village`, `item.user?.district || item.district`.
+  - Mapped price to `item.expectedPrice || item.marketPrice` and quantity to `item.quantityAvailable || item.availableQuantity`.
+  - Displayed seller's produce description / quality notes when present.
+  - Search filter now searches across `cropName`, `variety`, `village`, `district`, `farmerName`, and `description`.
+
+### 3. Android Hardware Back Button Broken Navigation
+- **Problem:**
+  - After completing forms (e.g., Add Crop, List Equipment, Book Machine, Create Post, Create Workgroup), pressing the physical Android back button popped back into the completed form screen rather than returning one logical level up.
+  - Modal dialogs on Android did not handle hardware back button presses.
+  - Root dashboard had inconsistent exit behavior on back press.
+- **Fix:**
+  - **Navigation Utility (`app/src/utils/navigationUtils.js`):**
+    - Created `navigateAfterComplete(navigation, targetScreen)`:
+      - If `targetScreen` is the previous screen in the stack, cleanly calls `navigation.goBack()`.
+      - If `targetScreen` exists earlier in the stack history, pops exact count of intermediate screens.
+      - If not present in history, replaces the form screen via `navigation.replace(targetScreen)`.
+    - Integrated across `AddCropScreen.js`, `AddMachineScreen.js`, `BookMachineScreen.js`, `CreatePostScreen.js`, `CreateGroupScreen.js`, `CropDetailsScreen.js` (on delete), and `ManageMachineScreen.js` (on delete).
+  - **Modal Back Press Handling (`onRequestClose`):**
+    - Added `onRequestClose` prop across all 11 `<Modal>` implementations in the mobile app (`GramSathiScreen.js`, `ChatScreen.js`, `ConversationsScreen.js`, `CommunityScreen.js`, `CropDetailsScreen.js`, `GroupDetailsScreen.js`, `ManageMachineScreen.js`, `MyBookingsScreen.js`, `ProfileScreen.js`, `SchemesScreen.js`, `LanguageSelectorModal.js`, `AppImage.js`).
+  - **Root Dashboard Exit (`DashboardScreen.js`):**
+    - Added `useFocusEffect` with `BackHandler.addEventListener('hardwareBackPress', onBackPress)` and `ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT)` within a 2-second debounce window. Double-tap back cleanly exits the app without looping through previous tab routes.
+
+---
+
+## 4. GramSathi AI, Community & Village Chat Enhancements (Phase 5)
+
+### 1. GramSathi AI – ChatGPT-Style Interface & Voice System
+- **Default Empty Chat:** When GramSathi AI opens, `sessionId` defaults to `null`. It never auto-opens the previous conversation, providing a fresh consultation prompt by default while preserving all previous sessions.
+- **ChatGPT-Style Sliding Left Sidebar:**
+  - Replaced bottom-sheet modal with an animated drawer sliding from the left (`translateX` from `-SIDEBAR_WIDTH` to `0`).
+  - Dark forest green AgriSpine theme (`#0f291e`, `#10b981`).
+  - "+ Start New Consultation" primary button at the top.
+  - Active session indicator and date display.
+  - Cross-platform Rename modal with text input and validation (`PUT /api/ai/chats/:id`).
+  - Safe session deletion with confirmation dialog (`DELETE /api/ai/chats/:id`).
+- **Voice System with Backend Parity:**
+  - Integrated `expo-av` audio recording and `expo-speech` text-to-speech.
+  - In-bar voice recorder with pulsing red indicator, live timer, cancel button, and send button.
+  - Audio streamed to backend `/api/ai/voice` with `audio_file`, `session_id`, and `language`.
+  - AI response automatically read aloud in the farmer's preferred language (Telugu, Hindi, English).
+  - Speaker playback / stop toggle on all AI message bubbles.
+
+### 2. Community Media Picker & Publishing Fix
+- **Separate Attachment Options:** Distinct triggers for Camera (`launchCameraAsync`), Gallery (`launchImageLibraryAsync`), and Files (`DocumentPicker.getDocumentAsync`).
+- **FormData Upload Fix (`Unsupported FormDataPart implementation`):**
+  - Modern Expo strict fetch rejects React Native's legacy `{ uri, name, type }` FormData objects.
+  - Implemented `uploadWithProgress` in `app/src/services/api.js` using native `XMLHttpRequest` which delegates directly to React Native's native C++/Java networking module (`RCTNetworking`).
+  - Added `EXPO_PUBLIC_USE_RN_FETCH=true` in `app/.env`.
+- **Media Previews & Progress:** Thumbnail cards with removal buttons, upload progress indicator, duplicate submission guards (`disabled={uploading}`), and draft preservation if network fails.
+- **Backend Schema Parity:** Updated `backend/models/Post.js` enum to `['image', 'video', 'document', 'file']` and updated `backend/controllers/postController.js` to correctly categorize documents.
+- **Back Navigation Fix:** Clean navigation back via `navigation.goBack()` and `useFocusEffect` post reload in `CommunityScreen.js`.
+
+### 3. Village Chat Camera, Gallery & Media Review Screen
+- **Separate Attachment Actions:** Dedicated buttons for Camera, Gallery, Documents, and Village Polls in the chat bar and action sheet.
+- **Image Review & Composition Screen:**
+  - High-resolution full-screen image preview prior to sending.
+  - Optional Crop tool (`ImagePicker` with `allowsEditing: true`).
+  - Caption input field ("Add a caption...").
+  - Explicit Send button (never auto-sends on crop/capture).
+  - Upload progress and error banner with retry capability without losing caption or image.
+- **Caption Rendering Fix:**
+  - Fixed message bubble ternary so both `item.image` and `item.text` render simultaneously. Caption displays directly beneath the image attachment.
+

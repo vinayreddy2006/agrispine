@@ -9,10 +9,12 @@ import {
   Image,
   Alert,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import colors from '../../constants/colors';
 import Header from '../../components/Header';
 import Button from '../../components/Button';
@@ -20,6 +22,7 @@ import Card from '../../components/Card';
 import communityService from '../../services/communityService';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
+import { navigateAfterComplete } from '../../utils/navigationUtils';
 
 const categories = [
   'General Agriculture',
@@ -36,72 +39,158 @@ const CreatePostScreen = ({ navigation }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('General Agriculture');
-  const [selectedImages, setSelectedImages] = useState([]);
+  const [selectedMedia, setSelectedMedia] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgressText, setUploadProgressText] = useState('');
 
-  // Pick images using expo-image-picker
-  const handlePickImages = async () => {
+  // 1. Camera – Capture photo or video
+  const handleLaunchCamera = async () => {
     try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
         Alert.alert(
-          'Permission Needed',
-          'Please allow access to your photo library to attach farm images to your post.'
+          'Camera Permission Needed',
+          'Please grant camera permissions to capture farm photos or videos for your post.'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images', 'videos'],
+        quality: 0.85,
+        allowsEditing: false,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const isVideo = asset.type === 'video' || (asset.mimeType && asset.mimeType.startsWith('video/'));
+        const filename = asset.fileName || `camera_${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`;
+        const newMedia = {
+          uri: asset.uri,
+          name: filename,
+          mimeType: asset.mimeType || (isVideo ? 'video/mp4' : 'image/jpeg'),
+          type: isVideo ? 'video' : 'image',
+          size: asset.fileSize || 0,
+        };
+        setSelectedMedia((prev) => [...prev, newMedia].slice(0, 10));
+      }
+    } catch (err) {
+      console.log('Error launching camera:', err.message);
+      Alert.alert('Camera Error', 'Could not open camera on this device.');
+    }
+  };
+
+  // 2. Gallery – Select existing photos/videos
+  const handlePickFromGallery = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          'Photo Library Access Needed',
+          'Please allow access to your photo library to attach farm photos or videos.'
         );
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ['images', 'videos'],
         allowsMultipleSelection: true,
-        quality: 0.8,
+        quality: 0.85,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setSelectedImages((prev) => [...prev, ...result.assets].slice(0, 5));
+        const newItems = result.assets.map((asset, idx) => {
+          const isVideo = asset.type === 'video' || (asset.mimeType && asset.mimeType.startsWith('video/'));
+          const filename = asset.fileName || `gallery_${Date.now()}_${idx}.${isVideo ? 'mp4' : 'jpg'}`;
+          return {
+            uri: asset.uri,
+            name: filename,
+            mimeType: asset.mimeType || (isVideo ? 'video/mp4' : 'image/jpeg'),
+            type: isVideo ? 'video' : 'image',
+            size: asset.fileSize || 0,
+          };
+        });
+        setSelectedMedia((prev) => [...prev, ...newItems].slice(0, 10));
       }
     } catch (err) {
-      console.log('Error selecting image:', err.message);
+      console.log('Error selecting from gallery:', err.message);
+      Alert.alert('Gallery Error', 'Could not open device photo library.');
     }
   };
 
-  const handleRemoveImage = (index) => {
-    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+  // 3. Files – Select documents/files from device storage
+  const handlePickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        multiple: true,
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const newDocs = result.assets.map((file) => {
+          const mime = file.mimeType || 'application/octet-stream';
+          const isImage = mime.startsWith('image/');
+          const isVideo = mime.startsWith('video/');
+          const fileType = isVideo ? 'video' : isImage ? 'image' : 'document';
+          return {
+            uri: file.uri,
+            name: file.name || 'document',
+            mimeType: mime,
+            type: fileType,
+            size: file.size || 0,
+          };
+        });
+        setSelectedMedia((prev) => [...prev, ...newDocs].slice(0, 10));
+      }
+    } catch (err) {
+      console.log('Error selecting document:', err.message);
+      Alert.alert('File Picker Error', 'Could not open document picker.');
+    }
   };
 
+  const handleRemoveMedia = (index) => {
+    setSelectedMedia((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // 4. Publish Post
   const handlePublishPost = async () => {
-    if (!content.trim() && !title.trim() && selectedImages.length === 0) {
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+
+    if (!trimmedContent && !trimmedTitle && selectedMedia.length === 0) {
       Alert.alert(
-        'Required',
-        'Please enter a topic title, write details, or attach a photo for your post.'
+        'Post Content Required',
+        'Please write a question or observation, or attach media for your post.'
       );
       return;
     }
 
     try {
       setSubmitting(true);
+      setUploadProgressText('Uploading attachments...');
 
       let uploadedMedia = [];
-      if (selectedImages.length > 0) {
+      if (selectedMedia.length > 0) {
         const formData = new FormData();
-        selectedImages.forEach((img, idx) => {
-          const uri = img.uri;
-          const filename = uri.split('/').pop() || `farm_photo_${idx}.jpg`;
-          const type = img.mimeType || 'image/jpeg';
+        selectedMedia.forEach((item, idx) => {
+          const filename = item.name || `media_${Date.now()}_${idx}.jpg`;
           formData.append('files', {
-            uri,
+            uri: item.uri,
             name: filename,
-            type,
+            type: item.mimeType || 'application/octet-stream',
           });
         });
 
         const uploadRes = await communityService.uploadMedia(formData);
-        uploadedMedia = uploadRes.media || uploadRes.files || [];
+        uploadedMedia = uploadRes?.files || uploadRes?.media || [];
       }
 
+      setUploadProgressText('Publishing discussion...');
+
       const postPayload = {
-        title: title.trim() || content.trim().slice(0, 60),
-        content: content.trim(),
+        title: trimmedTitle || trimmedContent.slice(0, 60),
+        content: trimmedContent,
         category,
         media: uploadedMedia,
         authorName: user?.name || 'Farmer',
@@ -116,15 +205,23 @@ const CreatePostScreen = ({ navigation }) => {
         [
           {
             text: 'View Community',
-            onPress: () => navigation.navigate('Community'),
+            onPress: () => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigateAfterComplete(navigation, 'Community');
+              }
+            },
           },
-        ]
+        ],
+        { cancelable: false }
       );
     } catch (err) {
       console.log('Publish error:', err.message);
-      Alert.alert('Publish Error', err.message || 'Could not publish post. Please check connection.');
+      Alert.alert('Publish Error', err.message || 'Could not publish post. Please check connection and try again.');
     } finally {
       setSubmitting(false);
+      setUploadProgressText('');
     }
   };
 
@@ -192,20 +289,34 @@ const CreatePostScreen = ({ navigation }) => {
             style={styles.textArea}
           />
 
-          {/* Image Attachments */}
+          {/* Media Attachments Header */}
           <View style={styles.mediaHeaderRow}>
-            <Text style={styles.fieldLabel}>Farm Photos (Max 5)</Text>
-            <Text style={styles.counterText}>{selectedImages.length}/5</Text>
+            <Text style={styles.fieldLabel}>Attachments (Photos, Videos, Files)</Text>
+            <Text style={styles.counterText}>{selectedMedia.length}/10</Text>
           </View>
 
-          {selectedImages.length > 0 && (
+          {/* Selected Attachments Preview */}
+          {selectedMedia.length > 0 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesRow}>
-              {selectedImages.map((img, idx) => (
-                <View key={idx} style={styles.imageThumbContainer}>
-                  <Image source={{ uri: img.uri }} style={styles.thumbImage} />
+              {selectedMedia.map((item, idx) => (
+                <View key={idx} style={styles.mediaThumbContainer}>
+                  {item.type === 'image' ? (
+                    <Image source={{ uri: item.uri }} style={styles.thumbImage} />
+                  ) : item.type === 'video' ? (
+                    <View style={styles.docThumbBox}>
+                      <MaterialCommunityIcons name="video" size={28} color="#9333EA" />
+                      <Text style={styles.docThumbName} numberOfLines={1}>{item.name}</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.docThumbBox}>
+                      <MaterialCommunityIcons name="file-document-outline" size={28} color={colors.primary} />
+                      <Text style={styles.docThumbName} numberOfLines={1}>{item.name}</Text>
+                    </View>
+                  )}
                   <TouchableOpacity
                     style={styles.removeImageBtn}
-                    onPress={() => handleRemoveImage(idx)}
+                    onPress={() => handleRemoveMedia(idx)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <MaterialCommunityIcons name="close-circle" size={20} color="#DC2626" />
                   </TouchableOpacity>
@@ -214,17 +325,55 @@ const CreatePostScreen = ({ navigation }) => {
             </ScrollView>
           )}
 
-          {selectedImages.length < 5 && (
-            <TouchableOpacity style={styles.addPhotoBtn} onPress={handlePickImages}>
-              <MaterialCommunityIcons name="camera-plus-outline" size={22} color={colors.primary} />
-              <Text style={styles.addPhotoText}>Attach Farm Photos</Text>
-            </TouchableOpacity>
+          {/* Media Picker Options (Camera, Gallery, Files) */}
+          {selectedMedia.length < 10 && (
+            <View style={styles.attachmentOptionsRow}>
+              <TouchableOpacity
+                style={styles.attachOptionBtn}
+                onPress={handleLaunchCamera}
+                disabled={submitting}
+              >
+                <View style={[styles.attachIconBg, { backgroundColor: '#FCE7F3' }]}>
+                  <MaterialCommunityIcons name="camera" size={20} color="#DB2777" />
+                </View>
+                <Text style={styles.attachOptionLabel}>Camera</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.attachOptionBtn}
+                onPress={handlePickFromGallery}
+                disabled={submitting}
+              >
+                <View style={[styles.attachIconBg, { backgroundColor: '#EDE9FE' }]}>
+                  <MaterialCommunityIcons name="image-multiple" size={20} color="#7C3AED" />
+                </View>
+                <Text style={styles.attachOptionLabel}>Gallery</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.attachOptionBtn}
+                onPress={handlePickDocument}
+                disabled={submitting}
+              >
+                <View style={[styles.attachIconBg, { backgroundColor: '#E0E7FF' }]}>
+                  <MaterialCommunityIcons name="file-document-outline" size={20} color="#4F46E5" />
+                </View>
+                <Text style={styles.attachOptionLabel}>Files</Text>
+              </TouchableOpacity>
+            </View>
           )}
+
+          {uploadProgressText ? (
+            <View style={styles.uploadingNotice}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.uploadingNoticeText}>{uploadProgressText}</Text>
+            </View>
+          ) : null}
         </Card>
 
         <Button
-          title={t('community.post', 'Publish to Community')}
-          icon="send"
+          title={submitting ? 'Publishing Post...' : t('community.post', 'Publish to Community')}
+          icon={submitting ? undefined : 'send'}
           onPress={handlePublishPost}
           loading={submitting}
           disabled={submitting}
@@ -340,6 +489,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 4,
   },
   counterText: {
     fontSize: 12,
@@ -348,15 +498,33 @@ const styles = StyleSheet.create({
   imagesRow: {
     flexDirection: 'row',
     marginBottom: 14,
+    marginTop: 6,
   },
-  imageThumbContainer: {
+  mediaThumbContainer: {
     position: 'relative',
     marginRight: 10,
   },
   thumbImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 10,
+    width: 84,
+    height: 84,
+    borderRadius: 12,
+  },
+  docThumbBox: {
+    width: 84,
+    height: 84,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 6,
+  },
+  docThumbName: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 2,
   },
   removeImageBtn: {
     position: 'absolute',
@@ -365,22 +533,50 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
   },
-  addPhotoBtn: {
+  attachmentOptionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginTop: 8,
+  },
+  attachOptionBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    borderStyle: 'dashed',
+    paddingVertical: 10,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.primaryLight + '30',
-    marginTop: 6,
   },
-  addPhotoText: {
-    fontSize: 13.5,
+  attachIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  attachOptionLabel: {
+    fontSize: 13,
     fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  uploadingNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+    padding: 10,
+    backgroundColor: '#F0FDF4',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+  },
+  uploadingNoticeText: {
+    fontSize: 12.5,
+    fontWeight: '600',
     color: colors.primaryDark,
   },
   publishBtn: {

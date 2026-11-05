@@ -319,7 +319,7 @@ const GroupDetailsScreen = ({ route, navigation }) => {
       </ScrollView>
 
       {/* Log Work Modal */}
-      <Modal visible={isWorkModalOpen} animationType="slide" transparent>
+      <Modal visible={isWorkModalOpen} animationType="slide" transparent onRequestClose={() => setIsWorkModalOpen(false)}>
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>

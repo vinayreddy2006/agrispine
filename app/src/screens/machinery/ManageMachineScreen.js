@@ -24,6 +24,7 @@ import machineService from '../../services/machineService';
 import bookingService from '../../services/bookingService';
 import { useTranslation } from '../../hooks/useTranslation';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { navigateAfterComplete } from '../../utils/navigationUtils';
 
 const ManageMachineScreen = ({ route, navigation }) => {
   const { machineId, machine: initialMachine } = route.params || {};
@@ -182,7 +183,7 @@ const ManageMachineScreen = ({ route, navigation }) => {
             try {
               await machineService.deleteMachine(machineId);
               Alert.alert('Deleted', 'Machine removed from your fleet.');
-              navigation.navigate('MyFleet');
+              navigateAfterComplete(navigation, 'MyFleet');
             } catch (err) {
               Alert.alert('Error', err.message || 'Failed to delete machine.');
             }
@@ -353,7 +354,7 @@ const ManageMachineScreen = ({ route, navigation }) => {
       </ScrollView>
 
       {/* Add Task Modal */}
-      <Modal visible={isTaskModalOpen} animationType="slide" transparent>
+      <Modal visible={isTaskModalOpen} animationType="slide" transparent onRequestClose={() => setIsTaskModalOpen(false)}>
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>

@@ -13,11 +13,13 @@ import {
   Modal,
   Alert,
   ScrollView,
+  Dimensions,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import colors from '../../constants/colors';
-import Header from '../../components/Header';
 import Card from '../../components/Card';
 import aiService from '../../services/aiService';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -30,27 +32,57 @@ try {
   Speech = null;
 }
 
+let Audio;
+try {
+  Audio = require('expo-av').Audio;
+} catch (e) {
+  Audio = null;
+}
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SIDEBAR_WIDTH = Math.min(SCREEN_WIDTH * 0.82, 320);
+
 const GramSathiScreen = ({ navigation }) => {
   const { t, language } = useTranslation();
 
+  // State: sessionId null by default => Always start with a new, empty chat
   const [sessionId, setSessionId] = useState(null);
   const [chatList, setChatList] = useState([]);
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const [messages, setMessages] = useState([
-    {
-      sender: 'ai',
-      text: t(
-        'gramsathi_ai.welcome',
-        'Namaste! I am GramSathi, your AgriSpine AI farming assistant. Ask me anything about crop diseases, pest control, weather advisories, machinery rental, or government schemes.'
-      ),
-    },
-  ]);
+  // Rename Dialog State
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [renamingChatId, setRenamingChatId] = useState(null);
+  const [renameTitleInput, setRenameTitleInput] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
+
+  // Initial welcome message
+  const getWelcomeMessage = () => ({
+    sender: 'ai',
+    text: t(
+      'gramsathi_ai.welcome',
+      'Namaste! I am GramSathi, your AgriSpine AI farming assistant. Ask me anything about crop diseases, pest control, weather advisories, machinery rental, or government schemes.'
+    ),
+  });
+
+  const [messages, setMessages] = useState([getWelcomeMessage()]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [speakingMessageIndex, setSpeakingMessageIndex] = useState(null);
 
+  // Audio Voice Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [recordingInstance, setRecordingInstance] = useState(null);
+  const [isProcessingVoice, setIsProcessingVoice] = useState(false);
+
+  // Animation values
+  const sidebarAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
   const flatListRef = useRef(null);
+  const recordingTimerRef = useRef(null);
 
   const suggestedPrompts = [
     language === 'te'
@@ -75,82 +107,153 @@ const GramSathiScreen = ({ navigation }) => {
       : 'How to apply for PM-KISAN subsidy?',
   ];
 
-  // Load chat sessions on mount
+  // 1. Load chat sessions on mount (do NOT auto-switch, stay in fresh chat)
   useEffect(() => {
     loadChatSessions();
+
     return () => {
       if (Speech && Speech.stop) {
         Speech.stop();
       }
+      stopAndCleanupRecording();
     };
   }, []);
+
+  // Pulsing animation for microphone recording
+  useEffect(() => {
+    if (isRecording) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.25,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1.0,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isRecording]);
 
   const loadChatSessions = async () => {
     try {
       const chats = await aiService.getChatSessions();
       if (Array.isArray(chats)) {
         setChatList(chats);
-        if (chats.length > 0 && !sessionId) {
-          switchChatSession(chats[0]._id);
-        }
       }
     } catch (err) {
       console.log('Error fetching AI chat list:', err.message);
     }
   };
 
+  // Sidebar Open / Close Animations
+  const openSidebar = () => {
+    setIsSidebarOpen(true);
+    Animated.parallel([
+      Animated.timing(sidebarAnim, {
+        toValue: 0,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 1,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeSidebar = () => {
+    Animated.parallel([
+      Animated.timing(sidebarAnim, {
+        toValue: -SIDEBAR_WIDTH,
+        duration: 220,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setIsSidebarOpen(false);
+    });
+  };
+
+  // Switch to selected existing session
   const switchChatSession = async (id) => {
     try {
       setLoading(true);
       setSessionId(id);
-      setIsHistoryModalOpen(false);
+      closeSidebar();
       const detail = await aiService.getChatById(id);
       if (detail && Array.isArray(detail.messages) && detail.messages.length > 0) {
         setMessages(detail.messages);
       } else {
-        setMessages([
-          {
-            sender: 'ai',
-            text: 'Namaste! How can I assist you with your farming today?',
-          },
-        ]);
+        setMessages([getWelcomeMessage()]);
       }
     } catch (err) {
       console.log('Error switching chat:', err.message);
+      Alert.alert('Error', 'Unable to load chat history.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNewChat = async () => {
+  // Start fresh new chat
+  const handleNewChat = () => {
+    if (Speech && Speech.stop) {
+      Speech.stop();
+      setSpeakingMessageIndex(null);
+    }
+    setSessionId(null);
+    setMessages([getWelcomeMessage()]);
+    setInputText('');
+    closeSidebar();
+  };
+
+  // Open Rename Dialog
+  const handleOpenRename = (chat) => {
+    setRenamingChatId(chat._id);
+    setRenameTitleInput(chat.title || '');
+    setRenameModalVisible(true);
+  };
+
+  // Save Renamed Chat Title
+  const handleSaveRename = async () => {
+    if (!renameTitleInput.trim() || !renamingChatId) {
+      setRenameModalVisible(false);
+      return;
+    }
     try {
-      setLoading(true);
-      setIsHistoryModalOpen(false);
-      const newChat = await aiService.createChatSession();
-      if (newChat && newChat._id) {
-        setSessionId(newChat._id);
-        setMessages([
-          {
-            sender: 'ai',
-            text: t(
-              'gramsathi_ai.welcome',
-              'Namaste! I am GramSathi, your AgriSpine AI farming assistant. Ask me anything about crop diseases, pest control, weather advisories, machinery rental, or government schemes.'
-            ),
-          },
-        ]);
-        loadChatSessions();
-      }
-    } catch (err) {
-      console.log('Error creating new chat:', err.message);
+      setIsRenaming(true);
+      await aiService.renameChat(renamingChatId, renameTitleInput.trim());
+      setChatList((prev) =>
+        prev.map((c) =>
+          c._id === renamingChatId ? { ...c, title: renameTitleInput.trim() } : c
+        )
+      );
+      setRenameModalVisible(false);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to rename chat session.');
     } finally {
-      setLoading(false);
+      setIsRenaming(false);
     }
   };
 
+  // Delete chat
   const handleDeleteChat = async (id) => {
     Alert.alert(
       t('common.delete', 'Delete Chat'),
-      'Are you sure you want to delete this chat conversation?',
+      'Are you sure you want to delete this consultation?',
       [
         { text: t('common.cancel', 'Cancel'), style: 'cancel' },
         {
@@ -172,9 +275,10 @@ const GramSathiScreen = ({ navigation }) => {
     );
   };
 
+  // Send text message
   const handleSend = async (messageToSend = inputText) => {
     const text = (messageToSend || '').trim();
-    if (!text || loading) return;
+    if (!text || loading || isProcessingVoice) return;
 
     if (Speech && Speech.stop) {
       Speech.stop();
@@ -214,7 +318,10 @@ const GramSathiScreen = ({ navigation }) => {
         ...prev,
         {
           sender: 'ai',
-          text: t('gramsathi_ai.offline_msg', 'Unable to reach GramSathi service. Please check your internet connection or verify the AI backend server.'),
+          text: t(
+            'gramsathi_ai.offline_msg',
+            'Unable to reach GramSathi service. Please check your internet connection or verify the AI backend server.'
+          ),
         },
       ]);
     } finally {
@@ -222,8 +329,161 @@ const GramSathiScreen = ({ navigation }) => {
     }
   };
 
+  // Voice Recording Functions
+  const startRecording = async () => {
+    if (!Audio) {
+      Alert.alert('Unsupported', 'Audio recording is not supported in this runtime.');
+      return;
+    }
+
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          'Permission Required',
+          'Microphone permission is required to ask questions by voice.'
+        );
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      setRecordingInstance(recording);
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.log('Failed to start recording:', err);
+      Alert.alert('Error', 'Unable to start audio recording.');
+    }
+  };
+
+  const cancelRecording = async () => {
+    try {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      if (recordingInstance) {
+        await recordingInstance.stopAndUnloadAsync();
+        setRecordingInstance(null);
+      }
+    } catch (e) {
+      console.log('Error canceling recording:', e);
+    } finally {
+      setIsRecording(false);
+      setRecordingDuration(0);
+    }
+  };
+
+  const stopAndCleanupRecording = async () => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    if (recordingInstance) {
+      try {
+        await recordingInstance.stopAndUnloadAsync();
+      } catch (e) {}
+      setRecordingInstance(null);
+    }
+    setIsRecording(false);
+  };
+
+  const stopAndSendRecording = async () => {
+    if (!recordingInstance) return;
+
+    try {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+
+      setIsProcessingVoice(true);
+      setIsRecording(false);
+
+      await recordingInstance.stopAndUnloadAsync();
+      const uri = recordingInstance.getURI();
+      setRecordingInstance(null);
+
+      if (!uri) {
+        setIsProcessingVoice(false);
+        return;
+      }
+
+      // Add optimistic user voice message bubble
+      const userVoiceMsg = {
+        sender: 'user',
+        text: '🎤 Voice Query (' + formatDuration(recordingDuration) + ')',
+      };
+      setMessages((prev) => [...prev, userVoiceMsg]);
+
+      // Prepare FormData
+      const formData = new FormData();
+      const cleanUri = Platform.OS === 'android' ? uri : uri.replace('file://', '');
+      formData.append('audio_file', {
+        uri: cleanUri,
+        name: `voice_${Date.now()}.m4a`,
+        type: 'audio/m4a',
+      });
+      formData.append('session_id', sessionId || 'new');
+      formData.append('language', language || 'en');
+
+      const res = await aiService.sendVoiceMessage(formData);
+
+      if (res && (res.reply || res.message)) {
+        const replyText = res.reply || res.message;
+        const aiVoiceReply = {
+          sender: 'ai',
+          text: replyText,
+          structuredData: res.structured_data,
+          action: res.action,
+        };
+        setMessages((prev) => [...prev, aiVoiceReply]);
+
+        // Speak reply automatically
+        speakText(replyText, messages.length + 1);
+        loadChatSessions();
+      } else {
+        throw new Error('No reply from voice service');
+      }
+    } catch (err) {
+      console.log('Voice processing error:', err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: 'ai',
+          text: t(
+            'gramsathi_ai.voice_error',
+            'Could not process voice message. Please check the network and speak clearly.'
+          ),
+        },
+      ]);
+    } finally {
+      setIsProcessingVoice(false);
+      setRecordingDuration(0);
+    }
+  };
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
   // Text-To-Speech Playback
-  const handleToggleSpeech = (text, index) => {
+  const speakText = (text, index) => {
     if (!Speech || !Speech.speak) {
       Alert.alert('Speech Unavailable', 'Text-to-speech audio is not supported in this runtime.');
       return;
@@ -327,7 +587,7 @@ const GramSathiScreen = ({ navigation }) => {
           {!isUser && item.text && (
             <TouchableOpacity
               style={styles.audioActionBtn}
-              onPress={() => handleToggleSpeech(item.text, index)}
+              onPress={() => speakText(item.text, index)}
             >
               <MaterialCommunityIcons
                 name={isSpeaking ? 'stop-circle' : 'volume-high'}
@@ -354,25 +614,43 @@ const GramSathiScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
-      <Header
-        title={t('gramsathi_ai.title', 'GramSathi AI')}
-        subtitle={t('gramsathi_ai.subtitle', 'Digital Agricultural Expert')}
-        onBack={() => navigation.goBack()}
-        rightAction={
-          <View style={styles.headerRightActions}>
-            <TouchableOpacity
-              style={styles.historyBtn}
-              onPress={() => setIsHistoryModalOpen(true)}
-            >
-              <MaterialCommunityIcons name="history" size={20} color={colors.textPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.newChatHeaderBtn} onPress={handleNewChat}>
-              <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
-              <Text style={styles.newChatHeaderText}>{t('gramsathi_ai.new_chat', 'New')}</Text>
-            </TouchableOpacity>
+
+      {/* Top App Header with Left Hamburger Menu */}
+      <View style={styles.customHeader}>
+        <View style={styles.headerLeftSection}>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => navigation.goBack()}
+            accessibilityLabel="Back"
+          >
+            <MaterialCommunityIcons name="arrow-left" size={22} color={colors.textPrimary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.sidebarToggleBtn}
+            onPress={openSidebar}
+            accessibilityLabel="Open Chat History"
+          >
+            <MaterialCommunityIcons name="menu" size={24} color={colors.primary} />
+          </TouchableOpacity>
+
+          <View style={styles.headerTitles}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.headerTitleText}>GramSathi AI</Text>
+              <View style={styles.onlineBadge}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.onlineText}>Online</Text>
+              </View>
+            </View>
+            <Text style={styles.headerSubtitleText}>Digital Agricultural Expert</Text>
           </View>
-        }
-      />
+        </View>
+
+        <TouchableOpacity style={styles.newChatHeaderBtn} onPress={handleNewChat}>
+          <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
+          <Text style={styles.newChatHeaderText}>{t('gramsathi_ai.new_chat', 'New Chat')}</Text>
+        </TouchableOpacity>
+      </View>
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -389,18 +667,20 @@ const GramSathiScreen = ({ navigation }) => {
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
 
-        {/* Loading Indicator */}
-        {loading && (
+        {/* Thinking Indicator */}
+        {(loading || isProcessingVoice) && (
           <View style={styles.thinkingContainer}>
             <ActivityIndicator size="small" color={colors.primary} />
             <Text style={styles.thinkingText}>
-              {t('gramsathi_ai.thinking', 'GramSathi is analyzing agronomy database...')}
+              {isProcessingVoice
+                ? 'Processing voice question with agronomy models...'
+                : t('gramsathi_ai.thinking', 'GramSathi is analyzing agronomy database...')}
             </Text>
           </View>
         )}
 
         {/* Quick Suggestion Chips */}
-        {messages.length <= 2 && (
+        {messages.length <= 2 && !isRecording && (
           <View style={styles.suggestionsWrapper}>
             <Text style={styles.suggestionsHeading}>
               {t('gramsathi_ai.quick_suggestions', 'Suggested Farming Questions')}:
@@ -420,77 +700,289 @@ const GramSathiScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Input Bar */}
-        <View style={styles.inputBar}>
-          <TextInput
-            placeholder={t('gramsathi_ai.placeholder', 'Ask any farming query (Telugu, Hindi, English)...')}
-            placeholderTextColor={colors.textMuted}
-            value={inputText}
-            onChangeText={setInputText}
-            style={styles.textInput}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity
-            style={[styles.sendBtn, (!inputText.trim() || loading) && { opacity: 0.5 }]}
-            onPress={() => handleSend(inputText)}
-            disabled={!inputText.trim() || loading}
-          >
-            <MaterialCommunityIcons name="send" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-
-      {/* Chat History Modal */}
-      <Modal visible={isHistoryModalOpen} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.historyModalContent}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MaterialCommunityIcons name="history" size={22} color={colors.primary} />
-                <Text style={styles.modalTitle}>{t('gramsathi_ai.chat_history', 'GramSathi Chat Sessions')}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setIsHistoryModalOpen(false)}>
-                <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
-              </TouchableOpacity>
+        {/* Input Bar or Active Voice Recording Bar */}
+        {isRecording ? (
+          <View style={styles.recordingBar}>
+            <View style={styles.recordingLeft}>
+              <Animated.View
+                style={[
+                  styles.recordingDot,
+                  { transform: [{ scale: pulseAnim }] },
+                ]}
+              />
+              <Text style={styles.recordingTimeText}>
+                {formatDuration(recordingDuration)}
+              </Text>
+              <Text style={styles.recordingStatusText}>Listening...</Text>
             </View>
 
-            <TouchableOpacity style={styles.modalNewChatBtn} onPress={handleNewChat}>
-              <MaterialCommunityIcons name="plus-circle-outline" size={20} color="#FFFFFF" />
-              <Text style={styles.modalNewChatText}>{t('gramsathi_ai.new_chat', 'Start New Chat')}</Text>
+            <View style={styles.recordingRight}>
+              <TouchableOpacity
+                style={styles.cancelRecordBtn}
+                onPress={cancelRecording}
+                accessibilityLabel="Cancel Recording"
+              >
+                <MaterialCommunityIcons name="close" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.sendRecordBtn}
+                onPress={stopAndSendRecording}
+                accessibilityLabel="Send Voice Question"
+              >
+                <MaterialCommunityIcons name="send" size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.inputBar}>
+            <TextInput
+              placeholder={t(
+                'gramsathi_ai.placeholder',
+                'Ask any farming query (Telugu, Hindi, English)...'
+              )}
+              placeholderTextColor={colors.textMuted}
+              value={inputText}
+              onChangeText={setInputText}
+              style={styles.textInput}
+              multiline
+              maxLength={500}
+            />
+
+            {/* Voice Mic Button */}
+            <TouchableOpacity
+              style={[
+                styles.micBtn,
+                isProcessingVoice && { opacity: 0.5 },
+              ]}
+              onPress={startRecording}
+              disabled={isProcessingVoice || loading}
+              accessibilityLabel="Record Voice Question"
+            >
+              <MaterialCommunityIcons name="microphone" size={22} color={colors.primary} />
             </TouchableOpacity>
 
-            <ScrollView style={styles.historyList} showsVerticalScrollIndicator={false}>
-              {chatList.length === 0 ? (
-                <Text style={styles.emptyHistoryText}>No previous chats found.</Text>
-              ) : (
-                chatList.map((chat) => {
-                  const isActive = chat._id === sessionId;
-                  return (
-                    <View
-                      key={chat._id}
-                      style={[styles.historyItem, isActive && styles.historyItemActive]}
-                    >
-                      <TouchableOpacity
-                        style={{ flex: 1 }}
-                        onPress={() => switchChatSession(chat._id)}
+            {/* Send Text Button */}
+            <TouchableOpacity
+              style={[
+                styles.sendBtn,
+                (!inputText.trim() || loading || isProcessingVoice) && { opacity: 0.4 },
+              ]}
+              onPress={() => handleSend(inputText)}
+              disabled={!inputText.trim() || loading || isProcessingVoice}
+              accessibilityLabel="Send Message"
+            >
+              <MaterialCommunityIcons name="send" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </KeyboardAvoidingView>
+
+      {/* ChatGPT-Style Left Sliding Sidebar Overlay */}
+      {isSidebarOpen && (
+        <Modal
+          visible={isSidebarOpen}
+          transparent
+          animationType="none"
+          onRequestClose={closeSidebar}
+        >
+          <View style={styles.sidebarOverlayContainer}>
+            {/* Animated Semi-transparent Backdrop */}
+            <Animated.View
+              style={[
+                styles.sidebarBackdrop,
+                { opacity: backdropAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.6] }) },
+              ]}
+            >
+              <TouchableOpacity
+                style={{ flex: 1 }}
+                activeOpacity={1}
+                onPress={closeSidebar}
+              />
+            </Animated.View>
+
+            {/* Sliding Sidebar Panel */}
+            <Animated.View
+              style={[
+                styles.sidebarPanel,
+                { transform: [{ translateX: sidebarAnim }] },
+              ]}
+            >
+              {/* Sidebar Header */}
+              <View style={styles.sidebarHeader}>
+                <View style={styles.sidebarBrand}>
+                  <View style={styles.sidebarBrandIcon}>
+                    <MaterialCommunityIcons name="sprout" size={20} color="#FFFFFF" />
+                  </View>
+                  <View>
+                    <Text style={styles.sidebarBrandTitle}>GramSathi AI</Text>
+                    <Text style={styles.sidebarBrandSub}>AgriSpine Expert</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.sidebarCloseBtn}
+                  onPress={closeSidebar}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <MaterialCommunityIcons name="close" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+
+              {/* "+ New Chat" Action Button */}
+              <TouchableOpacity style={styles.sidebarNewChatBtn} onPress={handleNewChat}>
+                <MaterialCommunityIcons name="plus-circle" size={20} color={colors.primary} />
+                <Text style={styles.sidebarNewChatBtnText}>+ Start New Consultation</Text>
+              </TouchableOpacity>
+
+              <View style={styles.sidebarDivider} />
+
+              {/* Consultation History Section Header */}
+              <View style={styles.sidebarSectionHeader}>
+                <Text style={styles.sidebarSectionTitle}>Recent Consultations</Text>
+                <Text style={styles.sidebarSectionCount}>{chatList.length}</Text>
+              </View>
+
+              {/* Sessions List */}
+              <ScrollView
+                style={styles.sidebarScroll}
+                contentContainerStyle={{ paddingBottom: 20 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {chatList.length === 0 ? (
+                  <View style={styles.sidebarEmptyBox}>
+                    <MaterialCommunityIcons
+                      name="message-text-outline"
+                      size={36}
+                      color="rgba(255,255,255,0.3)"
+                    />
+                    <Text style={styles.sidebarEmptyText}>
+                      No previous consultations yet.{'\n'}Ask your first farming question!
+                    </Text>
+                  </View>
+                ) : (
+                  chatList.map((chat) => {
+                    const isActive = chat._id === sessionId;
+                    return (
+                      <View
+                        key={chat._id}
+                        style={[
+                          styles.sidebarSessionItem,
+                          isActive && styles.sidebarSessionItemActive,
+                        ]}
                       >
-                        <Text style={[styles.historyTitle, isActive && styles.historyTitleActive]} numberOfLines={1}>
-                          {chat.title || 'Farming Consultation'}
-                        </Text>
-                        <Text style={styles.historyDate}>{formatDate(chat.updatedAt || chat.createdAt)}</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleDeleteChat(chat._id)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <MaterialCommunityIcons name="trash-can-outline" size={18} color={colors.textMuted} />
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })
-              )}
-            </ScrollView>
+                        <TouchableOpacity
+                          style={styles.sidebarSessionContent}
+                          onPress={() => switchChatSession(chat._id)}
+                        >
+                          <MaterialCommunityIcons
+                            name={isActive ? 'chat' : 'chat-outline'}
+                            size={18}
+                            color={isActive ? colors.primaryLight : 'rgba(255,255,255,0.7)'}
+                          />
+                          <View style={{ flex: 1 }}>
+                            <Text
+                              style={[
+                                styles.sidebarSessionTitle,
+                                isActive && styles.sidebarSessionTitleActive,
+                              ]}
+                              numberOfLines={1}
+                            >
+                              {chat.title || 'Farming Consultation'}
+                            </Text>
+                            <Text style={styles.sidebarSessionDate}>
+                              {formatDate(chat.updatedAt || chat.createdAt)}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+
+                        {/* Session Actions: Rename & Delete */}
+                        <View style={styles.sidebarItemActions}>
+                          <TouchableOpacity
+                            style={styles.itemActionBtn}
+                            onPress={() => handleOpenRename(chat)}
+                            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                          >
+                            <MaterialCommunityIcons
+                              name="pencil-outline"
+                              size={16}
+                              color="rgba(255,255,255,0.6)"
+                            />
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={styles.itemActionBtn}
+                            onPress={() => handleDeleteChat(chat._id)}
+                            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                          >
+                            <MaterialCommunityIcons
+                              name="trash-can-outline"
+                              size={16}
+                              color="rgba(255,100,100,0.8)"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })
+                )}
+              </ScrollView>
+
+              {/* Sidebar Footer */}
+              <View style={styles.sidebarFooter}>
+                <MaterialCommunityIcons name="shield-check" size={16} color={colors.primaryLight} />
+                <Text style={styles.sidebarFooterText}>AgriSpine AI v2.4 • Bilingual Agronomy</Text>
+              </View>
+            </Animated.View>
+          </View>
+        </Modal>
+      )}
+
+      {/* Rename Consultation Title Modal */}
+      <Modal
+        visible={renameModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRenameModalVisible(false)}
+      >
+        <View style={styles.modalOverlayCenter}>
+          <View style={styles.renameCard}>
+            <Text style={styles.renameCardTitle}>Rename Consultation</Text>
+            <Text style={styles.renameCardDesc}>
+              Enter a descriptive topic for this conversation.
+            </Text>
+            <TextInput
+              style={styles.renameInput}
+              value={renameTitleInput}
+              onChangeText={setRenameTitleInput}
+              placeholder="e.g. Cotton Fertilizer Schedule"
+              placeholderTextColor={colors.textMuted}
+              autoFocus
+              maxLength={80}
+            />
+
+            <View style={styles.renameActionsRow}>
+              <TouchableOpacity
+                style={styles.renameCancelBtn}
+                onPress={() => setRenameModalVisible(false)}
+                disabled={isRenaming}
+              >
+                <Text style={styles.renameCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.renameSaveBtn,
+                  !renameTitleInput.trim() && { opacity: 0.5 },
+                ]}
+                onPress={handleSaveRename}
+                disabled={!renameTitleInput.trim() || isRenaming}
+              >
+                {isRenaming ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.renameSaveText}>Save</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -503,27 +995,74 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  headerRightActions: {
+  customHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerLeftSection: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  historyBtn: {
-    padding: 8,
-    borderRadius: 18,
-    backgroundColor: colors.surfaceAlt,
+  headerIconButton: {
+    padding: 6,
+    borderRadius: 8,
+  },
+  sidebarToggleBtn: {
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: colors.primaryLight + '25',
+  },
+  headerTitles: {
+    flex: 1,
+  },
+  headerTitleText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  onlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#10b98115',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  onlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10b981',
+  },
+  onlineText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#10b981',
+  },
+  headerSubtitleText: {
+    fontSize: 11,
+    color: colors.textSecondary,
   },
   newChatHeaderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: colors.primary,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 14,
   },
   newChatHeaderText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '700',
     color: '#FFFFFF',
   },
@@ -598,7 +1137,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.primaryLight + '35',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -637,7 +1176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     paddingHorizontal: 20,
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   thinkingText: {
     fontSize: 12,
@@ -649,11 +1188,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   suggestionsHeading: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: '700',
     color: colors.textMuted,
     marginBottom: 6,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   chipsScroll: {
     flexDirection: 'row',
@@ -677,11 +1217,11 @@ const styles = StyleSheet.create({
   inputBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 10,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    gap: 10,
+    gap: 8,
   },
   textInput: {
     flex: 1,
@@ -689,94 +1229,304 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 20,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     maxHeight: 100,
     fontSize: 14,
     color: colors.textPrimary,
   },
+  micBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.primaryLight + '25',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  historyModalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: '75%',
-    minHeight: '40%',
-  },
-  modalHeader: {
+  recordingBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fef2f2',
+    borderTopWidth: 1,
+    borderTopColor: '#fca5a5',
+  },
+  recordingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  recordingDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#dc2626',
+  },
+  recordingTimeText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#dc2626',
+  },
+  recordingStatusText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  recordingRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  cancelRecordBtn: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#fee2e2',
+  },
+  sendRecordBtn: {
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+  },
+  sidebarOverlayContainer: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  sidebarBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000000',
+  },
+  sidebarPanel: {
+    width: SIDEBAR_WIDTH,
+    height: '100%',
+    backgroundColor: '#0f291e',
+    paddingTop: Platform.OS === 'android' ? 40 : 50,
+    paddingHorizontal: 16,
+    elevation: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+  },
+  sidebarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  sidebarBrand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  sidebarBrandIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sidebarBrandTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  sidebarBrandSub: {
+    fontSize: 11,
+    color: '#a7f3d0',
+  },
+  sidebarCloseBtn: {
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  sidebarNewChatBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
     marginBottom: 16,
   },
-  modalTitle: {
+  sidebarNewChatBtnText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: colors.primaryDark,
+  },
+  sidebarDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    marginBottom: 14,
+  },
+  sidebarSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
+  sidebarSectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  sidebarSectionCount: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#10b981',
+  },
+  sidebarScroll: {
+    flex: 1,
+  },
+  sidebarEmptyBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    gap: 10,
+  },
+  sidebarEmptyText: {
+    fontSize: 12.5,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  sidebarSessionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginBottom: 6,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  sidebarSessionItemActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.25)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#10b981',
+  },
+  sidebarSessionContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  sidebarSessionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.9)',
+  },
+  sidebarSessionTitleActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  sidebarSessionDate: {
+    fontSize: 10.5,
+    color: 'rgba(255,255,255,0.45)',
+    marginTop: 2,
+  },
+  sidebarItemActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 6,
+  },
+  itemActionBtn: {
+    padding: 5,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  sidebarFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  sidebarFooterText: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '600',
+  },
+  modalOverlayCenter: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  renameCard: {
+    width: '100%',
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 20,
+    elevation: 8,
+  },
+  renameCardTitle: {
     fontSize: 17,
     fontWeight: '800',
     color: colors.textPrimary,
+    marginBottom: 4,
   },
-  modalNewChatBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    borderRadius: 14,
+  renameCardDesc: {
+    fontSize: 12.5,
+    color: colors.textSecondary,
     marginBottom: 14,
   },
-  modalNewChatText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  historyList: {
-    flex: 1,
-  },
-  emptyHistoryText: {
-    textAlign: 'center',
-    color: colors.textMuted,
-    marginTop: 20,
-  },
-  historyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  renameInput: {
     backgroundColor: colors.background,
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 8,
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  historyItemActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight + '30',
-  },
-  historyTitle: {
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     fontSize: 14,
-    fontWeight: '700',
     color: colors.textPrimary,
+    marginBottom: 18,
   },
-  historyTitleActive: {
-    color: colors.primaryDark,
+  renameActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
   },
-  historyDate: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
+  renameCancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 10,
+  },
+  renameCancelText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: colors.textSecondary,
+  },
+  renameSaveBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 9,
+    borderRadius: 10,
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  renameSaveText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });
 

@@ -490,7 +490,7 @@ const ProfileScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* Edit Profile Modal */}
-      <Modal visible={isEditModalOpen} animationType="slide" transparent>
+      <Modal visible={isEditModalOpen} animationType="slide" transparent onRequestClose={() => setIsEditModalOpen(false)}>
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>

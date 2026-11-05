@@ -17,14 +17,13 @@ import colors from '../../constants/colors';
 import Header from '../../components/Header';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
-import Button from '../../components/Button';
 import Avatar from '../../components/Avatar';
 import EmptyState from '../../components/EmptyState';
 import ErrorState from '../../components/ErrorState';
 import { ListSkeleton } from '../../components/LoadingSkeleton';
 import cropService from '../../services/cropService';
 import { useTranslation } from '../../hooks/useTranslation';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency } from '../../utils/formatters';
 
 const BuyerMarketScreen = ({ navigation }) => {
   const { t } = useTranslation();
@@ -63,12 +62,16 @@ const BuyerMarketScreen = ({ navigation }) => {
   const filteredListings = listings.filter((item) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
+    const farmerName = item.user?.name || item.farmerName || '';
+    const village = item.user?.village || item.village || '';
+    const district = item.user?.district || item.district || '';
     return (
       (item.cropName || '').toLowerCase().includes(q) ||
       (item.variety || '').toLowerCase().includes(q) ||
-      (item.village || '').toLowerCase().includes(q) ||
-      (item.district || '').toLowerCase().includes(q) ||
-      (item.farmerName || '').toLowerCase().includes(q)
+      village.toLowerCase().includes(q) ||
+      district.toLowerCase().includes(q) ||
+      farmerName.toLowerCase().includes(q) ||
+      (item.description || '').toLowerCase().includes(q)
     );
   });
 
@@ -81,10 +84,15 @@ const BuyerMarketScreen = ({ navigation }) => {
   };
 
   const renderListingCard = ({ item }) => {
-    const location = [item.village, item.district].filter(Boolean).join(', ') || 'Telangana';
-    const quantityText = item.availableQuantity
-      ? `${item.availableQuantity} Quintals`
-      : 'Inquiry Basis';
+    const farmer = item.user || {};
+    const farmerName = farmer.name || item.farmerName || 'Farmer';
+    const farmerPhone = farmer.phone || item.farmerPhone;
+    const farmerVillage = farmer.village || item.village;
+    const farmerDistrict = farmer.district || item.district;
+    const location = [farmerVillage, farmerDistrict].filter(Boolean).join(', ') || 'Local Farmer';
+    const price = item.expectedPrice || item.marketPrice || item.pricePerUnit || 0;
+    const quantity = item.quantityAvailable || item.availableQuantity;
+    const quantityText = quantity ? `${quantity} Quintals` : 'Fresh Harvest';
 
     return (
       <Card style={styles.card}>
@@ -107,7 +115,7 @@ const BuyerMarketScreen = ({ navigation }) => {
           <View style={styles.metaCol}>
             <Text style={styles.metaLabel}>Asking Price</Text>
             <Text style={styles.priceHighlight}>
-              {formatCurrency(item.marketPrice || item.pricePerUnit || 2400)}
+              {formatCurrency(price)}
               <Text style={styles.priceUnit}> /Qtl</Text>
             </Text>
           </View>
@@ -121,21 +129,27 @@ const BuyerMarketScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {item.description ? (
+          <View style={styles.descBox}>
+            <Text style={styles.descText}>"{item.description}"</Text>
+          </View>
+        ) : null}
+
         <View style={styles.farmerFooter}>
           <View style={styles.farmerInfo}>
             <Avatar
-              source={item.farmerProfileImage || item.farmer?.profileImage}
-              name={item.farmerName || 'Farmer'}
+              source={farmer.profileImage || item.farmerProfileImage}
+              name={farmerName}
               size={24}
             />
-            <Text style={styles.farmerName}>{item.farmerName || 'Farmer'}</Text>
+            <Text style={styles.farmerName}>{farmerName}</Text>
           </View>
 
           <View style={styles.actionButtons}>
-            {item.farmerPhone ? (
+            {farmerPhone ? (
               <TouchableOpacity
                 style={styles.callButton}
-                onPress={() => handleCallSeller(item.farmerPhone, item.farmerName)}
+                onPress={() => handleCallSeller(farmerPhone, farmerName)}
               >
                 <MaterialCommunityIcons name="phone" size={16} color="#FFFFFF" />
                 <Text style={styles.callButtonText}>Call Seller</Text>
@@ -145,12 +159,12 @@ const BuyerMarketScreen = ({ navigation }) => {
             <TouchableOpacity
               style={styles.chatButton}
               onPress={() => {
-                const targetId = item.farmerId || item.user?._id || item.user;
+                const targetId = farmer._id || item.farmerId || item.user;
                 if (targetId) {
                   navigation.navigate('Chat', {
                     farmerId: targetId,
-                    farmerName: item.farmerName,
-                    farmerPhone: item.farmerPhone,
+                    farmerName: farmerName,
+                    farmerPhone: farmerPhone,
                   });
                 } else {
                   navigation.navigate('Conversations');
@@ -322,7 +336,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     padding: 10,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   metaCol: {
     flex: 1,
@@ -344,6 +358,19 @@ const styles = StyleSheet.create({
   },
   priceUnit: {
     fontSize: 11,
+    color: colors.textSecondary,
+  },
+  descBox: {
+    backgroundColor: colors.surfaceAlt,
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  descText: {
+    fontSize: 12,
+    fontStyle: 'italic',
     color: colors.textSecondary,
   },
   farmerFooter: {
@@ -400,4 +427,3 @@ const styles = StyleSheet.create({
 });
 
 export default BuyerMarketScreen;
-

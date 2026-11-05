@@ -22,6 +22,11 @@ export const aiService = {
     return await api.delete(API_ENDPOINTS.AI_CHAT_DETAIL(id));
   },
 
+  // Rename chat session
+  renameChat: async (id, title) => {
+    return await api.put(API_ENDPOINTS.AI_CHAT_DETAIL(id), { title });
+  },
+
   // Send message to GramSathi AI
   sendMessage: async ({ sessionId, message, language = 'en' }) => {
     return await api.post(API_ENDPOINTS.AI_CHAT_SEND, {
@@ -30,6 +35,11 @@ export const aiService = {
       language,
       current_page_context: { path: '/mobile/ai-chat' },
     });
+  },
+
+  // Send voice audio to GramSathi AI
+  sendVoiceMessage: async (formData) => {
+    return await api.upload(API_ENDPOINTS.AI_VOICE, formData);
   },
 
   // Get agricultural weather recommendations

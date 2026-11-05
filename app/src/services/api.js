@@ -93,13 +93,74 @@ export const request = async (endpoint, options = {}) => {
   }
 };
 
+/**
+ * Robust multipart upload using XMLHttpRequest to natively support file streaming,
+ * real-time upload progress, and proper boundary headers across Android & iOS without
+ * WinterCG fetch FormData limitations.
+ */
+export const uploadWithProgress = async (endpoint, formData, options = {}) => {
+  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const token = await getAuthToken();
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+
+    if (token) {
+      xhr.setRequestHeader('auth-token', token);
+    }
+    if (options.headers) {
+      Object.entries(options.headers).forEach(([k, v]) => {
+        if (k.toLowerCase() !== 'content-type') {
+          xhr.setRequestHeader(k, v);
+        }
+      });
+    }
+
+    xhr.timeout = options.timeout || 60000;
+
+    xhr.onload = () => {
+      let responseData = null;
+      try {
+        responseData = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+      } catch {
+        responseData = { message: xhr.responseText };
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(responseData);
+      } else {
+        const errMsg = responseData?.error || responseData?.message || `Upload failed with status ${xhr.status}`;
+        reject(new Error(errMsg));
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new Error('Network error during file upload. Please check your connection.'));
+    };
+
+    xhr.ontimeout = () => {
+      reject(new Error('Upload timed out. Please try with smaller files or a better connection.'));
+    };
+
+    if (options.onProgress && xhr.upload) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          options.onProgress(event.loaded / event.total);
+        }
+      };
+    }
+
+    xhr.send(formData);
+  });
+};
+
 export const api = {
   get: (endpoint, options = {}) => request(endpoint, { ...options, method: 'GET' }),
   post: (endpoint, body, options = {}) => request(endpoint, { ...options, method: 'POST', body }),
   put: (endpoint, body, options = {}) => request(endpoint, { ...options, method: 'PUT', body }),
   delete: (endpoint, options = {}) => request(endpoint, { ...options, method: 'DELETE' }),
-  upload: (endpoint, formData, options = {}) => 
-    request(endpoint, { ...options, method: 'POST', body: formData, isFormData: true }),
+  upload: (endpoint, formData, options = {}) => uploadWithProgress(endpoint, formData, options),
 };
 
 export default api;
