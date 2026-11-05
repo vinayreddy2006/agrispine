@@ -19,6 +19,7 @@ import EmptyState from '../../components/EmptyState';
 import ErrorState from '../../components/ErrorState';
 import Avatar from '../../components/Avatar';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import LocationConfirmationModal from '../../components/LocationConfirmationModal';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import cropService from '../../services/cropService';
@@ -38,6 +39,10 @@ const DashboardScreen = ({ navigation }) => {
 
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
+
+  // Location confirmation banner & modal
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showLocationBanner, setShowLocationBanner] = useState(!user?.isLocationConfirmed);
 
   const [mandiRates, setMandiRates] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -60,12 +65,20 @@ const DashboardScreen = ({ navigation }) => {
       setLoadingCrops(false);
     }
 
-    // 2. Fetch live weather
+    // 2. Fetch live weather using accurate multi-tier coordinates & village resolution
     try {
       setWeatherLoading(true);
-      const query = user?.district || user?.village || 'Warangal,IN';
-      const weatherData = await weatherService.getCurrentWeatherByQuery(query);
-      setWeather(weatherData);
+      const coords = user?.locationCoordinates || (user?.lat && user?.lon ? { lat: user.lat, lng: user.lon } : null);
+      const res = await weatherService.getWeatherAndForecast({
+        village: user?.village,
+        mandal: user?.mandal,
+        district: user?.district,
+        state: user?.state,
+        lat: coords?.lat ? Number(coords.lat) : null,
+        lon: coords?.lng ? Number(coords.lng) : null,
+        name: user?.village || user?.district || 'Warangal',
+      });
+      setWeather(res.current);
     } catch (err) {
       console.log('Error loading weather on dashboard:', err.message);
     } finally {
@@ -203,6 +216,37 @@ const DashboardScreen = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
         }
       >
+        {/* Location Confirmation Banner (Principle 1 & Web Parity) */}
+        {!user?.isLocationConfirmed && showLocationBanner ? (
+          <View style={styles.locationBanner}>
+            <View style={styles.locationBannerTop}>
+              <View style={styles.locationBannerIconCircle}>
+                <MaterialCommunityIcons name="map-marker-alert" size={20} color="#D97706" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.locationBannerTitle}>Confirm Your Farm Location</Text>
+                <Text style={styles.locationBannerDesc}>
+                  Confirming your village enables hyper-local weather alerts, spray advisories, and nearby machinery recommendations.
+                </Text>
+              </View>
+            </View>
+            <View style={styles.locationBannerActions}>
+              <TouchableOpacity
+                style={styles.locationConfirmBtn}
+                onPress={() => setShowLocationModal(true)}
+              >
+                <Text style={styles.locationConfirmBtnText}>Confirm Village</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.locationSkipBtn}
+                onPress={() => setShowLocationBanner(false)}
+              >
+                <Text style={styles.locationSkipBtnText}>Remind Later</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
+
         {/* Weather Card */}
         <TouchableOpacity
           activeOpacity={0.9}
@@ -215,7 +259,7 @@ const DashboardScreen = ({ navigation }) => {
               <Text style={styles.weatherTitle}>Farm Weather Advisory</Text>
             </View>
             <Text style={styles.weatherLocation} numberOfLines={1}>
-              {user?.district || user?.village || 'Warangal'}
+              {[user?.village, user?.district].filter(Boolean).join(', ') || user?.district || 'Warangal'}
             </Text>
           </View>
 
@@ -235,6 +279,14 @@ const DashboardScreen = ({ navigation }) => {
                     Feels like {Math.round(weather.main?.feels_like || 0)}°C
                   </Text>
                 </View>
+                {weather.weather?.[0]?.icon ? (
+                  <Image
+                    source={{
+                      uri: `https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`,
+                    }}
+                    style={{ width: 48, height: 48 }}
+                  />
+                ) : null}
               </View>
 
               <View style={styles.weatherStatsRow}>
@@ -471,6 +523,16 @@ const DashboardScreen = ({ navigation }) => {
         )}
       </ScrollView>
 
+      {/* Location Confirmation Modal */}
+      <LocationConfirmationModal
+        visible={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onLocationConfirmed={() => {
+          setShowLocationBanner(false);
+          loadDashboardData();
+        }}
+      />
+
       {/* Language Selection Modal */}
       <LanguageSelectorModal
         visible={isLangModalOpen}
@@ -620,6 +682,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 40,
+  },
+  locationBanner: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+  },
+  locationBannerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  locationBannerIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationBannerTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#92400E',
+  },
+  locationBannerDesc: {
+    fontSize: 11,
+    color: '#78350F',
+    lineHeight: 15,
+    marginTop: 2,
+  },
+  locationBannerActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 10,
+  },
+  locationConfirmBtn: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  locationConfirmBtnText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  locationSkipBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  locationSkipBtnText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: '#78350F',
   },
   weatherCard: {
     backgroundColor: '#FFFFFF',

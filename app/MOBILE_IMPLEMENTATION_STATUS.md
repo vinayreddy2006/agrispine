@@ -143,3 +143,40 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
   - Updated `ChatScreen.js` to inspect the full ImagePicker asset object (`asset.mimeType`, `asset.fileName`), guaranteeing a clean filename (`chat_${Date.now()}.${ext}`) and valid MIME type.
   - Updated `uploadMiddleware.js` to allow `application/octet-stream` when the filename has an image extension, and automatically deduce file extensions from `file.mimetype` when `file.originalname` lacks one.
   - Added Multer error handling in `backend/routes/chatRoutes.js` returning JSON `{ error: err.message }` with HTTP 400.
+
+---
+
+## 6. Location Autocomplete & Weather Web Parity Implementation
+
+### 1. Root Cause Analysis for "Yadadri Bhuvanagiri" & "Weather Unavailable"
+- **Village Discarded in Default Expression:** In `WeatherScreen.js` and `DashboardScreen.js`, the code used `const defaultLocation = user?.district || user?.village || 'Warangal'`. Because `user.district` ("Yadadri Bhuvanagiri") was defined, `user.village` ("Lingamvarigudem") was discarded, reducing the farmer's location to only the district name.
+- **Direct City Name Failure for Newly Formed Districts:** The mobile app sent `https://api.openweathermap.org/data/2.5/weather?q=Yadadri Bhuvanagiri,IN`. OpenWeatherMap's city database recognizes historical cities (e.g. Nalgonda, Hyderabad, Warangal) but returns `404 city not found` for newly organized administrative districts like Yadadri Bhuvanagiri.
+- **Ignoring Coordinates:** The mobile app completely bypassed `user.locationCoordinates` (`lat`, `lng`), which the user selects during location confirmation. When coordinates for Lingamvarigudem `(17.1322, 78.9462)` are queried, OpenWeatherMap returns 100% accurate live weather and 40 forecast periods.
+- **Missing Keystroke Autocomplete & Confirmation Workflow:** Mobile had only a static input field without real-time suggestions, and lacked `LocationConfirmationModal` on both Dashboard and Profile.
+
+### 2. Implementation & Parity Enhancements
+1. **`app/src/services/locationService.js`:**
+   - Real-time debounced (350ms) autocomplete via OpenStreetMap Nominatim (`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=in&limit=7&q=...`).
+   - Parses structured `village`, `mandal`, `district`, `state`, `country`, `lat`, `lon`, `placeId`, and `displayName`.
+   - Multi-tier geocoding candidate resolution matching web `resolveLocationCoordinates`.
+   - `confirmLocation(payload)` saving coordinates and structured location to `PUT /auth/confirm-location`.
+2. **`app/src/services/weatherService.js`:**
+   - Multi-tier resolution: checks coordinates first; if missing, resolves via `locationService.resolveLocationCoordinates`; falls back to district while **preserving** original `village` and `displayName` labels.
+   - Calculates Dew Point (Magnus-Tetens Formula), Wind Compass Direction (16-point), and local timezone conversion.
+   - AI and Rule-Based Agricultural Recommendations (Spraying, Irrigation, Harvesting, Field Work) with Favorable/Caution/Unfavorable semantic statuses, actionable advice, "Why" explanations, and time windows.
+3. **`app/src/components/LocationConfirmationModal.js`:**
+   - Standalone reusable modal matching `frontend/src/components/common/LocationConfirmationModal.jsx`.
+   - Keystroke-by-keystroke dynamic Nominatim autocomplete, displaying matching villages, mandals, and districts.
+   - Populates structured fields and coordinate badge upon selection.
+   - Saves confirmed location to backend and updates mobile auth context.
+4. **`app/src/screens/dashboard/DashboardScreen.js`:**
+   - Location Confirmation Banner prompting unconfirmed farmers to verify village location with "Confirm Village" and "Remind Later".
+   - Weather Card displaying full location label (`[village, district].join(', ')`), current temperature, feels-like, weather condition icon from OWM, humidity, wind, and pressure.
+5. **`app/src/screens/weather/WeatherScreen.js`:**
+   - Full web parity with `frontend/src/pages/core/Weather.jsx`.
+   - Location bar showing "My Farm" vs "Selected Location", "Reset to My Farm" button, "Change Location" toggle, and refresh button.
+   - Main Hero Banner: Station live observation pulse, observation time, coordinates badge, big temperature, official OWM icon, feels-like, and 4 essential quadrants (Humidity + Dew Point, Wind + Compass, Sunrise, Sunset).
+   - Agricultural Field Operations Advisory (Spraying, Irrigation, Harvesting, Field Work) with semantic status badges and metrics.
+   - 24–48 Hour Forecast Timeline grouped with day transition headers ("TODAY", "TOMORROW") and horizontal scroll cards with rain probabilities.
+   - Atmospherics & Air Observations Card (Wind velocity, direction, gusts, dew point, visibility, barometric pressure, cloud cover).
+   - Temporary location previewing never overwrites the farmer's saved farm profile.

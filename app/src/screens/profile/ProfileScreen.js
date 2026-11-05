@@ -22,6 +22,7 @@ import Badge from '../../components/Badge';
 import Avatar from '../../components/Avatar';
 import { CardSkeleton } from '../../components/LoadingSkeleton';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import LocationConfirmationModal from '../../components/LocationConfirmationModal';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
@@ -57,13 +58,6 @@ const ProfileScreen = ({ navigation }) => {
 
   // Location Confirmation Modal
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [locationForm, setLocationForm] = useState({
-    village: '',
-    mandal: '',
-    district: '',
-    state: 'Telangana',
-  });
-  const [savingLocation, setSavingLocation] = useState(false);
 
   // Analytics State
   const [analytics, setAnalytics] = useState({
@@ -165,34 +159,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const openLocationModal = () => {
-    setLocationForm({
-      village: user?.village || '',
-      mandal: user?.mandal || '',
-      district: user?.district || '',
-      state: user?.state || 'Telangana',
-    });
     setIsLocationModalOpen(true);
-  };
-
-  const handleConfirmLocation = async () => {
-    if (!locationForm.district.trim()) {
-      Alert.alert('Required', 'Please enter your district for weather and mandi accuracy.');
-      return;
-    }
-
-    try {
-      setSavingLocation(true);
-      const res = await api.put(API_ENDPOINTS.CONFIRM_LOCATION, locationForm);
-      if (res.user) {
-        updateUser(res.user);
-      }
-      setIsLocationModalOpen(false);
-      Alert.alert('Location Confirmed! 📍', 'Your farm location has been verified.');
-    } catch (err) {
-      Alert.alert('Error', err.message || 'Unable to confirm location.');
-    } finally {
-      setSavingLocation(false);
-    }
   };
 
   const handleLogoutPress = () => {
@@ -588,56 +555,11 @@ const ProfileScreen = ({ navigation }) => {
       </Modal>
 
       {/* Location Confirmation Modal */}
-      <Modal visible={isLocationModalOpen} animationType="slide" transparent>
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Confirm Farm Location 📍</Text>
-              <TouchableOpacity onPress={() => setIsLocationModalOpen(false)}>
-                <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.modalDescription}>
-              Accurate farm locations ensure precise rainfall advisories and live mandi market quotes.
-            </Text>
-
-            <Input
-              label="District"
-              value={locationForm.district}
-              onChangeText={(v) => setLocationForm({ ...locationForm, district: v })}
-              placeholder="e.g. Warangal"
-              required
-            />
-            <Input
-              label="Mandal"
-              value={locationForm.mandal}
-              onChangeText={(v) => setLocationForm({ ...locationForm, mandal: v })}
-              placeholder="e.g. Geesugonda"
-            />
-            <Input
-              label="Village"
-              value={locationForm.village}
-              onChangeText={(v) => setLocationForm({ ...locationForm, village: v })}
-              placeholder="e.g. Rampur"
-            />
-            <Input
-              label="State"
-              value={locationForm.state}
-              onChangeText={(v) => setLocationForm({ ...locationForm, state: v })}
-              placeholder="e.g. Telangana"
-            />
-
-            <Button
-              title="Verify & Confirm Location"
-              onPress={handleConfirmLocation}
-              loading={savingLocation}
-              disabled={savingLocation}
-              size="large"
-              style={{ marginTop: 16 }}
-            />
-          </View>
-        </SafeAreaView>
-      </Modal>
+      <LocationConfirmationModal
+        visible={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onLocationConfirmed={(updated) => updateUser(updated)}
+      />
 
       {/* Language Selector Modal */}
       <LanguageSelectorModal
