@@ -34,6 +34,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/machines', express.static(path.join(__dirname, '../frontend/public/machines')));
 
 // --- SOCKET.IO SETUP ---
 const server = http.createServer(app); // Wrap Express
@@ -205,7 +206,7 @@ server.on('error', (err) => {
 
 const startServer = () => {
   // 👇 IMPORTANT: Listen using 'server', not 'app'
-  server.listen(currentPort, () => {
+  server.listen(currentPort, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${currentPort}`);
   });
 };

@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 /* -------------------------------------------------------------------------- */
 export const register = async (req, res) => {
   try {
-    const { name, phone, password, userType, village, district } = req.body;
+    const { name, phone, password, userType, role, village, district } = req.body;
 
     // 1. Check if user already exists
     const existingUser = await User.findOne({ phone });
@@ -21,12 +21,17 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Support both 'user' role and legacy userType (farmer, provider, buyer)
+    const assignedUserType = userType || role || 'user';
+    const assignedRole = role || (assignedUserType === 'farmer' || assignedUserType === 'provider' || assignedUserType === 'buyer' ? 'user' : assignedUserType);
+
     // 3. Create User (registration location remains untouched per requirements)
     const newUser = new User({
       name,
       phone,
       password: hashedPassword,
-      userType,
+      userType: assignedUserType,
+      role: assignedRole,
       village,
       district,
       isLocationConfirmed: false
@@ -40,7 +45,8 @@ export const register = async (req, res) => {
         id: savedUser._id,
         name: savedUser.name,
         phone: savedUser.phone,
-        userType: savedUser.userType
+        userType: savedUser.userType,
+        role: savedUser.role || 'user'
       }
     });
 
@@ -83,6 +89,7 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         userType: user.userType,
+        role: user.role || 'user',
         village: user.village || "",
         mandal: user.mandal || "",
         district: user.district || "",

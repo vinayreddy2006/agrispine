@@ -23,7 +23,20 @@ const router = express.Router();
 router.get("/conversations", fetchUser, getConversations);
 router.post("/conversations", fetchUser, createConversation);
 router.put("/conversations/:conversationId/pin", fetchUser, pinMessage);
-router.put("/conversations/:id/icon", fetchUser, upload.single("image"), updateGroupIcon);
+router.put(
+    "/conversations/:id/icon",
+    fetchUser,
+    (req, res, next) => {
+        upload.single("image")(req, res, (err) => {
+            if (err) {
+                console.error("Group icon upload error:", err.message);
+                return res.status(400).json({ error: err.message || "Image upload failed" });
+            }
+            next();
+        });
+    },
+    updateGroupIcon
+);
 
 // Messages
 router.get("/messages/:conversationId", fetchUser, getConversationMessages);
@@ -36,7 +49,20 @@ router.post("/delete-multiple", fetchUser, deleteMultipleMessages);
 router.put("/delete-for-me", fetchUser, deleteForMe);
 
 // Uploads
-router.post("/upload", fetchUser, upload.single("file"), uploadMessageFile);
+router.post(
+    "/upload",
+    fetchUser,
+    (req, res, next) => {
+        upload.single("file")(req, res, (err) => {
+            if (err) {
+                console.error("Chat upload multer error:", err.message);
+                return res.status(400).json({ error: err.message || "File upload failed" });
+            }
+            next();
+        });
+    },
+    uploadMessageFile
+);
 
 // Send message via REST (used by AI)
 router.post("/messages", fetchUser, async (req, res) => {

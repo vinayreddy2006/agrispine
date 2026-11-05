@@ -16,8 +16,12 @@ const userSchema = new mongoose.Schema({
   },
   userType: { 
     type: String, 
-    enum: ['farmer', 'provider', 'buyer'], 
-    default: 'farmer' 
+    enum: ['farmer', 'provider', 'buyer', 'user'], 
+    default: 'user' 
+  },
+  role: { 
+    type: String, 
+    default: 'user' 
   },
   village: { type: String, default: "" },
   mandal: { type: String, default: "" },
