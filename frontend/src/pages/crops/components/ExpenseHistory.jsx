@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trash2, Receipt } from 'lucide-react';
 import EmptyState from '../../../components/ui/EmptyState';
 
@@ -8,23 +9,24 @@ const ExpenseHistory = ({
     getExpenseIcon,
     handleDeleteExpense,
     isSold,
-    setShowExpenseForm,
-    t
+    setShowExpenseForm
 }) => {
+    const { t } = useTranslation();
+
     return (
         <div className="bg-surface dark:bg-gray-800 rounded-2xl shadow-md border border-border dark:border-gray-700 overflow-hidden">
             <div className="bg-background dark:bg-gray-900 px-6 py-4 border-b border-border dark:border-gray-700 flex justify-between items-center">
-                <h3 className="font-bold text-text-primary dark:text-white">{t('crop.expense_history')}</h3>
+                <h3 className="font-bold text-text-primary dark:text-white">{t('crop.expense_history', 'Expense History')}</h3>
                 <span className="text-xs font-bold text-text-muted dark:text-gray-400 bg-surface dark:bg-gray-800 border border-border dark:border-gray-600 px-2 py-1 rounded-full">{expenses.length} Records</span>
             </div>
 
             {expenses.length === 0 ? (
                 <div className="p-6">
                     <EmptyState 
-                        title={t('crop.no_exp_yet')} 
-                        description="Track your expenses to see detailed profit and loss calculations."
+                        title={t('crop.no_exp_yet', 'No expenses recorded yet')} 
+                        description={t('crops_extra.no_expenses', 'Track your expenses to see detailed profit and loss calculations.')}
                         icon={Receipt}
-                        actionText="Add Expense"
+                        actionText={t('crops_extra.add_expense', 'Add Expense')}
                         onAction={() => setShowExpenseForm(true)}
                     />
                 </div>

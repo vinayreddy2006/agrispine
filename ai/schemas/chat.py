@@ -6,7 +6,7 @@ class ChatMessage(BaseModel):
     content: str
 
 class ChatRequest(BaseModel):
-    session_id: str
+    session_id: Optional[str] = "default"
     message: str
     history: Optional[List[ChatMessage]] = []
     context: Optional[Dict[str, Any]] = None

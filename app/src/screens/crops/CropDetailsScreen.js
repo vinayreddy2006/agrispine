@@ -286,7 +286,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <Header title="Crop Details" onBack={() => navigation.goBack()} />
+        <Header title={t('crops_ui.crop_timeline', 'Crop Details')} onBack={() => navigation.goBack()} />
         <View style={{ padding: 16 }}>
           <CardSkeleton />
           <CardSkeleton />
@@ -298,9 +298,9 @@ const CropDetailsScreen = ({ route, navigation }) => {
   if (error || !crop) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <Header title="Crop Details" onBack={() => navigation.goBack()} />
+        <Header title={t('crops_ui.crop_timeline', 'Crop Details')} onBack={() => navigation.goBack()} />
         <View style={{ padding: 16 }}>
-          <ErrorState message={error || 'Crop not found'} onRetry={loadCropDetails} />
+          <ErrorState message={error || t('common.error', 'Crop not found')} onRetry={loadCropDetails} />
         </View>
       </SafeAreaView>
     );
@@ -317,8 +317,8 @@ const CropDetailsScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={crop.cropName}
-        subtitle={`${crop.variety || 'Local'} • ${crop.area} ${crop.areaUnit || 'Acres'}`}
+        title={t(`crops_list.${crop.cropName?.toLowerCase()}`, crop.cropName)}
+        subtitle={`${crop.variety || t('crops_ui.local_variety', 'Local')} • ${crop.area} ${crop.areaUnit || t('crops_ui.acres', 'Acres')}`}
         onBack={() => navigation.goBack()}
         rightAction={
           <TouchableOpacity onPress={handleDeleteCrop} style={styles.trashBtn}>
@@ -341,9 +341,9 @@ const CropDetailsScreen = ({ route, navigation }) => {
               <MaterialCommunityIcons name="sprout" size={28} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cropTitle}>{crop.cropName}</Text>
+              <Text style={styles.cropTitle}>{t(`crops_list.${crop.cropName?.toLowerCase()}`, crop.cropName)}</Text>
               <Text style={styles.cropSubtitle}>
-                {crop.variety ? `Variety: ${crop.variety}` : 'Local Variety'}
+                {crop.variety ? `${t('crops_ui.variety', 'Variety')}: ${crop.variety}` : t('crops_ui.local_variety', 'Local Variety')}
               </Text>
             </View>
             <Badge status={crop.status || 'growing'} />
@@ -351,26 +351,26 @@ const CropDetailsScreen = ({ route, navigation }) => {
 
           <View style={styles.metaGrid}>
             <View style={styles.metaCell}>
-              <Text style={styles.metaLabel}>Farm Area</Text>
-              <Text style={styles.metaVal}>{crop.area} {crop.areaUnit || 'Acres'}</Text>
+              <Text style={styles.metaLabel}>{t('crops_ui.area_acres', 'Farm Area')}</Text>
+              <Text style={styles.metaVal}>{crop.area} {crop.areaUnit || t('crops_ui.acres', 'Acres')}</Text>
             </View>
             <View style={styles.metaCell}>
-              <Text style={styles.metaLabel}>Sowing Date</Text>
+              <Text style={styles.metaLabel}>{t('crops_ui.sowing_date', 'Sowing Date')}</Text>
               <Text style={styles.metaVal}>{formatDate(crop.sowingDate)}</Text>
             </View>
             <View style={styles.metaCell}>
-              <Text style={styles.metaLabel}>Total Expenses</Text>
+              <Text style={styles.metaLabel}>{t('crops_ui.total_expenses', 'Total Expenses')}</Text>
               <Text style={[styles.metaVal, { color: colors.error }]}>{formatCurrency(totalExpense)}</Text>
             </View>
             <View style={styles.metaCell}>
-              <Text style={styles.metaLabel}>Expected Yield</Text>
+              <Text style={styles.metaLabel}>{t('crops_ui.expected_yield', 'Expected Yield')}</Text>
               <Text style={styles.metaVal}>{crop.expectedYield || '25-30 Qtl'}</Text>
             </View>
           </View>
 
           {crop.notes ? (
             <View style={styles.notesBox}>
-              <Text style={styles.notesLabel}>Field Notes:</Text>
+              <Text style={styles.notesLabel}>{t('crops_ui.field_notes', 'Field Notes')}:</Text>
               <Text style={styles.notesText}>{crop.notes}</Text>
             </View>
           ) : null}
@@ -380,7 +380,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
             <View style={styles.actionRow}>
               {!isHarvested && (
                 <Button
-                  title="Record Harvest"
+                  title={t('crops_ui.record_harvest', 'Record Harvest')}
                   onPress={() => setIsSellModalOpen(true)}
                   size="small"
                   variant="outline"
@@ -390,7 +390,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
               )}
               {!crop.isListed && (
                 <Button
-                  title="List on Market"
+                  title={t('crops_ui.list_on_market', 'List on Market')}
                   onPress={handleOpenListModal}
                   size="small"
                   variant="primary"
@@ -408,9 +408,9 @@ const CropDetailsScreen = ({ route, navigation }) => {
             <View style={styles.marketCardHeader}>
               <View style={styles.marketBadgeGroup}>
                 <MaterialCommunityIcons name="storefront" size={20} color="#EA580C" />
-                <Text style={styles.marketTitle}>Listed on Market</Text>
+                <Text style={styles.marketTitle}>{t('crops_ui.listed_on_market', 'Listed on Market')}</Text>
                 <View style={styles.activeTag}>
-                  <Text style={styles.activeTagText}>ACTIVE</Text>
+                  <Text style={styles.activeTagText}>{t('crops_ui.active_badge', 'ACTIVE')}</Text>
                 </View>
               </View>
               <TouchableOpacity
@@ -419,14 +419,14 @@ const CropDetailsScreen = ({ route, navigation }) => {
                 disabled={savingMarket}
               >
                 <MaterialCommunityIcons name="trash-can-outline" size={16} color="#DC2626" />
-                <Text style={styles.delistBtnText}>Unlist</Text>
+                <Text style={styles.delistBtnText}>{t('crops_ui.unlist', 'Unlist')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.marketDetailRow}>
               <Text style={styles.marketDetailText}>
-                Price: <Text style={styles.boldText}>₹{crop.expectedPrice || 0}/Qtl</Text>
+                {t('common.price', 'Price')}: <Text style={styles.boldText}>₹{crop.expectedPrice || 0}/Qtl</Text>
                 {'  •  '}
-                Qty: <Text style={styles.boldText}>{crop.quantityAvailable || 0} Qtl</Text>
+                {t('common.quantity', 'Qty')}: <Text style={styles.boldText}>{crop.quantityAvailable || 0} Qtl</Text>
               </Text>
             </View>
             {crop.description ? (
@@ -438,17 +438,17 @@ const CropDetailsScreen = ({ route, navigation }) => {
         {/* Financial Summary Card (If harvested or income recorded) */}
         {isHarvested && (
           <Card style={styles.financialCard}>
-            <Text style={styles.financialTitle}>Harvest & Profit Analysis</Text>
+            <Text style={styles.financialTitle}>{t('crops_ui.harvest_analysis', 'Harvest & Profit Analysis')}</Text>
             <View style={styles.financialRow}>
-              <Text style={styles.financialLabel}>Total Sales Income</Text>
+              <Text style={styles.financialLabel}>{t('crops_ui.total_sales_income', 'Total Sales Income')}</Text>
               <Text style={[styles.financialVal, { color: colors.primary }]}>{formatCurrency(totalIncome)}</Text>
             </View>
             <View style={styles.financialRow}>
-              <Text style={styles.financialLabel}>Total Cultivation Cost</Text>
+              <Text style={styles.financialLabel}>{t('crops_ui.total_cultivation_cost', 'Total Cultivation Cost')}</Text>
               <Text style={[styles.financialVal, { color: colors.error }]}>{formatCurrency(totalExpense)}</Text>
             </View>
             <View style={[styles.financialRow, styles.netProfitRow]}>
-              <Text style={styles.netProfitLabel}>Net Farm Profit</Text>
+              <Text style={styles.netProfitLabel}>{t('crops_ui.net_farm_profit', 'Net Farm Profit')}</Text>
               <Text style={[styles.netProfitVal, { color: netProfit >= 0 ? colors.primary : colors.error }]}>
                 {formatCurrency(netProfit)}
               </Text>
@@ -459,8 +459,8 @@ const CropDetailsScreen = ({ route, navigation }) => {
         {/* Expenses Section */}
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionTitle}>Expense Tracking</Text>
-            <Text style={styles.sectionSub}>All investments in fertilizers, seeds, labor & machinery</Text>
+            <Text style={styles.sectionTitle}>{t('crops_ui.expense_tracking', 'Expense Tracking')}</Text>
+            <Text style={styles.sectionSub}>{t('crops_ui.expense_tracking_sub', 'All investments in fertilizers, seeds, labor & machinery')}</Text>
           </View>
           {!isSold && (
             <TouchableOpacity
@@ -468,7 +468,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
               onPress={() => setIsExpenseModalOpen(true)}
             >
               <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
-              <Text style={styles.addExpenseBtnText}>Add Expense</Text>
+              <Text style={styles.addExpenseBtnText}>{t('crops_ui.add_expense', 'Add Expense')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -476,13 +476,13 @@ const CropDetailsScreen = ({ route, navigation }) => {
         {expenses.length === 0 ? (
           <Card style={styles.emptyExpenseCard}>
             <MaterialCommunityIcons name="receipt" size={36} color={colors.textMuted} />
-            <Text style={styles.emptyExpenseTitle}>No Expenses Recorded</Text>
+            <Text style={styles.emptyExpenseTitle}>{t('crops_ui.no_expenses_title', 'No Expenses Recorded')}</Text>
             <Text style={styles.emptyExpenseSub}>
-              Track spending on fertilizers, labor, and diesel to calculate real crop profits.
+              {t('crops_ui.no_expenses_sub', 'Track spending on fertilizers, labor, and diesel to calculate real crop profits.')}
             </Text>
             {!isSold && (
               <Button
-                title="Add First Expense"
+                title={t('crops_ui.add_first_expense', 'Add First Expense')}
                 onPress={() => setIsExpenseModalOpen(true)}
                 size="small"
                 style={{ marginTop: 12 }}
@@ -499,7 +499,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.expenseTitle}>{expense.title}</Text>
                   <Text style={styles.expenseCategory}>
-                    {expense.category || 'General'} • {formatDate(expense.date)}
+                    {t(`crops_ui.category_${expense.category?.toLowerCase()}`, expense.category || 'General')} • {formatDate(expense.date)}
                   </Text>
                   {expense.notes ? <Text style={styles.expenseNotes}>{expense.notes}</Text> : null}
                 </View>
@@ -531,13 +531,13 @@ const CropDetailsScreen = ({ route, navigation }) => {
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalHeading}>Record Crop Expense</Text>
+              <Text style={styles.modalHeading}>{t('crops_ui.record_crop_expense', 'Record Crop Expense')}</Text>
               <TouchableOpacity onPress={() => setIsExpenseModalOpen(false)}>
                 <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.categoryLabel}>Expense Category</Text>
+            <Text style={styles.categoryLabel}>{t('crops_ui.expense_category', 'Expense Category')}</Text>
             <View style={styles.categoryGrid}>
               {EXPENSE_CATEGORIES.map((cat) => {
                 const isSelected = expenseForm.category === cat.label;
@@ -553,7 +553,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
                       color={isSelected ? colors.primaryDark : colors.textSecondary}
                     />
                     <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
-                      {cat.label}
+                      {t(`crops_ui.category_${cat.label.toLowerCase()}`, cat.label)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -561,7 +561,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
             </View>
 
             <Input
-              label="Description / Purpose"
+              label={t('crops_ui.desc_purpose', 'Description / Purpose')}
               placeholder="e.g. Urea fertilizer 2 bags, tractor plowing"
               value={expenseForm.title}
               onChangeText={(v) => setExpenseForm({ ...expenseForm, title: v })}
@@ -569,7 +569,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
             />
 
             <Input
-              label="Amount (₹)"
+              label={t('crops_ui.expense_amount', 'Amount (₹)')}
               placeholder="e.g. 1850"
               value={expenseForm.amount}
               keyboardType="numeric"
@@ -578,14 +578,14 @@ const CropDetailsScreen = ({ route, navigation }) => {
             />
 
             <Input
-              label="Notes / Vendor (Optional)"
+              label={t('crops_ui.expense_notes', 'Notes / Vendor (Optional)')}
               placeholder="e.g. Bought from Kisan Seva Kendra"
               value={expenseForm.notes}
               onChangeText={(v) => setExpenseForm({ ...expenseForm, notes: v })}
             />
 
             <Button
-              title="Save Expense"
+              title={t('crop.save_expense', 'Save Expense')}
               onPress={handleAddExpense}
               loading={savingExpense}
               disabled={savingExpense}
@@ -606,14 +606,14 @@ const CropDetailsScreen = ({ route, navigation }) => {
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalHeading}>Record Harvest & Sale</Text>
+              <Text style={styles.modalHeading}>{t('crops_ui.record_harvest_sale', 'Record Harvest & Sale')}</Text>
               <TouchableOpacity onPress={() => setIsSellModalOpen(false)}>
                 <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
             <Input
-              label="Total Harvested Quantity (Quintals)"
+              label={t('crops_ui.total_harvested_qty', 'Total Harvested Quantity (Quintals)')}
               placeholder="e.g. 35"
               value={sellForm.quantity}
               keyboardType="numeric"
@@ -622,7 +622,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
             />
 
             <Input
-              label="Sale Price per Quintal (₹)"
+              label={t('crops_ui.sale_price_qtl', 'Sale Price per Quintal (₹)')}
               placeholder="e.g. 2350"
               value={sellForm.pricePerUnit}
               keyboardType="numeric"
@@ -631,7 +631,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
             />
 
             <Button
-              title="Complete Harvest & Record Profit"
+              title={t('crops_ui.complete_harvest_btn', 'Complete Harvest & Record Profit')}
               onPress={handleSellCrop}
               loading={savingSell}
               disabled={savingSell}
@@ -652,17 +652,17 @@ const CropDetailsScreen = ({ route, navigation }) => {
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalHeading}>List on Buyer Market 🛒</Text>
+              <Text style={styles.modalHeading}>{t('crops_ui.list_on_market', 'List on Buyer Market')} 🛒</Text>
               <TouchableOpacity onPress={() => setIsMarketModalOpen(false)}>
                 <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
             <Text style={styles.modalSub}>
-              Listing your produce allows verified agricultural traders, millers, and buyers across your district to contact you directly.
+              {t('market_ui.subtitle', 'Listing your produce allows verified agricultural traders, millers, and buyers across your district to contact you directly.')}
             </Text>
 
             <Input
-              label="Asking Price per Quintal (₹)"
+              label={t('crops_ui.asking_price_qtl', 'Asking Price per Quintal (₹)')}
               placeholder="e.g. 2400"
               value={marketForm.pricePerUnit}
               keyboardType="numeric"
@@ -671,7 +671,7 @@ const CropDetailsScreen = ({ route, navigation }) => {
             />
 
             <Input
-              label="Quantity Available for Sale (Quintals)"
+              label={t('crops_ui.qty_available_sale', 'Quantity Available for Sale (Quintals)')}
               placeholder="e.g. 25"
               value={marketForm.quantity}
               keyboardType="numeric"

@@ -70,7 +70,7 @@ const BuyerMarket = () => {
                     <CardSkeleton count={4} />
                 ) : error ? (
                     <ErrorState
-                        title="Failed to Load Farm Listings"
+                        title={t('ui.error_title', "Failed to Load Farm Listings")}
                         message={error}
                         onRetry={fetchListings}
                     />
@@ -78,20 +78,14 @@ const BuyerMarket = () => {
                     <NoSearchResults
                         query={searchTerm}
                         onClear={() => setSearchTerm("")}
-                        suggestions={[
-                            "Search by crop type like Paddy, Cotton, or Maize",
-                            "Search by farmer's village or mandal name",
-                            "Clear your search to view all active farmer listings"
-                        ]}
                     />
                 ) : listings.length === 0 ? (
                     <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center border border-slate-200/80 dark:border-slate-800">
                         <EmptyState 
                             title={t('market.no_crops', { defaultValue: "No crops listed in the market yet" })}
-                            description="Direct harvest listings published by local farmers will be displayed here for buyers and traders."
-                            tip="Are you a farmer? List your harvested crops directly from My Crops to connect with wholesale buyers."
+                            description={t('ui.empty_desc', "Direct harvest listings published by local farmers will be displayed here for buyers and traders.")}
                             icon={ShoppingBag}
-                            actionText="Go to My Crops"
+                            actionText={t('nav.crops', "Go to My Crops")}
                             onAction={() => navigate("/my-crops")}
                         />
                     </div>

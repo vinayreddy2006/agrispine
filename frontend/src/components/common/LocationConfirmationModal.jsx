@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { 
   MapPin, Search, Navigation, CheckCircle2, AlertCircle, 
   X, Loader2, Sparkles, Building, ChevronRight 
@@ -6,6 +7,7 @@ import {
 import api from "../../utils/api";
 
 const LocationConfirmationModal = ({ isOpen, onClose, onLocationConfirmed, initialData = null }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -226,8 +228,8 @@ const LocationConfirmationModal = ({ isOpen, onClose, onLocationConfirmed, initi
               <MapPin className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-black">Confirm Your Farm Location</h3>
-              <p className="text-emerald-100 text-xs">Accurate weather, nearby machinery, and village group updates</p>
+              <h3 className="text-xl font-black">{t('location_modal.title', 'Confirm Your Farm Location')}</h3>
+              <p className="text-emerald-100 text-xs">{t('location_modal.desc', 'Accurate weather, nearby machinery, and village group updates')}</p>
             </div>
           </div>
         </div>
@@ -372,7 +374,7 @@ const LocationConfirmationModal = ({ isOpen, onClose, onLocationConfirmed, initi
                 onClick={onClose}
                 className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition"
               >
-                Skip for Now
+                {t('common.skip', 'Skip for Now')}
               </button>
 
               <button
@@ -383,12 +385,12 @@ const LocationConfirmationModal = ({ isOpen, onClose, onLocationConfirmed, initi
                 {saving ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Saving...</span>
+                    <span>{t('common.loading', 'Saving...')}</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Confirm & Save Location</span>
+                    <span>{t('location_modal.confirm_btn', 'Confirm & Save Location')}</span>
                   </>
                 )}
               </button>

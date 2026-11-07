@@ -175,11 +175,11 @@ const MyBookingsScreen = ({ navigation }) => {
 
         <View style={styles.detailsGrid}>
           <View style={styles.detailCol}>
-            <Text style={styles.detailLabel}>Scheduled Date</Text>
+            <Text style={styles.detailLabel}>{t('common.date', 'Scheduled Date')}</Text>
             <Text style={styles.detailVal}>{formatDate(item.date)}</Text>
           </View>
           <View style={styles.detailCol}>
-            <Text style={styles.detailLabel}>{isOwnerTab ? 'Farmer (Renter)' : 'Owner / Provider'}</Text>
+            <Text style={styles.detailLabel}>{isOwnerTab ? t('common.farmer', 'Farmer (Renter)') : t('machinery_ui.owner', 'Owner / Provider')}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
               <Avatar
                 source={isOwnerTab ? item.farmer?.profileImage : item.provider?.profileImage}
@@ -190,7 +190,7 @@ const MyBookingsScreen = ({ navigation }) => {
             </View>
           </View>
           <View style={styles.detailCol}>
-            <Text style={styles.detailLabel}>Rental Cost</Text>
+            <Text style={styles.detailLabel}>{t('common.amount', 'Rental Cost')}</Text>
             <Text style={[styles.detailVal, { color: colors.primary }]}>
               {formatCurrency(item.totalAmount || 0)}
             </Text>
@@ -199,7 +199,7 @@ const MyBookingsScreen = ({ navigation }) => {
 
         {item.notes ? (
           <View style={styles.notesBox}>
-            <Text style={styles.notesText}>Notes: {item.notes}</Text>
+            <Text style={styles.notesText}>{t('common.notes', 'Notes')}: {item.notes}</Text>
           </View>
         ) : null}
 
@@ -209,7 +209,7 @@ const MyBookingsScreen = ({ navigation }) => {
           {isOwnerTab && status === 'pending' && (
             <View style={styles.buttonRow}>
               <Button
-                title="Decline"
+                title={t('common.cancel', 'Decline')}
                 variant="outline"
                 size="small"
                 onPress={() => handleUpdateStatus(item._id, 'rejected')}
@@ -217,7 +217,7 @@ const MyBookingsScreen = ({ navigation }) => {
                 textStyle={{ color: colors.error }}
               />
               <Button
-                title="Accept Request"
+                title={t('common.confirm', 'Accept Request')}
                 size="small"
                 onPress={() => handleUpdateStatus(item._id, 'accepted')}
                 style={{ flex: 1 }}
@@ -227,7 +227,7 @@ const MyBookingsScreen = ({ navigation }) => {
 
           {isOwnerTab && status === 'accepted' && (
             <Button
-              title="Mark as Completed"
+              title={t('common.completed', 'Mark as Completed')}
               variant="outline"
               size="small"
               onPress={() => handleUpdateStatus(item._id, 'completed')}
@@ -238,7 +238,7 @@ const MyBookingsScreen = ({ navigation }) => {
           {/* Renter Tab Actions */}
           {!isOwnerTab && (status === 'pending' || status === 'accepted') && (
             <Button
-              title="Cancel Booking"
+              title={t('common.cancel', 'Cancel Booking')}
               variant="outline"
               size="small"
               onPress={() => handleUpdateStatus(item._id, 'cancelled')}
@@ -294,7 +294,7 @@ const MyBookingsScreen = ({ navigation }) => {
           <Text
             style={[styles.tabBtnText, activeTab === 'renter' && styles.tabBtnTextActive]}
           >
-            My Bookings ({renterBookings.length})
+            {t('machinery_ui.my_bookings_title', 'My Bookings')} ({renterBookings.length})
           </Text>
         </TouchableOpacity>
 
@@ -310,7 +310,7 @@ const MyBookingsScreen = ({ navigation }) => {
           <Text
             style={[styles.tabBtnText, activeTab === 'owner' && styles.tabBtnTextActive]}
           >
-            Fleet Requests ({ownerRequests.length})
+            {t('machinery_ui.bookings', 'Fleet Requests')} ({ownerRequests.length})
           </Text>
         </TouchableOpacity>
       </View>

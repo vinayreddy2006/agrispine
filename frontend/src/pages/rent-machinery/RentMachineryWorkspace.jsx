@@ -488,7 +488,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
             
             {/* Header */}
             <PageHeader 
-                title="Rent Machinery"
+                title={t('machinery_ui.title', 'Rent Machinery')}
                 icon={Tractor}
                 rightActions={<LanguageSwitcher />}
             />
@@ -522,16 +522,16 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                 <div className="flex-1 pr-6">
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                                            Rent Equipment
+                                            {t('machinery_ui.title', 'Rent Equipment')}
                                         </h2>
                                         {mode === 'rent' && (
                                             <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-600 text-white">
-                                                Active Mode
+                                                {t('common.active', 'Active')}
                                             </span>
                                         )}
                                     </div>
                                     <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed font-medium">
-                                        Find nearby tractors, harvesters and other agricultural machinery. Explore services, check availability and manage your bookings.
+                                        {t('machinery_ui.subtitle', 'Find nearby tractors, harvesters and other agricultural machinery. Explore services, check availability and manage your bookings.')}
                                     </p>
                                 </div>
                             </div>
@@ -565,11 +565,11 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                 <div className="flex-1 pr-6">
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                                            Manage My Equipment
+                                            {t('machinery_ui.my_fleet', 'Manage My Equipment')}
                                         </h2>
                                         {mode === 'owner' && (
                                             <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-600 text-white">
-                                                Active Mode
+                                                {t('common.active', 'Active')}
                                             </span>
                                         )}
                                         {ownerStats.pendingRequests > 0 && (
@@ -579,7 +579,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                         )}
                                     </div>
                                     <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed font-medium">
-                                        List your machines, manage agricultural services, handle incoming booking requests and manage your equipment schedule.
+                                        {t('machinery_ui.subtitle', 'List your machines, manage agricultural services, handle incoming booking requests and manage your equipment schedule.')}
                                     </p>
                                 </div>
                             </div>
@@ -611,7 +611,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                 }`}
                             >
                                 <Compass className="w-4 h-4" />
-                                <span>Discover Equipment</span>
+                                <span>{t('machinery_ui.title', 'Discover Equipment')}</span>
                             </button>
 
                             <button
@@ -623,7 +623,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                 }`}
                             >
                                 <ClipboardList className="w-4 h-4" />
-                                <span>My Bookings</span>
+                                <span>{t('machinery_ui.bookings', 'My Bookings')}</span>
                                 {renterBookings.length > 0 && (
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                                         rentTab === 'bookings'
@@ -644,7 +644,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                 }`}
                             >
                                 <Calendar className="w-4 h-4" />
-                                <span>Booking Calendar</span>
+                                <span>{t('machinery_ui.calendar', 'Booking Calendar')}</span>
                             </button>
                         </div>
 
@@ -663,7 +663,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                             <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none shrink-0" />
                                             <input
                                                 type="text"
-                                                placeholder="Search by equipment, service task (e.g., Ploughing), village..."
+                                                placeholder={t('machinery_ui.search_placeholder', 'Search tractor, harvester, drone, location...')}
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                                 className="w-full !pl-11 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[44px]"
@@ -684,12 +684,12 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                                 onChange={(e) => setProximityFilter(e.target.value)}
                                                 className="px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                             >
-                                                <option value="all">Everywhere</option>
+                                                <option value="all">{t('common.all', 'Everywhere')}</option>
                                                 {currentUser?.village && (
-                                                    <option value="village">In My Village ({currentUser.village})</option>
+                                                    <option value="village">{currentUser.village}</option>
                                                 )}
                                                 {currentUser?.district && (
-                                                    <option value="district">In My District ({currentUser.district})</option>
+                                                    <option value="district">{currentUser.district}</option>
                                                 )}
                                             </select>
 
@@ -698,9 +698,9 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                                 onChange={(e) => setSortBy(e.target.value)}
                                                 className="px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                             >
-                                                <option value="recommended">Recommended</option>
-                                                <option value="price_asc">Price: Low to High</option>
-                                                <option value="price_desc">Price: High to Low</option>
+                                                <option value="recommended">{t('common.recommended', 'Recommended')}</option>
+                                                <option value="price_asc">{t('common.price', 'Price')}: Low to High</option>
+                                                <option value="price_desc">{t('common.price', 'Price')}: High to Low</option>
                                                 <option value="rating_desc">Highest Rated</option>
                                             </select>
                                         </div>
@@ -710,6 +710,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                     <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 scrollbar-none">
                                         {CATEGORIES.map(cat => {
                                             const isActive = selectedCategory.toLowerCase() === cat.name.toLowerCase();
+                                            const catTransKey = `machinery_ui.cat_${cat.name.toLowerCase().replace(/\s+/g, '_')}`;
                                             return (
                                                 <button
                                                     key={cat.name}
@@ -734,7 +735,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                                             style={{ width: '36px', height: '26px', minWidth: '36px', minHeight: '26px', maxWidth: '36px', maxHeight: '26px' }}
                                                         />
                                                     )}
-                                                    <span className="leading-none">{cat.name}</span>
+                                                    <span className="leading-none">{t(catTransKey, cat.name)}</span>
                                                 </button>
                                             );
                                         })}
@@ -761,10 +762,10 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                         />
                                     ) : (
                                         <EmptyState
-                                            title="No Machinery Found"
-                                            description="No equipment matches your search or filters. Try adjusting your search query or location settings."
+                                            title={t('machinery_ui.no_found_title', 'No Machinery Found')}
+                                            description={t('machinery_ui.no_found_desc', 'No farm machinery matches your search query. Try another keyword or category.')}
                                             icon={Tractor}
-                                            actionText="Reset Filters"
+                                            actionText={t('machinery_ui.clear_search', 'Clear Search')}
                                             onAction={() => {
                                                 setSearchQuery("");
                                                 setSelectedCategory("All");
@@ -804,7 +805,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                                                     ? 'bg-emerald-600 text-white shadow-xs'
                                                                     : 'bg-slate-500 text-white'
                                                             }`}>
-                                                                {isAvailable ? 'Available' : 'Booked'}
+                                                                {isAvailable ? t('machinery_ui.available', 'Available') : t('machinery_ui.busy', 'Booked')}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -841,7 +842,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                                                     ₹{m.price}
                                                                 </span>
                                                                 <span className="text-xs text-slate-500 font-semibold">
-                                                                    / {m.priceUnit || 'hour'}
+                                                                    / {m.priceUnit || t('rent.per_hour', 'hour')}
                                                                 </span>
                                                             </div>
 
@@ -871,7 +872,7 @@ const RentMachineryWorkspace = ({ defaultMode, defaultTab }) => {
                                                                 onClick={() => navigate(`/rent/details/${m._id}`)}
                                                                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5"
                                                             >
-                                                                <span>View & Book Equipment</span>
+                                                                <span>{t('machinery_ui.check_services', 'View & Book Equipment')}</span>
                                                                 <ChevronRight className="w-4 h-4" />
                                                             </button>
                                                         </div>

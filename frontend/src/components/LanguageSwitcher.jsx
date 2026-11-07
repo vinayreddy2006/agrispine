@@ -14,6 +14,11 @@ const LanguageSwitcher = () => {
     ];
 
     const changeLanguage = (lng) => {
+        try {
+            localStorage.setItem('i18nextLng', lng);
+        } catch (e) {
+            console.error('Failed to save language in localStorage', e);
+        }
         i18n.changeLanguage(lng).then(() => {
             window.location.reload();
         });

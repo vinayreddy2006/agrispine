@@ -103,6 +103,37 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 - **Root Cause:** Multiple screens were hardcoded to display initials text in a circle (e.g. `displayName.charAt(0).toUpperCase()`), completely ignoring the user's `profileImage` field.
 - **Fix:** Created `Avatar.js` with automatic URL resolution, fallback initials with deterministic colors (`getAvatarColor`), and online badges. Integrated `Avatar` across Dashboard, Profile, Village Chat, Community posts/comments, Workgroup members, Machinery owner info, and Buyer market cards.
 
+### Bug 5: GramSathi AI "Service Unavailable" and Connection Failure
+- **Root Cause:**
+  1. `backend/.env` was configured with `AI_SERVICE_URL=https://agrispine-ai.onrender.com`. When the mobile app sent an AI chat request to the Node.js backend, the backend's `forwardToFastAPI` attempted up to 15 retries * 5 seconds (75 seconds total) against the sleeping Render URL.
+  2. Mobile client `APP_CONFIG.TIMEOUT_MS` is set to 15 seconds. The 75-second backend stall reliably triggered client timeout.
+  3. `app/src/screens/ai/GramSathiScreen.js` caught the error blindly and swallowed all server details, always displaying the generic `t('gramsathi_ai.offline_msg')` ("GramSathi service is currently unavailable. Please check your network.").
+  4. `app/src/constants/config.js` had a stale LAN IP fallback (`192.168.1.43:5000` instead of current Wi-Fi IP `10.85.213.163:5000`).
+  5. FastAPI service lacked `/health` and `/api/ai/health` diagnostics, and `ChatRequest` schema rigidly rejected requests missing `session_id`.
+- **Fix:**
+  1. Updated `backend/.env` to point `AI_SERVICE_URL=http://localhost:8000`.
+  2. Implemented multi-endpoint candidate fallback in `backend/services/aiService.js` (`cleanAiUrl`, `http://127.0.0.1:8000/api/ai`, `http://localhost:8000/api/ai`) with reduced per-request timeout (10s) and fast retry (1s), preventing mobile timeout overrun.
+  3. Added `/health` and `/api/ai/health` endpoints to `ai/main.py` and `backend/routes/aiRoutes.js`.
+  4. Updated `DEFAULT_LAN_URL` in `app/src/constants/config.js` to `http://10.85.213.163:5000` and added `AI_HEALTH: '/api/ai/health'`.
+  5. Refactored error handling in `GramSathiScreen.js` to parse and display specific errors: HTTP 401 Session Expiration, HTTP 500 AI server messages, client connection timeouts, and network reachability errors.
+  6. Added diagnostic logging in `app/src/services/aiService.js` and updated `ai/schemas/chat.py` with optional `session_id` default.
+  7. Verified live end-to-end greeting ("Hi") returning HTTP 200 with intent `GREETING` and model `qwen/qwen3.8-27b` via Groq.
+
+### Bug 6: GramSathi AI – "Audio Recording Not Supported in This Runtime"
+- **Root Cause:**
+  1. The project uses Expo SDK 58 (`"expo": "~58.0.22"`). In Expo SDK 54+, `expo-av` was deprecated and its native recording module removed from modern Expo Go in favor of the new universal `expo-audio` package.
+  2. `app/src/screens/ai/GramSathiScreen.js` attempted to load `require('expo-av').Audio` inside a `try/catch`. When `Audio` evaluated to `null`, tapping the microphone triggered the alert: `"Audio recording is not supported in this runtime."`
+  3. The backend voice proxy in `backend/controllers/aiController.js` sent `audio_file` while the FastAPI endpoint in `ai/router/voice.py` strictly expected `audio: UploadFile = File(...)`, triggering 422 Unprocessable Entity.
+  4. The audio transcription used `speech_recognition.AudioFile`, which cannot read native Android AAC `.m4a` files without PCM conversion.
+  5. The mobile screen immediately and automatically dispatched the voice recording to the chat without allowing the farmer to review or edit the recognized speech.
+- **Fix:**
+  1. Installed `expo-audio@~58.0.11` matching Expo SDK 58.
+  2. Built `app/src/utils/audioRecorder.js` supporting both `expo-audio` (primary for SDK 58) and `expo-av` (fallback) with permission checks, deep linking to Android Settings if permission is denied, and clean cancellation/recording lifecycle.
+  3. Added `POST /api/ai/transcribe` in `ai/router/voice.py` integrating Groq Whisper Large v3 (`whisper-large-v3`) with native multilingual transcription support for English (`en`), Telugu (`te`), and Hindi (`hi`), falling back to Google Speech Recognition.
+  4. Added `POST /api/ai/transcribe` in `backend/routes/aiRoutes.js` and `backend/controllers/aiController.js` with `audio` and `audio_file` compatibility.
+  5. Connected the recording flow in `GramSathiScreen.js` to populate the recognized text directly into the chat `inputText` box, enabling farmers to review, edit, and send at their own pace without immediate forced sending.
+  6. Verified `/api/ai/transcribe` end-to-end with TestClient returning HTTP 200 and handling empty/silent recordings with clear feedback.
+
 ---
 
 ## 4. Verification & Health Check
@@ -352,5 +383,49 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
     - **Danger Zone (Owner Only):**
       - Close Group (`closeGroup`) to freeze logging.
       - Delete Group Permanently (`deleteGroup`) with safe confirmation and cascade cleanup.
+
+---
+
+## 6. GramSathi AI Architecture & Groq Provider Integration
+
+### 1. Root Cause Analysis
+- **Hugging Face Serverless Deprecation / Payment Block:**
+  - Hugging Face serverless chat endpoints (`router.huggingface.co/v1/chat/completions`) began returning `402 Payment Required` or `The requested model is not supported by any provider you have enabled` for standard models (`Qwen/Qwen2.5-Coder-32B-Instruct`, `meta-llama/Llama-3.2-3B-Instruct`, `HuggingFaceH4/zephyr-7b-beta`), exhausting all fallbacks.
+  - The API responded with `200 OK` but contained runtime error exceptions or fallback failures inside intent classification.
+
+### 2. Provider-Independent Architecture & Groq Integration
+- **Groq API URL Resolution (Fixed):**
+  - Resolved `Unknown request URL: POST /openai/v1/openai/v1/chat/completions` caused by the Groq SDK appending `/openai/v1/chat/completions` to a base_url already ending in `/openai/v1`.
+  - Built automatic base URL sanitization in `GroqEngine.__init__` normalizing endpoints to `https://api.groq.com`, ensuring exact request URL `https://api.groq.com/openai/v1/chat/completions`.
+- **Model Verification & Real Production Models:**
+  - Audited models on the active Groq account: identified that legacy `mixtral-8x7b-32768` and `gemma2-9b-it` were decommissioned by Groq (400), and `llama-3.3-70b-versatile` / `llama-3.1-8b-instant` returned 404 access restrictions.
+  - Configured verified active production models: Primary `qwen/qwen3.8-27b` (exceptional multilingual Telugu, Hindi, and English accuracy) with verified fallbacks `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, and `allam-2-7b`, all verified with native JSON mode (`response_format={"type": "json_object"}`).
+- **Accurate HTTP Status Codes on Failures:**
+  - Replaced false HTTP 200 OK responses on intent classification errors with explicit HTTP 500 status codes in both `ai/router/chat.py` and `backend/controllers/aiController.js`.
+- **Greeting & General Conversation Support:**
+  - Added dedicated first-class `GREETING` and `GENERAL_CONVERSATION` intent classifications.
+  - Supports "Hi", "Hello", "How are you?", "Namaste", "నమస్కారం", "What can you do?", "Help me", and contextual follow-ups ("My previous question was about rice. Tell me more.") without misclassifying into farming task actions.
+  - Verified 10/10 test cases in automated test suite across English, Telugu, and Hindi.
+
+---
+
+## 7. Full Multilingual Translation Audit & Parity (Web & Mobile)
+
+### 1. Translation Parity Audit
+- Audited `frontend/public/locales/` (`en`, `te`, `hi`) and `app/src/i18n/translations/` (`en.json`, `te.json`, `hi.json`).
+- Discovered and resolved:
+  - 156 missing `landing.*` English strings in `frontend/public/locales/en/translation.json` (extracted from defaults in `Landing.jsx`).
+  - 35 missing `village.*` keys (clipboard, starring, message actions, themes, audio recording).
+  - 6 missing `schemes.*` keys (`financial_benefit`, `about`, `important_timeline`, `application_window`, `disbursement_window`, `apply_official`).
+  - Missing `dashboard.work_groups` in Hindi translation.
+  - Missing `crop.new_exp`, `crop.remove`, `date.today`, `date.yesterday`.
+  - Missing `crops_list.nuvvlu` in English ("Sesame").
+  - Mobile missing keys: `gramsathi_ai.welcome`, `gramsathi_ai.voice_error`, `rent.calendar`.
+- Mobile screens refactored with `useTranslation()`:
+  - `app/src/screens/groups/CreateGroupScreen.js`: Group Name, Village, Daily Labor Rate, Objective, validation alerts, and completion actions fully localized.
+  - `app/src/screens/machinery/AddMachineScreen.js`: Category selector, Name & Model, Rate, Price Unit, Year, Specs, Terms, and success feedback fully localized.
+  - `app/src/screens/groups/GroupDetailsScreen.js`: Subtabs (Overview, Members, Work, Settlements, Reports), Analytics cards, Daily Work and Settlement actions, and Member Balance cards fully localized.
+- Both Web and Mobile have achieved **100% translation key parity** (0 missing keys across English, Telugu, and Hindi).
+
 
 

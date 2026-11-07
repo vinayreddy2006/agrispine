@@ -16,10 +16,12 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import groupService from '../../services/groupService';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation';
 import { navigateAfterComplete } from '../../utils/navigationUtils';
 
 const CreateGroupScreen = ({ navigation }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     name: '',
     village: user?.village || '',
@@ -31,8 +33,8 @@ const CreateGroupScreen = ({ navigation }) => {
 
   const validate = () => {
     const errs = {};
-    if (!form.name.trim()) errs.name = 'Group name is required';
-    if (!form.village.trim()) errs.village = 'Village name is required';
+    if (!form.name.trim()) errs.name = t('groups.name_req', 'Group name is required');
+    if (!form.village.trim()) errs.village = t('groups.village_req', 'Village name is required');
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -52,11 +54,11 @@ const CreateGroupScreen = ({ navigation }) => {
       const res = await groupService.createGroup(payload);
 
       Alert.alert(
-        'Workgroup Created! 🤝',
-        `"${form.name}" has been established. You are the administrator and can now log cooperative work and track member contributions.`,
+        t('groups.created_title', 'Workgroup Created! 🤝'),
+        `"${form.name}" ${t('groups.created_desc', 'has been established. You are the administrator and can now log cooperative work and track member contributions.')}`,
         [
           {
-            text: 'View Workgroup',
+            text: t('groups.view_group', 'View Workgroup'),
             onPress: () => {
               if (res && res._id) {
                 navigation.replace('GroupDetails', { groupId: res._id });
@@ -68,7 +70,7 @@ const CreateGroupScreen = ({ navigation }) => {
         ]
       );
     } catch (err) {
-      Alert.alert('Error', err.message || 'Unable to create workgroup.');
+      Alert.alert(t('common.error', 'Error'), err.message || t('groups.err_create', 'Unable to create workgroup.'));
     } finally {
       setLoading(false);
     }
@@ -78,8 +80,8 @@ const CreateGroupScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title="Create Workgroup"
-        subtitle="Form Cooperative Farming Team"
+        title={t('groups.create_title', 'Create Workgroup')}
+        subtitle={t('groups.create_subtitle', 'Form Cooperative Farming Team')}
         onBack={() => navigation.goBack()}
       />
 
@@ -90,12 +92,12 @@ const CreateGroupScreen = ({ navigation }) => {
       >
         <Card style={styles.formCard}>
           <Text style={styles.cardInfo}>
-            Workgroups allow groups of farmers to exchange labor, track work hours on each other's fields, and automatically calculate fair financial settlements.
+            {t('groups.card_info', "Workgroups allow groups of farmers to exchange labor, track work hours on each other's fields, and automatically calculate fair financial settlements.")}
           </Text>
 
           <Input
-            label="Workgroup Name"
-            placeholder="e.g. Rampur Kisan Labor Cooperative"
+            label={t('groups.name_label', 'Workgroup Name')}
+            placeholder={t('groups.name_placeholder', 'e.g. Rampur Kisan Labor Cooperative')}
             value={form.name}
             onChangeText={(v) => {
               setForm({ ...form, name: v });
@@ -107,8 +109,8 @@ const CreateGroupScreen = ({ navigation }) => {
           />
 
           <Input
-            label="Village / Cluster"
-            placeholder="e.g. Rampur, Geesugonda"
+            label={t('groups.village_label', 'Village / Cluster')}
+            placeholder={t('groups.village_placeholder', 'e.g. Rampur, Geesugonda')}
             value={form.village}
             onChangeText={(v) => {
               setForm({ ...form, village: v });
@@ -120,18 +122,18 @@ const CreateGroupScreen = ({ navigation }) => {
           />
 
           <Input
-            label="Standard Labor Rate (₹ per Day/Worker)"
+            label={t('groups.rate_label', 'Standard Labor Rate (₹ per Day/Worker)')}
             placeholder="350"
             value={form.hourlyRate}
             keyboardType="numeric"
             onChangeText={(v) => setForm({ ...form, hourlyRate: v })}
-            helperText="Agreed standard daily value of labor for ledger balancing"
+            helperText={t('groups.rate_helper', 'Agreed standard daily value of labor for ledger balancing')}
             leftIcon={<MaterialCommunityIcons name="currency-inr" size={20} color={colors.primary} />}
           />
 
           <Input
-            label="Objective / Cooperative Description"
-            placeholder="e.g. Shared labor group for kharif paddy transplanting and weeding"
+            label={t('groups.desc_label', 'Objective / Cooperative Description')}
+            placeholder={t('groups.desc_placeholder', 'e.g. Shared labor group for kharif paddy transplanting and weeding')}
             value={form.description}
             onChangeText={(v) => setForm({ ...form, description: v })}
             multiline
@@ -139,7 +141,7 @@ const CreateGroupScreen = ({ navigation }) => {
           />
 
           <Button
-            title="Create Workgroup"
+            title={t('groups.submit_btn', 'Create Workgroup')}
             onPress={handleCreateGroup}
             loading={loading}
             disabled={loading}

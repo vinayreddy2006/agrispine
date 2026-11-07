@@ -100,14 +100,14 @@ const QuickActions = ({ weather, weatherLoading = false, weatherError = null, on
                 </h3>
                 {weather?.isLocationConfirmed ? (
                   <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
-                    My Farm Location
+                    {t('common.verified_farm', 'My Farm Location')}
                   </span>
                 ) : (
                   <button
                     onClick={onConfirmLocation}
                     className="text-[10px] font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 px-2.5 py-0.5 rounded-full transition cursor-pointer"
                   >
-                    Confirm Location
+                    {t('location_modal.confirm_btn', 'Confirm Location')}
                   </button>
                 )}
               </div>
@@ -124,7 +124,7 @@ const QuickActions = ({ weather, weatherLoading = false, weatherError = null, on
             onClick={() => navigate('/weather')}
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold shadow-sm transition text-xs flex items-center gap-1.5"
           >
-            <span>View Full Weather & Forecast</span>
+            <span>{t('dashboard_extra.full_forecast', 'View Full Weather & Forecast')}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -150,14 +150,14 @@ const QuickActions = ({ weather, weatherLoading = false, weatherError = null, on
               </div>
               <div className="flex flex-wrap gap-3 text-xs font-semibold text-slate-600 dark:text-slate-300">
                 <span className="flex items-center gap-1 bg-white/80 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-200/60 dark:border-slate-700">
-                  <Droplets className="w-3.5 h-3.5 text-blue-500" /> {weather.humidity}% Humidity
+                  <Droplets className="w-3.5 h-3.5 text-blue-500" /> {weather.humidity}% {t('dashboard_extra.humidity', 'Humidity')}
                 </span>
                 <span className="flex items-center gap-1 bg-white/80 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-200/60 dark:border-slate-700">
-                  <Wind className="w-3.5 h-3.5 text-teal-500" /> {weather.wind} m/s Wind Speed
+                  <Wind className="w-3.5 h-3.5 text-teal-500" /> {weather.wind} m/s {t('dashboard_extra.wind_speed', 'Wind Speed')}
                 </span>
                 {weather.temp_min !== undefined && weather.temp_max !== undefined && (
                   <span className="flex items-center gap-1 bg-white/80 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-200/60 dark:border-slate-700">
-                    High: {weather.temp_max}° • Low: {weather.temp_min}°
+                    Max: {weather.temp_max}° • Min: {weather.temp_min}°
                   </span>
                 )}
               </div>
@@ -167,14 +167,14 @@ const QuickActions = ({ weather, weatherLoading = false, weatherError = null, on
           <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 flex items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-200">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-              <span>{weather?.errorMessage || weatherError || "Weather information could not be retrieved."}</span>
+              <span>{weather?.errorMessage || weatherError || t('ui.error_desc', 'Weather information could not be retrieved.')}</span>
             </div>
             {onRetryWeather && (
               <button
                 onClick={onRetryWeather}
                 className="px-3 py-1.5 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition"
               >
-                Retry
+                {t('common.retry', 'Retry')}
               </button>
             )}
           </div>

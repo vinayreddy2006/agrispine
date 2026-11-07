@@ -242,7 +242,7 @@ const GroupsListScreen = ({ navigation }) => {
 
             <View style={styles.viewRow}>
               <Text style={styles.viewText}>
-                {activeSection === 'admin_dashboard' ? 'Manage Workgroup' : 'Open Workgroup'}
+                {activeSection === 'admin_dashboard' ? t('groups_ui.manage_workgroup', 'Manage Workgroup') : t('groups_ui.open_workgroup', 'Open Workgroup')}
               </Text>
               <MaterialCommunityIcons name="arrow-right" size={16} color={colors.primary} />
             </View>
@@ -256,8 +256,8 @@ const GroupsListScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('dashboard.work_groups', 'Workgroups')}
-        subtitle="Cooperative Labor & Shared Work"
+        title={t('groups_ui.title', 'Workgroups')}
+        subtitle={t('groups_ui.cooperative_labor', 'Cooperative Labor & Shared Work')}
         onBack={() => navigation.goBack()}
         rightAction={
           <TouchableOpacity
@@ -266,7 +266,7 @@ const GroupsListScreen = ({ navigation }) => {
             accessibilityLabel="Create New Workgroup"
           >
             <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
-            <Text style={styles.createGroupBtnText}>New Group</Text>
+            <Text style={styles.createGroupBtnText}>{t('groups_ui.new_group', 'New Group')}</Text>
           </TouchableOpacity>
         }
       />
@@ -310,8 +310,8 @@ const GroupsListScreen = ({ navigation }) => {
                         <MaterialCommunityIcons name="handshake" size={20} color="#047857" />
                       </View>
                       <View>
-                        <Text style={styles.statsTitle}>Personal Labor Summary</Text>
-                        <Text style={styles.statsSubtitle}>Your shared work contributions across groups</Text>
+                        <Text style={styles.statsTitle}>{t('groups_ui.personal_labor_summary', 'Personal Labor Summary')}</Text>
+                        <Text style={styles.statsSubtitle}>{t('groups_ui.labor_summary_sub', 'Your shared work contributions across groups')}</Text>
                       </View>
                     </View>
                     <MaterialCommunityIcons
@@ -324,28 +324,28 @@ const GroupsListScreen = ({ navigation }) => {
                   {showStats && (
                     <View style={styles.statsGrid}>
                       <View style={styles.statBox}>
-                        <Text style={styles.statBoxLabel}>Total Earned</Text>
+                        <Text style={styles.statBoxLabel}>{t('groups_ui.total_earned', 'Total Earned')}</Text>
                         <Text style={[styles.statBoxValue, { color: '#059669' }]}>
                           {formatCurrency(personalStats.totalEarned || 0)}
                         </Text>
                       </View>
 
                       <View style={styles.statBox}>
-                        <Text style={styles.statBoxLabel}>Settled</Text>
+                        <Text style={styles.statBoxLabel}>{t('groups_ui.settled', 'Settled')}</Text>
                         <Text style={[styles.statBoxValue, { color: '#2563EB' }]}>
                           {formatCurrency(personalStats.settledEarned || 0)}
                         </Text>
                       </View>
 
                       <View style={styles.statBox}>
-                        <Text style={styles.statBoxLabel}>Pending</Text>
+                        <Text style={styles.statBoxLabel}>{t('groups_ui.pending', 'Pending')}</Text>
                         <Text style={[styles.statBoxValue, { color: '#D97706' }]}>
                           {formatCurrency(personalStats.pendingEarned || 0)}
                         </Text>
                       </View>
 
                       <View style={styles.statBox}>
-                        <Text style={styles.statBoxLabel}>Days Worked</Text>
+                        <Text style={styles.statBoxLabel}>{t('groups_ui.days_worked', 'Days Worked')}</Text>
                         <Text style={styles.statBoxValue}>
                           {personalStats.daysWorked || 0}
                         </Text>
@@ -375,7 +375,7 @@ const GroupsListScreen = ({ navigation }) => {
                       activeSection === 'my_groups' && styles.sectionTabBtnTextActive,
                     ]}
                   >
-                    My Workgroups ({groups.length})
+                    {t('groups_ui.my_groups', 'My Workgroups')} ({groups.length})
                   </Text>
                 </TouchableOpacity>
 

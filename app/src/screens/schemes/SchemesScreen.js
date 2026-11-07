@@ -122,7 +122,7 @@ const SchemesScreen = ({ navigation }) => {
           </Text>
 
           <View style={styles.cardFooter}>
-            <Text style={styles.viewDetailsText}>View Eligibility & Documents</Text>
+            <Text style={styles.viewDetailsText}>{t('common.view_details', 'View Eligibility & Documents')}</Text>
             <MaterialCommunityIcons name="arrow-right" size={16} color={colors.primary} />
           </View>
         </Card>
@@ -134,8 +134,8 @@ const SchemesScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('schemes.title', 'Government Schemes')}
-        subtitle="Subsidies, Grants & Crop Insurance"
+        title={t('schemes_ui.title', 'Government Schemes')}
+        subtitle={t('schemes_ui.subtitle', 'Subsidies, Grants & Crop Insurance')}
         onBack={() => navigation.goBack()}
       />
 
@@ -144,7 +144,7 @@ const SchemesScreen = ({ navigation }) => {
         <View style={styles.searchBar}>
           <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
           <TextInput
-            placeholder="Search scheme name, subsidy, insurance..."
+            placeholder={t('schemes_ui.search_placeholder', 'Search scheme name, subsidy, insurance...')}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -176,7 +176,7 @@ const SchemesScreen = ({ navigation }) => {
                 <Text
                   style={[styles.categoryChipText, isSelected && styles.categoryChipTextSelected]}
                 >
-                  {item}
+                  {item === 'All' ? t('common.all', 'All') : item}
                 </Text>
               </TouchableOpacity>
             );
@@ -206,13 +206,10 @@ const SchemesScreen = ({ navigation }) => {
           ListEmptyComponent={
             <EmptyState
               icon="bank-outline"
-              title="No Schemes Matching Query"
-              description="No welfare schemes matched your search filter. Clear your query to see all available subsidies."
-              actionTitle="Reset Filters"
-              onAction={() => {
-                setSearchQuery('');
-                setSelectedCategory('All');
-              }}
+              title={t('ui.no_matching_records', 'No Schemes Matching Query')}
+              description={t('ui.try_diff_keyword', 'No welfare schemes matched your search filter. Clear your query to see all available subsidies.')}
+              actionTitle={searchQuery ? t('machinery_ui.clear_search', 'Clear Search') : null}
+              onAction={searchQuery ? () => setSearchQuery('') : null}
             />
           }
         />
@@ -245,14 +242,14 @@ const SchemesScreen = ({ navigation }) => {
 
               {selectedScheme?.benefits ? (
                 <>
-                  <Text style={styles.modalSectionLabel}>Key Benefits & Subsidy</Text>
+                  <Text style={styles.modalSectionLabel}>{t('schemes_ui.benefits', 'Key Benefits & Subsidy')}</Text>
                   <Text style={styles.modalBodyText}>{selectedScheme.benefits}</Text>
                 </>
               ) : null}
 
               {selectedScheme?.eligibility ? (
                 <>
-                  <Text style={styles.modalSectionLabel}>Eligibility Criteria</Text>
+                  <Text style={styles.modalSectionLabel}>{t('schemes_ui.eligibility', 'Eligibility Criteria')}</Text>
                   <Text style={styles.modalBodyText}>{selectedScheme.eligibility}</Text>
                 </>
               ) : null}
@@ -268,7 +265,7 @@ const SchemesScreen = ({ navigation }) => {
             <View style={styles.modalBtnRow}>
               {selectedScheme?.link || selectedScheme?.applicationLink ? (
                 <Button
-                  title="Official Application Portal"
+                  title={t('schemes_ui.apply_now', 'Official Application Portal')}
                   onPress={() =>
                     handleOpenLink(selectedScheme.link || selectedScheme.applicationLink)
                   }
@@ -278,7 +275,7 @@ const SchemesScreen = ({ navigation }) => {
                 />
               ) : (
                 <Button
-                  title="Close Details"
+                  title={t('common.close', 'Close Details')}
                   variant="outline"
                   onPress={() => setSelectedScheme(null)}
                   size="large"

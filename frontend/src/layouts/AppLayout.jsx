@@ -1,10 +1,12 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Bot } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import OfflineBanner from '../components/common/OfflineBanner';
 
 const AppLayout = ({ children }) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -51,7 +53,7 @@ const AppLayout = ({ children }) => {
         >
           <Bot className="w-6 h-6 animate-pulse" />
           <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap opacity-0 group-hover:opacity-100 font-semibold ml-0 group-hover:ml-3">
-            Ask GramSathi
+            {t('nav.ask_gramsathi', 'Ask GramSathi')}
           </span>
         </button>
       )}

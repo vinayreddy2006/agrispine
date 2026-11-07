@@ -1,4 +1,5 @@
 import { Filter, MessageSquarePlus, User as UserIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../../../utils/api';
 import Swal from 'sweetalert2';
 import CreateGroupModal from './CreateGroupModal';
@@ -7,6 +8,7 @@ import { useState } from 'react';
 import { renderName, getAvatarUrl } from '../../../utils/userUtils';
 
 const Sidebar = ({ currentUser, conversations, activeConversation, onSelectConversation, fetchConversations }) => {
+    const { t } = useTranslation();
     const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState('All'); // All, Unread, Groups, Favorites
@@ -124,17 +126,22 @@ const Sidebar = ({ currentUser, conversations, activeConversation, onSelectConve
             {/* Filter Chips */}
             {!isSearchingNew && (
                 <div className="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide shrink-0 bg-surface">
-                    {['All', 'Unread', 'Favorites', 'Groups'].map(f => (
+                    {[
+                        { key: 'All', label: t('common.all', 'All') },
+                        { key: 'Unread', label: t('village.unread', 'Unread') },
+                        { key: 'Favorites', label: t('village.favorites', 'Favorites') },
+                        { key: 'Groups', label: t('groups.title', 'Groups') }
+                    ].map(f => (
                         <button
-                            key={f}
-                            onClick={() => setFilter(f)}
+                            key={f.key}
+                            onClick={() => setFilter(f.key)}
                             className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                                filter === f 
+                                filter === f.key 
                                 ? 'bg-primary text-white' 
                                 : 'bg-background text-text-secondary hover:bg-border'
                             }`}
                         >
-                            {f}
+                            {f.label}
                         </button>
                     ))}
                 </div>
@@ -144,7 +151,7 @@ const Sidebar = ({ currentUser, conversations, activeConversation, onSelectConve
             <div className="flex-1 overflow-y-auto bg-background">
                 {isSearchingNew ? (
                     <div className="p-2">
-                        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 px-2">Global Search Results</h3>
+                        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 px-2">{t('common.search', 'Global Search Results')}</h3>
                         {searchResults.length > 0 ? searchResults.map(user => (
                             <div key={user._id} onClick={() => startNewChat(user)} className="flex items-center gap-3 p-3 hover:bg-surface cursor-pointer rounded-lg transition-colors mx-1">
                                 <div className="w-12 h-12 rounded-full bg-blue-100 flex-shrink-0 overflow-hidden flex items-center justify-center relative border border-border">
@@ -156,7 +163,7 @@ const Sidebar = ({ currentUser, conversations, activeConversation, onSelectConve
                                 </div>
                             </div>
                         )) : (
-                            <p className="text-center text-sm text-text-muted py-4">No users found.</p>
+                            <p className="text-center text-sm text-text-muted py-4">{t('ui.no_results_desc', 'No users found.')}</p>
                         )}
                     </div>
                 ) : (

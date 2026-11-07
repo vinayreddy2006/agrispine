@@ -31,16 +31,16 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import { formatRelativeTime } from '../../utils/formatters';
 
-const CATEGORIES = [
-  'All',
-  'Crop Management',
-  'Pest & Disease',
-  'Irrigation',
-  'Fertilizers',
-  'Weather',
-  'Equipment',
-  'Market Prices',
-  'Others',
+const CATEGORY_ITEMS = [
+  { key: 'All', labelKey: 'community_ui.cat_all', fallback: 'All' },
+  { key: 'Crop Management', labelKey: 'community_ui.cat_crop_management', fallback: 'Crop Management' },
+  { key: 'Pest & Disease', labelKey: 'community_ui.cat_pest_disease', fallback: 'Pest & Disease' },
+  { key: 'Irrigation', labelKey: 'community_ui.cat_irrigation', fallback: 'Irrigation' },
+  { key: 'Fertilizers', labelKey: 'community_ui.cat_fertilizers', fallback: 'Fertilizers' },
+  { key: 'Weather', labelKey: 'community_ui.cat_weather', fallback: 'Weather' },
+  { key: 'Equipment', labelKey: 'community_ui.cat_equipment', fallback: 'Equipment' },
+  { key: 'Market Prices', labelKey: 'community_ui.cat_market_prices', fallback: 'Market Prices' },
+  { key: 'Others', labelKey: 'community_ui.cat_others', fallback: 'Others' },
 ];
 
 const CommunityScreen = ({ navigation }) => {
@@ -392,7 +392,7 @@ const CommunityScreen = ({ navigation }) => {
                           <Text style={styles.postDocName} numberOfLines={1}>
                             {(typeof m === 'object' && m?.name) || 'Document'}
                           </Text>
-                          <Text style={styles.postDocMeta}>Tap to view</Text>
+                          <Text style={styles.postDocMeta}>{t('community_ui.tap_view', 'Tap to view')}</Text>
                         </View>
                       </TouchableOpacity>
                     );
@@ -433,7 +433,7 @@ const CommunityScreen = ({ navigation }) => {
                   isLiked && { color: '#DC2626', fontWeight: '800' },
                 ]}
               >
-                {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
+                {likeCount} {likeCount === 1 ? t('community_ui.like', 'Like') : t('community_ui.likes', 'Likes')}
               </Text>
             </TouchableOpacity>
 
@@ -449,7 +449,7 @@ const CommunityScreen = ({ navigation }) => {
                 color={colors.textSecondary}
               />
               <Text style={styles.actionBtnText}>
-                {commentCount > 0 ? `${commentCount} ` : ''}Discuss
+                {commentCount > 0 ? `${commentCount} ` : ''}{t('community_ui.discuss', 'Discuss')}
               </Text>
             </TouchableOpacity>
 
@@ -464,7 +464,7 @@ const CommunityScreen = ({ navigation }) => {
                 size={20}
                 color={colors.textSecondary}
               />
-              <Text style={styles.actionBtnText}>Share</Text>
+              <Text style={styles.actionBtnText}>{t('community_ui.share', 'Share')}</Text>
             </TouchableOpacity>
           </View>
         </Card>
@@ -476,8 +476,8 @@ const CommunityScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('community.title', 'Farmers Forum')}
-        subtitle="Connect, Share & Learn with Progressive Farmers"
+        title={t('community_ui.title', 'Farmers Forum')}
+        subtitle={t('community_ui.subtitle', 'Connect, Share & Learn with Progressive Farmers')}
         onBack={() => navigation.goBack()}
         rightAction={
           <TouchableOpacity
@@ -486,7 +486,7 @@ const CommunityScreen = ({ navigation }) => {
             activeOpacity={0.8}
           >
             <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
-            <Text style={styles.createPostHeaderText}>Share Post</Text>
+            <Text style={styles.createPostHeaderText}>{t('community_ui.share_post', 'Share Post')}</Text>
           </TouchableOpacity>
         }
       />
@@ -508,7 +508,7 @@ const CommunityScreen = ({ navigation }) => {
               activeTab === 'all' && styles.tabButtonTextActive,
             ]}
           >
-            All Forum
+            {t('community_ui.all_forum', 'All Discussions')}
           </Text>
         </TouchableOpacity>
 
@@ -527,7 +527,7 @@ const CommunityScreen = ({ navigation }) => {
               activeTab === 'my_posts' && styles.tabButtonTextActive,
             ]}
           >
-            My Posts {myPostsCount > 0 ? `(${myPostsCount})` : ''}
+            {t('community_ui.my_posts', 'My Posts')} {myPostsCount > 0 ? `(${myPostsCount})` : ''}
           </Text>
         </TouchableOpacity>
       </View>
@@ -542,7 +542,7 @@ const CommunityScreen = ({ navigation }) => {
             style={{ marginRight: 6 }}
           />
           <TextInput
-            placeholder="Search crop discussions, pests, fertilizers..."
+            placeholder={t('community_ui.search_placeholder', 'Search crop discussions, pests, fertilizers...')}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -567,16 +567,16 @@ const CommunityScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryScroll}
         >
-          {CATEGORIES.map((cat) => {
-            const isSelected = selectedCategory === cat;
+          {CATEGORY_ITEMS.map((cat) => {
+            const isSelected = selectedCategory === cat.key;
             return (
               <TouchableOpacity
-                key={cat}
+                key={cat.key}
                 style={[
                   styles.categoryChip,
                   isSelected && styles.categoryChipSelected,
                 ]}
-                onPress={() => setSelectedCategory(cat)}
+                onPress={() => setSelectedCategory(cat.key)}
               >
                 <Text
                   style={[
@@ -584,7 +584,7 @@ const CommunityScreen = ({ navigation }) => {
                     isSelected && styles.categoryChipTextSelected,
                   ]}
                 >
-                  {cat === 'All' ? t('common.all', 'All') : cat}
+                  {t(cat.labelKey, cat.fallback)}
                 </Text>
               </TouchableOpacity>
             );
@@ -620,20 +620,22 @@ const CommunityScreen = ({ navigation }) => {
               icon="forum-outline"
               title={
                 activeTab === 'my_posts'
-                  ? 'No posts by you yet'
+                  ? t('community_ui.no_my_posts_title', 'No posts by you yet')
                   : searchQuery
-                  ? 'No matching discussions'
-                  : t('community.no_posts', 'No Posts Yet')
+                  ? t('ui.no_matching_records', 'No matching discussions')
+                  : t('community_ui.no_posts_title', 'No Discussions Yet')
               }
               description={
                 activeTab === 'my_posts'
-                  ? 'Share your first farming update, question, or crop photo with your peers.'
+                  ? t('community_ui.no_my_posts_desc', 'Share your first farming update, question, or crop photo with your peers.')
                   : searchQuery
-                  ? `No community posts matched "${searchQuery}". Try a different keyword.`
-                  : 'Be the first farmer to share an update, crop photo, or agricultural query with the village community.'
+                  ? t('ui.try_diff_keyword', 'No community posts matched your search. Try a different keyword.')
+                  : t('community_ui.no_posts_desc', 'Be the first farmer to share an update, crop photo, or agricultural query with the village community.')
               }
               actionTitle={
-                searchQuery ? 'Clear Search' : t('community.create', 'Share Your First Post')
+                searchQuery
+                  ? t('machinery_ui.clear_search', 'Clear Search')
+                  : t('community_ui.first_post_btn', 'Share Your First Post')
               }
               onAction={
                 searchQuery

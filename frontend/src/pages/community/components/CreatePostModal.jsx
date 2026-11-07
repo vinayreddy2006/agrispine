@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
     X, Image as ImageIcon, Video, HelpCircle, Sparkles, Tag, 
     Upload, AlertCircle, Loader2, Check, ArrowRight, ShieldCheck 
@@ -26,6 +27,7 @@ const POST_TYPES = [
 ];
 
 const CreatePostModal = ({ isOpen, onClose, onPostCreated, currentUser, initialType = 'general' }) => {
+    const { t } = useTranslation();
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [postType, setPostType] = useState(initialType || 'general');
@@ -449,7 +451,7 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated, currentUser, initialT
                             disabled={isUploading}
                             className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                         >
-                            Cancel
+                            {t('common.cancel', 'Cancel')}
                         </button>
                         <button
                             type="submit"
@@ -459,11 +461,11 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated, currentUser, initialT
                             {isUploading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    Publishing...
+                                    {t('common.loading', 'Publishing...')}
                                 </>
                             ) : (
                                 <>
-                                    Publish Post
+                                    {t('community_extra.create_post', 'Publish Post')}
                                     <ArrowRight className="w-4 h-4" />
                                 </>
                             )}

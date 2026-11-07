@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import io from 'socket.io-client';
 import api from '../../utils/api';
 import Sidebar from './components/Sidebar';
@@ -11,6 +12,7 @@ const SERVER_URL = rawUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
 const socket = io.connect(SERVER_URL);
 
 const Messenger = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [currentUser, setCurrentUser] = useState(null);
     const [conversations, setConversations] = useState([]);
@@ -157,15 +159,15 @@ const Messenger = () => {
                                     <Leaf className="w-24 h-24 text-primary opacity-80" strokeWidth={1} />
                                 </div>
                             </div>
-                            <h2 className="text-3xl font-light text-text-primary dark:text-gray-200 mb-3 tracking-wide">AgriSpine Web</h2>
+                            <h2 className="text-3xl font-light text-text-primary dark:text-gray-200 mb-3 tracking-wide">{t('village.title', 'AgriSpine Web')}</h2>
                             <p className="text-[15px] text-text-secondary dark:text-gray-400 mb-8 leading-relaxed">
-                                Connect with your farming community.<br/>
-                                Select a chat to start messaging.
+                                {t('village_extra.group_chat', 'Connect with your farming community.')}<br/>
+                                {t('village.select_chat', 'Select a chat to start messaging.')}
                             </p>
                         </div>
                         
                         <div className="absolute bottom-10 flex items-center justify-center gap-2 text-xs text-text-muted dark:text-gray-500 font-medium">
-                            <Lock className="w-3 h-3" /> End-to-end encrypted
+                            <Lock className="w-3 h-3" /> {t('village.encrypted', 'End-to-end encrypted')}
                         </div>
                     </div>
                 )}

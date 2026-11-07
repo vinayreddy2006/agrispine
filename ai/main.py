@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from router import chat, voice
+from core.config import settings
 
 app = FastAPI(
     title="GramSathi AI",
@@ -26,6 +27,16 @@ app.include_router(voice.router, prefix="/api/ai", tags=["Voice"])
 @app.head("/")
 async def root():
     return {"message": "GramSathi AI Ecosystem is Online"}
+
+@app.get("/health")
+@app.get("/api/ai/health")
+async def health():
+    return {
+        "status": "healthy",
+        "service": "GramSathi AI",
+        "provider": getattr(settings, "AI_PROVIDER", "groq"),
+        "model": getattr(settings, "GROQ_MODEL", "llama-3.3-70b-versatile")
+    }
 
 if __name__ == "__main__":
     import uvicorn

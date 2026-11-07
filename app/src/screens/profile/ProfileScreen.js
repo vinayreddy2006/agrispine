@@ -179,7 +179,7 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
-  const displayName = user?.name || 'Farmer';
+  const displayName = user?.name || t('common.farmer', 'Farmer');
   const locationString =
     [user?.village, user?.mandal, user?.district, user?.state].filter(Boolean).join(', ') ||
     'Telangana, India';
@@ -188,8 +188,8 @@ const ProfileScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title="Farmer Profile"
-        subtitle="Account & Farm Records"
+        title={t('profile_ui.title', 'Farmer Profile')}
+        subtitle={t('profile_ui.account_records', 'Account & Farm Records')}
         onBack={() => navigation.goBack()}
         rightAction={
           <TouchableOpacity onPress={openEditModal} style={styles.editHeaderBtn}>
@@ -212,7 +212,7 @@ const ProfileScreen = ({ navigation }) => {
           <Text
             style={[styles.tabItemText, activeTab === 'profile' && styles.tabItemTextActive]}
           >
-            Farm Profile
+            {t('profile_ui.tab_profile', 'Farm Profile')}
           </Text>
         </TouchableOpacity>
 
@@ -228,7 +228,7 @@ const ProfileScreen = ({ navigation }) => {
           <Text
             style={[styles.tabItemText, activeTab === 'analytics' && styles.tabItemTextActive]}
           >
-            Analytics
+            {t('profile_ui.tab_analytics', 'Analytics')}
           </Text>
         </TouchableOpacity>
 
@@ -244,7 +244,7 @@ const ProfileScreen = ({ navigation }) => {
           <Text
             style={[styles.tabItemText, activeTab === 'settings' && styles.tabItemTextActive]}
           >
-            Settings
+            {t('profile_ui.tab_settings', 'Settings')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -296,7 +296,7 @@ const ProfileScreen = ({ navigation }) => {
                 />
                 <View style={styles.locationTextCol}>
                   <Text style={styles.locationLabel}>
-                    {user?.isLocationConfirmed ? 'Verified Farm Location' : 'Confirm Location'}
+                    {user?.isLocationConfirmed ? t('profile_ui.verified_location', 'Verified Farm Location') : t('profile_ui.confirm_location', 'Confirm Location')}
                   </Text>
                   <Text style={styles.locationVal} numberOfLines={1}>
                     {locationString}
@@ -307,14 +307,14 @@ const ProfileScreen = ({ navigation }) => {
             </Card>
 
             {/* Farm Details */}
-            <Text style={styles.sectionHeading}>Agricultural Details</Text>
+            <Text style={styles.sectionHeading}>{t('profile_ui.agri_details', 'Agricultural Details')}</Text>
             <Card style={styles.detailsCard}>
               <View style={styles.detailRow}>
                 <View style={styles.detailIconBox}>
                   <MaterialCommunityIcons name="calendar-clock" size={20} color="#0284C7" />
                 </View>
                 <View style={styles.detailCol}>
-                  <Text style={styles.detailLabel}>Farming Since</Text>
+                  <Text style={styles.detailLabel}>{t('profile_ui.farming_since', 'Farming Since')}</Text>
                   <Text style={styles.detailVal}>{user?.farmingStartYear || '2015'}</Text>
                 </View>
               </View>
@@ -324,9 +324,9 @@ const ProfileScreen = ({ navigation }) => {
                   <MaterialCommunityIcons name="texture-box" size={20} color="#15803D" />
                 </View>
                 <View style={styles.detailCol}>
-                  <Text style={styles.detailLabel}>Land Holding</Text>
+                  <Text style={styles.detailLabel}>{t('profile_ui.land_holding', 'Land Holding')}</Text>
                   <Text style={styles.detailVal}>
-                    {user?.landPlots?.[0]?.area || '3.5'} {user?.landPlots?.[0]?.unit || 'Acres'}
+                    {user?.landPlots?.[0]?.area || '3.5'} {user?.landPlots?.[0]?.unit || t('crops_ui.acres', 'Acres')}
                   </Text>
                 </View>
               </View>
@@ -336,7 +336,7 @@ const ProfileScreen = ({ navigation }) => {
                   <MaterialCommunityIcons name="leaf" size={20} color="#D97706" />
                 </View>
                 <View style={styles.detailCol}>
-                  <Text style={styles.detailLabel}>Cultivation Style</Text>
+                  <Text style={styles.detailLabel}>{t('profile_ui.cultivation_style', 'Cultivation Style')}</Text>
                   <Text style={styles.detailVal}>{user?.farmingStyle || 'Mixed (Organic & Modern)'}</Text>
                 </View>
               </View>
@@ -346,7 +346,7 @@ const ProfileScreen = ({ navigation }) => {
                   <MaterialCommunityIcons name="water-pump" size={20} color="#0D9488" />
                 </View>
                 <View style={styles.detailCol}>
-                  <Text style={styles.detailLabel}>Irrigation Source</Text>
+                  <Text style={styles.detailLabel}>{t('profile_ui.irrigation_source', 'Irrigation Source')}</Text>
                   <Text style={styles.detailVal}>{user?.irrigationType || 'Borewell & Canal'}</Text>
                 </View>
               </View>
@@ -356,14 +356,14 @@ const ProfileScreen = ({ navigation }) => {
                   <MaterialCommunityIcons name="layers-outline" size={20} color="#7C3AED" />
                 </View>
                 <View style={styles.detailCol}>
-                  <Text style={styles.detailLabel}>Soil Type</Text>
+                  <Text style={styles.detailLabel}>{t('profile_ui.soil_type', 'Soil Type')}</Text>
                   <Text style={styles.detailVal}>{user?.soilType || 'Black Soil (Regur)'}</Text>
                 </View>
               </View>
             </Card>
 
             <Button
-              title="Edit Farm Profile"
+              title={t('profile_ui.edit_profile', 'Edit Farm Profile')}
               variant="outline"
               onPress={openEditModal}
               size="large"
@@ -375,38 +375,38 @@ const ProfileScreen = ({ navigation }) => {
 
         {activeTab === 'analytics' && (
           <>
-            <Text style={styles.sectionHeading}>Farm Performance Analytics</Text>
+            <Text style={styles.sectionHeading}>{t('profile_ui.performance_analytics', 'Farm Performance Analytics')}</Text>
             <View style={styles.analyticsGrid}>
               <Card style={styles.analyticCard}>
                 <MaterialCommunityIcons name="sprout" size={28} color="#15803D" />
                 <Text style={styles.analyticVal}>{analytics.activeCrops || 0}</Text>
-                <Text style={styles.analyticLabel}>Active Crops</Text>
+                <Text style={styles.analyticLabel}>{t('profile_ui.active_crops', 'Active Crops')}</Text>
               </Card>
 
               <Card style={styles.analyticCard}>
                 <MaterialCommunityIcons name="check-decagram" size={28} color="#0284C7" />
                 <Text style={styles.analyticVal}>{analytics.completedCrops || 0}</Text>
-                <Text style={styles.analyticLabel}>Harvested</Text>
+                <Text style={styles.analyticLabel}>{t('profile_ui.harvested_crops', 'Harvested')}</Text>
               </Card>
 
               <Card style={styles.analyticCard}>
                 <MaterialCommunityIcons name="receipt" size={28} color="#D97706" />
                 <Text style={styles.analyticVal}>{analytics.expensesRecorded || 0}</Text>
-                <Text style={styles.analyticLabel}>Expenses Logged</Text>
+                <Text style={styles.analyticLabel}>{t('profile_ui.expenses_logged', 'Expenses Logged')}</Text>
               </Card>
 
               <Card style={styles.analyticCard}>
                 <MaterialCommunityIcons name="forum-outline" size={28} color="#7C3AED" />
                 <Text style={styles.analyticVal}>{analytics.forumPosts || 0}</Text>
-                <Text style={styles.analyticLabel}>Community Posts</Text>
+                <Text style={styles.analyticLabel}>{t('profile_ui.community_posts', 'Community Posts')}</Text>
               </Card>
             </View>
 
             <Card style={styles.financialSummaryCard}>
-              <Text style={styles.summaryTitle}>Cultivation Summary</Text>
-              <Text style={styles.summarySub}>Overall farm financial tracking across all cycles</Text>
+              <Text style={styles.summaryTitle}>{t('profile_ui.cultivation_summary', 'Cultivation Summary')}</Text>
+              <Text style={styles.summarySub}>{t('profile_ui.financial_tracking', 'Overall farm financial tracking across all cycles')}</Text>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Total Recorded Expense</Text>
+                <Text style={styles.summaryLabel}>{t('profile_ui.total_expenses_recorded', 'Total Recorded Expense')}</Text>
                 <Text style={styles.summaryVal}>{formatCurrency(analytics.totalSpent || 0)}</Text>
               </View>
             </Card>
@@ -415,7 +415,7 @@ const ProfileScreen = ({ navigation }) => {
 
         {activeTab === 'settings' && (
           <>
-            <Text style={styles.sectionHeading}>App & Account Preferences</Text>
+            <Text style={styles.sectionHeading}>{t('profile_ui.app_preferences', 'App & Account Preferences')}</Text>
             <Card style={styles.settingsCard}>
               <TouchableOpacity
                 style={styles.settingRow}
@@ -441,8 +441,8 @@ const ProfileScreen = ({ navigation }) => {
                   <MaterialCommunityIcons name="weather-partly-cloudy" size={20} color="#0284C7" />
                 </View>
                 <View style={styles.settingTextCol}>
-                  <Text style={styles.settingTitle}>Weather Preferences</Text>
-                  <Text style={styles.settingSub}>Manage notification alerts for rain & spray</Text>
+                  <Text style={styles.settingTitle}>{t('profile_ui.weather_pref', 'Weather Preferences')}</Text>
+                  <Text style={styles.settingSub}>{t('profile_ui.weather_pref_sub', 'Manage notification alerts for rain & spray')}</Text>
                 </View>
                 <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -455,8 +455,8 @@ const ProfileScreen = ({ navigation }) => {
                   <MaterialCommunityIcons name="bell-outline" size={20} color="#15803D" />
                 </View>
                 <View style={styles.settingTextCol}>
-                  <Text style={styles.settingTitle}>Notifications Feed</Text>
-                  <Text style={styles.settingSub}>View system & booking updates</Text>
+                  <Text style={styles.settingTitle}>{t('profile_ui.notifications_feed', 'Notifications Feed')}</Text>
+                  <Text style={styles.settingSub}>{t('profile_ui.notifications_sub', 'View system & booking updates')}</Text>
                 </View>
                 <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -469,15 +469,15 @@ const ProfileScreen = ({ navigation }) => {
                   <MaterialCommunityIcons name="map-marker-radius" size={20} color="#D97706" />
                 </View>
                 <View style={styles.settingTextCol}>
-                  <Text style={styles.settingTitle}>Update Farm Location</Text>
-                  <Text style={styles.settingSub}>Accurate mandi prices and weather data</Text>
+                  <Text style={styles.settingTitle}>{t('profile_ui.update_location', 'Update Farm Location')}</Text>
+                  <Text style={styles.settingSub}>{t('profile_ui.update_location_sub', 'Accurate mandi prices and weather data')}</Text>
                 </View>
                 <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </Card>
 
             <Button
-              title="Log Out of AgriSpine"
+              title={t('profile_ui.logout_btn', 'Log Out of AgriSpine')}
               variant="outline"
               onPress={handleLogoutPress}
               size="large"
@@ -494,7 +494,7 @@ const ProfileScreen = ({ navigation }) => {
         <SafeAreaView style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Farm Profile</Text>
+              <Text style={styles.modalTitle}>{t('profile_ui.edit_profile', 'Edit Farm Profile')}</Text>
               <TouchableOpacity onPress={() => setIsEditModalOpen(false)}>
                 <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
@@ -502,47 +502,47 @@ const ProfileScreen = ({ navigation }) => {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
               <Input
-                label="Farmer Name"
+                label={t('common.name', 'Farmer Name')}
                 value={editForm.name}
                 onChangeText={(v) => setEditForm({ ...editForm, name: v })}
                 required
               />
               <Input
-                label="Bio / Notes"
+                label={t('profile_ui.bio_notes', 'Bio / Notes')}
                 value={editForm.bio}
                 onChangeText={(v) => setEditForm({ ...editForm, bio: v })}
-                placeholder="Brief description about your farm..."
+                placeholder={t('profile_ui.bio_placeholder', 'Brief description about your farm...')}
               />
               <Input
-                label="Village"
+                label={t('profile_ui.village', 'Village')}
                 value={editForm.village}
                 onChangeText={(v) => setEditForm({ ...editForm, village: v })}
               />
               <Input
-                label="Mandal"
+                label={t('profile_ui.mandal', 'Mandal')}
                 value={editForm.mandal}
                 onChangeText={(v) => setEditForm({ ...editForm, mandal: v })}
               />
               <Input
-                label="District"
+                label={t('profile_ui.district', 'District')}
                 value={editForm.district}
                 onChangeText={(v) => setEditForm({ ...editForm, district: v })}
               />
               <Input
-                label="Total Land Holding (Acres)"
+                label={t('profile_ui.land_holding', 'Total Land Holding (Acres)')}
                 value={editForm.totalLand}
                 keyboardType="numeric"
                 onChangeText={(v) => setEditForm({ ...editForm, totalLand: v })}
               />
               <Input
-                label="Farming Since (Year)"
+                label={t('profile_ui.farming_since', 'Farming Since (Year)')}
                 value={editForm.farmingStartYear}
                 keyboardType="numeric"
                 onChangeText={(v) => setEditForm({ ...editForm, farmingStartYear: v })}
               />
 
               <Button
-                title="Save Profile"
+                title={t('profile_ui.save_profile', 'Save Profile')}
                 onPress={handleSaveProfile}
                 loading={savingProfile}
                 disabled={savingProfile}

@@ -25,6 +25,7 @@ import EmptyState from '../../components/EmptyState';
 import ErrorState from '../../components/ErrorState';
 import groupService from '../../services/groupService';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -43,6 +44,7 @@ const COMMON_ACTIVITIES = [
 const GroupDetailsScreen = ({ route, navigation }) => {
   const { groupId } = route.params || {};
   const { user } = useAuth();
+  const { t } = useTranslation();
   const currentUserId = user?._id || user?.id;
 
   const [group, setGroup] = useState(null);
@@ -654,10 +656,10 @@ const GroupDetailsScreen = ({ route, navigation }) => {
       {viewMode === 'member' ? (
         <View style={styles.subTabBar}>
           {[
-            { id: 'overview', label: 'Overview', icon: 'view-dashboard-outline' },
-            { id: 'work', label: `Work (${records.length})`, icon: 'clipboard-text-outline' },
-            { id: 'settlements', label: 'Settlements', icon: 'cash-multiple' },
-            { id: 'members', label: `Members (${activeMembers.length})`, icon: 'account-multiple-outline' },
+            { id: 'overview', label: t('groups.overview', 'Overview'), icon: 'view-dashboard-outline' },
+            { id: 'work', label: `${t('groups.work', 'Work')} (${records.length})`, icon: 'clipboard-text-outline' },
+            { id: 'settlements', label: t('groups.settlements', 'Settlements'), icon: 'cash-multiple' },
+            { id: 'members', label: `${t('groups.members', 'Members')} (${activeMembers.length})`, icon: 'account-multiple-outline' },
           ].map((tab) => (
             <TouchableOpacity
               key={tab.id}
@@ -678,11 +680,11 @@ const GroupDetailsScreen = ({ route, navigation }) => {
       ) : (
         <View style={styles.subTabBar}>
           {[
-            { id: 'overview', label: 'Overview', icon: 'chart-pie' },
-            { id: 'members', label: `Members (${activeMembers.length})`, icon: 'account-cog-outline' },
-            { id: 'work', label: `Work (${records.length})`, icon: 'clipboard-list-outline' },
-            { id: 'settlements', label: 'Settlements', icon: 'scale-balance' },
-            { id: 'reports', label: 'Reports', icon: 'file-chart-outline' },
+            { id: 'overview', label: t('groups.overview', 'Overview'), icon: 'chart-pie' },
+            { id: 'members', label: `${t('groups.members', 'Members')} (${activeMembers.length})`, icon: 'account-cog-outline' },
+            { id: 'work', label: `${t('groups.work', 'Work')} (${records.length})`, icon: 'clipboard-list-outline' },
+            { id: 'settlements', label: t('groups.settlements', 'Settlements'), icon: 'scale-balance' },
+            { id: 'reports', label: t('groups.reports', 'Reports'), icon: 'file-chart-outline' },
           ].map((tab) => (
             <TouchableOpacity
               key={tab.id}
@@ -721,23 +723,23 @@ const GroupDetailsScreen = ({ route, navigation }) => {
                   <Text style={styles.memberStatsTitle}>My Labor & Balance in this Group</Text>
                   <View style={styles.statsQuadGrid}>
                     <View style={styles.statsQuadBox}>
-                      <Text style={styles.statsQuadLabel}>Days Worked</Text>
+                      <Text style={styles.statsQuadLabel}>{t('groups.days_worked', 'Days Worked')}</Text>
                       <Text style={styles.statsQuadVal}>{personalGroupStats.daysWorked}</Text>
                     </View>
                     <View style={styles.statsQuadBox}>
-                      <Text style={styles.statsQuadLabel}>Total Earned</Text>
+                      <Text style={styles.statsQuadLabel}>{t('groups.total_earned', 'Total Earned')}</Text>
                       <Text style={[styles.statsQuadVal, { color: '#059669' }]}>
                         {formatCurrency(personalGroupStats.earned)}
                       </Text>
                     </View>
                     <View style={styles.statsQuadBox}>
-                      <Text style={styles.statsQuadLabel}>Pending Settlement</Text>
+                      <Text style={styles.statsQuadLabel}>{t('groups.pending_payments', 'Pending Settlement')}</Text>
                       <Text style={[styles.statsQuadVal, { color: '#D97706' }]}>
                         {formatCurrency(personalGroupStats.pending)}
                       </Text>
                     </View>
                     <View style={styles.statsQuadBox}>
-                      <Text style={styles.statsQuadLabel}>Net Balance</Text>
+                      <Text style={styles.statsQuadLabel}>{t('groups.net_balance', 'Net Balance')}</Text>
                       <Text
                         style={[
                           styles.statsQuadVal,
@@ -987,7 +989,7 @@ const GroupDetailsScreen = ({ route, navigation }) => {
                 <View style={styles.statsGrid}>
                   <Card style={[styles.analyticsCard, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
                     <MaterialCommunityIcons name="currency-inr" size={24} color="#059669" />
-                    <Text style={styles.analyticsLabel}>Total Earned</Text>
+                    <Text style={styles.analyticsLabel}>{t('groups.total_earned', 'Total Earned')}</Text>
                     <Text style={[styles.analyticsVal, { color: '#065F46' }]}>
                       {formatCurrency(analytics?.totalEarnings || 0)}
                     </Text>
@@ -995,7 +997,7 @@ const GroupDetailsScreen = ({ route, navigation }) => {
 
                   <Card style={[styles.analyticsCard, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
                     <MaterialCommunityIcons name="clock-alert-outline" size={24} color="#D97706" />
-                    <Text style={styles.analyticsLabel}>Pending Payments</Text>
+                    <Text style={styles.analyticsLabel}>{t('groups.pending_payments', 'Pending Payments')}</Text>
                     <Text style={[styles.analyticsVal, { color: '#92400E' }]}>
                       {formatCurrency(analytics?.pendingPayments || 0)}
                     </Text>
@@ -1003,7 +1005,7 @@ const GroupDetailsScreen = ({ route, navigation }) => {
 
                   <Card style={[styles.analyticsCard, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
                     <MaterialCommunityIcons name="land-plots" size={24} color="#2563EB" />
-                    <Text style={styles.analyticsLabel}>Total Acres Worked</Text>
+                    <Text style={styles.analyticsLabel}>{t('groups.acres_worked', 'Total Acres Worked')}</Text>
                     <Text style={[styles.analyticsVal, { color: '#1E40AF' }]}>
                       {(analytics?.totalAcres || 0).toFixed(1)}
                     </Text>
@@ -1011,7 +1013,7 @@ const GroupDetailsScreen = ({ route, navigation }) => {
 
                   <Card style={[styles.analyticsCard, { backgroundColor: '#FAF5FF', borderColor: '#E9D5FF' }]}>
                     <MaterialCommunityIcons name="calendar-check" size={24} color="#7C3AED" />
-                    <Text style={styles.analyticsLabel}>Total Work Days</Text>
+                    <Text style={styles.analyticsLabel}>{t('groups.work_days', 'Total Work Days')}</Text>
                     <Text style={[styles.analyticsVal, { color: '#6B21A8' }]}>
                       {analytics?.totalWorkDays || records.length}
                     </Text>
@@ -1025,7 +1027,7 @@ const GroupDetailsScreen = ({ route, navigation }) => {
                     onPress={handleOpenRecordWork}
                   >
                     <MaterialCommunityIcons name="plus-circle" size={18} color="#FFFFFF" />
-                    <Text style={styles.adminActionBtnText}>Record Daily Work</Text>
+                    <Text style={styles.adminActionBtnText}>{t('groups.record_work', 'Record Daily Work')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -1033,7 +1035,7 @@ const GroupDetailsScreen = ({ route, navigation }) => {
                     onPress={handleOpenSettlements}
                   >
                     <MaterialCommunityIcons name="scale-balance" size={18} color="#FFFFFF" />
-                    <Text style={styles.adminActionBtnText}>Process Settlement</Text>
+                    <Text style={styles.adminActionBtnText}>{t('groups.process_settlement', 'Process Settlement')}</Text>
                   </TouchableOpacity>
                 </View>
 

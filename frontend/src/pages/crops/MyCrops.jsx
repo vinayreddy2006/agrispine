@@ -54,7 +54,7 @@ const MyCrops = () => {
                     <div className="mt-12">
                         <EmptyState 
                             title={t('dashboard.no_crops')}
-                            description="Start tracking your farm today."
+                            description={t('dashboard.add_first_crop', "Start tracking your farm today.")}
                             icon={Leaf}
                             actionText={t('dashboard.add_first_crop')}
                             onAction={() => navigate("/add-crop")}
@@ -81,7 +81,7 @@ const MyCrops = () => {
                                     
                                     <div className="relative z-10 flex justify-between items-start mb-6">
                                         <div className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${statusColor} uppercase tracking-wider`}>
-                                            {crop.status}
+                                            {t(`crop.${crop.status}`, { defaultValue: crop.status })}
                                         </div>
                                         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900/50 px-2 py-1 rounded-md">
                                             <Calendar className="w-3.5 h-3.5" /> 
@@ -94,14 +94,16 @@ const MyCrops = () => {
                                             {crop.status === 'sold' ? <CheckCircle className="w-7 h-7 text-green-600 dark:text-green-500" /> : <Sprout className="w-7 h-7 text-green-600 dark:text-green-500" />}
                                         </div>
                                         <div>
-                                            <h3 className="font-extrabold text-xl text-slate-800 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors line-clamp-1">{crop.cropName}</h3>
-                                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">{crop.area} Acres</p>
+                                            <h3 className="font-extrabold text-xl text-slate-800 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors line-clamp-1">
+                                                {t(`crops_list.${crop.cropName.toLowerCase()}`, { defaultValue: crop.cropName })}
+                                            </h3>
+                                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">{crop.area} {t('crop.acres', 'Acres')}</p>
                                         </div>
                                     </div>
 
                                     <div className="relative z-10 pt-4 border-t border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
                                         <div>
-                                            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">Total Expenses</p>
+                                            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">{t('crop.expenses', 'Total Expenses')}</p>
                                             <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
                                                 ₹{totalExpenses.toLocaleString()}
                                             </p>

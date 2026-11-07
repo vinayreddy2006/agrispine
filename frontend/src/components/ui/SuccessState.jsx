@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, ArrowRight, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from './Button';
@@ -8,15 +9,20 @@ import Button from './Button';
  * Following Principle 10: Explicit confirmation, clear record summary, actionable next steps.
  */
 const SuccessState = ({
-  title = "Action Completed Successfully",
-  message = "Your request has been processed and saved.",
+  title,
+  message,
   primaryAction = null, // { label: string, onClick: func, icon: Component }
   secondaryAction = null,
   referenceId = null,
-  referenceLabel = "Reference ID",
+  referenceLabel,
   className = "",
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const displayTitle = title || t('ui.success_title', 'Action Completed Successfully');
+  const displayMessage = message || t('ui.action_completed', 'Your request has been processed and saved.');
+  const displayRefLabel = referenceLabel || t('ui.reference_number', 'Reference ID');
 
   return (
     <div className={`p-8 md:p-12 bg-white dark:bg-slate-800 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 text-center max-w-lg mx-auto shadow-sm ${className}`}>
@@ -25,16 +31,16 @@ const SuccessState = ({
       </div>
 
       <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
-        {title}
+        {displayTitle}
       </h3>
 
       <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
-        {message}
+        {displayMessage}
       </p>
 
       {referenceId && (
         <div className="inline-block bg-emerald-50 dark:bg-slate-700/60 border border-emerald-100 dark:border-slate-600 px-4 py-2 rounded-xl text-xs font-mono font-medium text-emerald-800 dark:text-emerald-300 mb-6">
-          {referenceLabel}: <span className="font-bold">{referenceId}</span>
+          {displayRefLabel}: <span className="font-bold">{referenceId}</span>
         </div>
       )}
 
@@ -55,7 +61,7 @@ const SuccessState = ({
             className="flex items-center gap-2"
           >
             <Home className="w-4 h-4" />
-            Go to Dashboard
+            {t('ui.view_dashboard', 'Back to Dashboard')}
           </Button>
         )}
 
@@ -65,8 +71,8 @@ const SuccessState = ({
             variant="outline"
             className="flex items-center gap-2"
           >
-            {secondaryAction.icon ? <secondaryAction.icon className="w-4 h-4" /> : null}
             {secondaryAction.label}
+            <ArrowRight className="w-4 h-4" />
           </Button>
         )}
       </div>
@@ -75,4 +81,3 @@ const SuccessState = ({
 };
 
 export default SuccessState;
-

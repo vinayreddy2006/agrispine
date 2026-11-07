@@ -102,29 +102,31 @@ const BuyerMarketScreen = ({ navigation }) => {
               <MaterialCommunityIcons name="barley" size={24} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cropName}>{item.cropName}</Text>
+              <Text style={styles.cropName}>
+                {t(`crops_list.${(item.cropName || '').toLowerCase()}`, item.cropName)}
+              </Text>
               <Text style={styles.cropVariety}>
-                {item.variety ? `Variety: ${item.variety}` : 'Fresh Harvest'}
+                {item.variety ? `${t('crops_ui.variety', 'Variety')}: ${item.variety}` : t('crops_ui.tab_harvested', 'Fresh Harvest')}
               </Text>
             </View>
           </View>
-          <Badge status="listed" text="Verified Farmer" />
+          <Badge status="listed" text={t('common.verified_farm', 'Verified Farmer')} />
         </View>
 
         <View style={styles.metaRow}>
           <View style={styles.metaCol}>
-            <Text style={styles.metaLabel}>Asking Price</Text>
+            <Text style={styles.metaLabel}>{t('market_ui.expected_price', 'Asking Price')}</Text>
             <Text style={styles.priceHighlight}>
               {formatCurrency(price)}
-              <Text style={styles.priceUnit}> /Qtl</Text>
+              <Text style={styles.priceUnit}> {t('market_ui.per_quintal', '/Qtl')}</Text>
             </Text>
           </View>
           <View style={styles.metaCol}>
-            <Text style={styles.metaLabel}>Available Volume</Text>
+            <Text style={styles.metaLabel}>{t('market_ui.quantity', 'Available Volume')}</Text>
             <Text style={styles.metaVal}>{quantityText}</Text>
           </View>
           <View style={styles.metaCol}>
-            <Text style={styles.metaLabel}>Location</Text>
+            <Text style={styles.metaLabel}>{t('profile_ui.village', 'Location')}</Text>
             <Text style={styles.metaVal} numberOfLines={1}>{location}</Text>
           </View>
         </View>
@@ -152,7 +154,7 @@ const BuyerMarketScreen = ({ navigation }) => {
                 onPress={() => handleCallSeller(farmerPhone, farmerName)}
               >
                 <MaterialCommunityIcons name="phone" size={16} color="#FFFFFF" />
-                <Text style={styles.callButtonText}>Call Seller</Text>
+                <Text style={styles.callButtonText}>{t('market_ui.call_farmer', 'Call Seller')}</Text>
               </TouchableOpacity>
             ) : null}
 
@@ -172,7 +174,7 @@ const BuyerMarketScreen = ({ navigation }) => {
               }}
             >
               <MaterialCommunityIcons name="message-text-outline" size={16} color={colors.primary} />
-              <Text style={styles.chatButtonText}>Chat</Text>
+              <Text style={styles.chatButtonText}>{t('market_ui.chat_farmer', 'Chat')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -184,8 +186,8 @@ const BuyerMarketScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('market.title', 'Buyer Market')}
-        subtitle="Trade Direct Farm Produce"
+        title={t('market_ui.buyer_title', 'Buyer Produce Market')}
+        subtitle={t('market_ui.buyer_subtitle', 'Trade Direct Farm Produce')}
         onBack={() => navigation.goBack()}
         rightAction={
           <TouchableOpacity
@@ -193,7 +195,7 @@ const BuyerMarketScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('Crops')}
           >
             <MaterialCommunityIcons name="plus" size={18} color={colors.primary} />
-            <Text style={styles.myListingsText}>List Crop</Text>
+            <Text style={styles.myListingsText}>{t('dashboard.add_crop', 'List Crop')}</Text>
           </TouchableOpacity>
         }
       />
@@ -203,7 +205,7 @@ const BuyerMarketScreen = ({ navigation }) => {
         <View style={styles.searchBar}>
           <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
           <TextInput
-            placeholder="Search crop, variety, or district..."
+            placeholder={t('market_ui.buyer_search', 'Search crop, variety, village or farmer...')}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -239,9 +241,9 @@ const BuyerMarketScreen = ({ navigation }) => {
           ListEmptyComponent={
             <EmptyState
               icon="shopping-outline"
-              title="No Produce Listed"
-              description="There are currently no active crop sales in this category. You can list your own harvest from My Crops."
-              actionTitle="View My Crops"
+              title={t('market_ui.buyer_empty_title', 'No Produce Listed')}
+              description={t('market_ui.buyer_empty_desc', 'There are currently no active crop sales in this category. You can list your own harvest from My Crops.')}
+              actionTitle={t('dashboard.my_crops', 'View My Crops')}
               onAction={() => navigation.navigate('Crops')}
             />
           }

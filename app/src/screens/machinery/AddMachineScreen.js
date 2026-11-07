@@ -16,6 +16,7 @@ import Input from '../../components/Input';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import machineService from '../../services/machineService';
+import { useTranslation } from '../../hooks/useTranslation';
 import { navigateAfterComplete } from '../../utils/navigationUtils';
 
 const MACHINE_TYPES = [
@@ -35,6 +36,7 @@ const PRICE_UNITS = [
 ];
 
 const AddMachineScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     name: '',
     type: 'tractor',
@@ -51,10 +53,10 @@ const AddMachineScreen = ({ navigation }) => {
 
   const validate = () => {
     const errs = {};
-    if (!form.name.trim()) errs.name = 'Machine name is required (e.g. Mahindra 575 DI)';
+    if (!form.name.trim()) errs.name = t('add_machine.name_err', 'Machine name is required (e.g. Mahindra 575 DI)');
     const priceNum = parseFloat(form.price);
     if (!form.price || isNaN(priceNum) || priceNum <= 0) {
-      errs.price = 'Enter a valid base rental price (e.g. 800)';
+      errs.price = t('add_machine.price_err', 'Enter a valid base rental price (e.g. 800)');
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -87,17 +89,17 @@ const AddMachineScreen = ({ navigation }) => {
       await machineService.addMachine(payload);
 
       Alert.alert(
-        'Machine Listed! 🚜',
-        `${form.name} is now available in the AgriSpine machinery rental catalog. You can add specific tasks & pricing anytime in Manage Machine.`,
+        t('add_machine.listed_success', 'Machine Listed! 🚜'),
+        `${form.name} ${t('add_machine.subtitle', 'is now available in the AgriSpine machinery rental catalog.')}`,
         [
           {
-            text: 'Go to Fleet',
+            text: t('add_machine.go_to_fleet', 'Go to Fleet'),
             onPress: () => navigateAfterComplete(navigation, 'MyFleet'),
           },
         ]
       );
     } catch (err) {
-      Alert.alert('Listing Failed', err.message || 'Please check your connection.');
+      Alert.alert(t('common.error', 'Error'), err.message || t('common.try_again', 'Please check your connection.'));
     } finally {
       setLoading(false);
     }
@@ -107,8 +109,8 @@ const AddMachineScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title="List New Equipment"
-        subtitle="Offer Machinery for Rent"
+        title={t('add_machine.title', 'List Your Machine')}
+        subtitle={t('add_machine.subtitle', 'Offer Machinery for Rent')}
         onBack={() => navigation.goBack()}
       />
 
@@ -119,18 +121,18 @@ const AddMachineScreen = ({ navigation }) => {
       >
         <Card style={styles.formCard}>
           {/* Category Selector */}
-          <Text style={styles.fieldLabel}>Equipment Category *</Text>
+          <Text style={styles.fieldLabel}>{t('add_machine.cat_label', 'Equipment Category *')}</Text>
           <View style={styles.chipRow}>
-            {MACHINE_TYPES.map((t) => {
-              const isSelected = form.type === t.key;
+            {MACHINE_TYPES.map((tItem) => {
+              const isSelected = form.type === tItem.key;
               return (
                 <TouchableOpacity
-                  key={t.key}
-                  onPress={() => setForm({ ...form, type: t.key })}
+                  key={tItem.key}
+                  onPress={() => setForm({ ...form, type: tItem.key })}
                   style={[styles.chip, isSelected && styles.chipSelected]}
                 >
                   <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                    {t.label}
+                    {tItem.label}
                   </Text>
                 </TouchableOpacity>
               );
@@ -138,7 +140,7 @@ const AddMachineScreen = ({ navigation }) => {
           </View>
 
           <Input
-            label="Equipment Name & Model"
+            label={t('add_machine.name_label', 'Equipment Name & Model')}
             placeholder="e.g. John Deere 5050 D 4WD"
             value={form.name}
             onChangeText={(v) => {
@@ -154,7 +156,7 @@ const AddMachineScreen = ({ navigation }) => {
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
               <Input
-                label="Base Rate (₹)"
+                label={t('add_machine.price_label', 'Base Rate (₹)')}
                 placeholder="e.g. 850"
                 value={form.price}
                 keyboardType="numeric"
@@ -170,7 +172,7 @@ const AddMachineScreen = ({ navigation }) => {
           </View>
 
           {/* Unit Selector */}
-          <Text style={styles.fieldLabel}>Price Unit</Text>
+          <Text style={styles.fieldLabel}>{t('add_machine.model_label', 'Price Unit')}</Text>
           <View style={styles.unitRow}>
             {PRICE_UNITS.map((u) => {
               const isSelected = form.priceUnit === u.key;
@@ -189,7 +191,7 @@ const AddMachineScreen = ({ navigation }) => {
           </View>
 
           <Input
-            label="Model Year"
+            label={t('add_machine.year_label', 'Model Year')}
             placeholder="2022"
             value={form.modelYear}
             keyboardType="numeric"
@@ -197,14 +199,14 @@ const AddMachineScreen = ({ navigation }) => {
           />
 
           <Input
-            label="Technical Specifications (Optional)"
+            label={t('add_machine.specs_label', 'Technical Specifications (Optional)')}
             placeholder="e.g. 50 HP, 4-Wheel Drive, Power Steering"
             value={form.specs}
             onChangeText={(v) => setForm({ ...form, specs: v })}
           />
 
           <Input
-            label="Equipment Description / Terms"
+            label={t('add_machine.terms_label', 'Equipment Description / Terms')}
             placeholder="e.g. Includes experienced driver, diesel included, available within 15 km"
             value={form.description}
             onChangeText={(v) => setForm({ ...form, description: v })}
@@ -213,7 +215,7 @@ const AddMachineScreen = ({ navigation }) => {
           />
 
           <Button
-            title="List Equipment on AgriSpine"
+            title={t('add_machine.submit_btn', 'List Machine')}
             onPress={handleSubmit}
             loading={loading}
             disabled={loading}

@@ -230,7 +230,7 @@ const DashboardScreen = ({ navigation }) => {
               {displayName}
             </Text>
             <Text style={styles.greetingSub}>
-              {activeCrops.length} Active {activeCrops.length === 1 ? 'Crop' : 'Crops'} in cultivation
+              {activeCrops.length} {t('dashboard_ui.active_cultivation', 'Active Cultivation')}
             </Text>
           </View>
 
@@ -239,7 +239,7 @@ const DashboardScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('GramSathi')}
           >
             <MaterialCommunityIcons name="robot" size={20} color={colors.primaryDark} />
-            <Text style={styles.aiQuickBtnText}>Ask GramSathi</Text>
+            <Text style={styles.aiQuickBtnText}>{t('dashboard.ask_gramsathi', 'Ask GramSathi')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -259,9 +259,9 @@ const DashboardScreen = ({ navigation }) => {
                 <MaterialCommunityIcons name="map-marker-alert" size={20} color="#D97706" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.locationBannerTitle}>Confirm Your Farm Location</Text>
+                <Text style={styles.locationBannerTitle}>{t('location_modal.title', 'Confirm Your Farm Location')}</Text>
                 <Text style={styles.locationBannerDesc}>
-                  Confirming your village enables hyper-local weather alerts, spray advisories, and nearby machinery recommendations.
+                  {t('location_modal.subtitle', 'Confirming your village enables hyper-local weather alerts, spray advisories, and nearby machinery recommendations.')}
                 </Text>
               </View>
             </View>
@@ -270,13 +270,13 @@ const DashboardScreen = ({ navigation }) => {
                 style={styles.locationConfirmBtn}
                 onPress={() => setShowLocationModal(true)}
               >
-                <Text style={styles.locationConfirmBtnText}>Confirm Village</Text>
+                <Text style={styles.locationConfirmBtnText}>{t('location_modal.confirm_btn', 'Confirm Village')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.locationSkipBtn}
                 onPress={() => setShowLocationBanner(false)}
               >
-                <Text style={styles.locationSkipBtnText}>Remind Later</Text>
+                <Text style={styles.locationSkipBtnText}>{t('common.skip', 'Remind Later')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -291,7 +291,7 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.weatherHeader}>
             <View style={styles.weatherTitleRow}>
               <MaterialCommunityIcons name="weather-partly-cloudy" size={20} color="#0284C7" />
-              <Text style={styles.weatherTitle}>Farm Weather Advisory</Text>
+              <Text style={styles.weatherTitle}>{t('dashboard_ui.weather_advisory', 'Farm Weather Advisory')}</Text>
             </View>
             <Text style={styles.weatherLocation} numberOfLines={1}>
               {[user?.village, user?.district].filter(Boolean).join(', ') || user?.district || 'Warangal'}
@@ -327,37 +327,37 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.weatherStatsRow}>
                 <View style={styles.weatherStat}>
                   <MaterialCommunityIcons name="water-percent" size={16} color="#0284C7" />
-                  <Text style={styles.weatherStatLabel}>Humidity</Text>
+                  <Text style={styles.weatherStatLabel}>{t('dashboard_ui.humidity', 'Humidity')}</Text>
                   <Text style={styles.weatherStatVal}>{weather.main?.humidity}%</Text>
                 </View>
                 <View style={styles.weatherStat}>
                   <MaterialCommunityIcons name="weather-windy" size={16} color="#0D9488" />
-                  <Text style={styles.weatherStatLabel}>Wind</Text>
+                  <Text style={styles.weatherStatLabel}>{t('dashboard_ui.wind', 'Wind')}</Text>
                   <Text style={styles.weatherStatVal}>
                     {Math.round((weather.wind?.speed || 0) * 3.6)} km/h
                   </Text>
                 </View>
                 <View style={styles.weatherStat}>
                   <MaterialCommunityIcons name="gauge" size={16} color="#64748B" />
-                  <Text style={styles.weatherStatLabel}>Pressure</Text>
+                  <Text style={styles.weatherStatLabel}>{t('weather_ui.pressure', 'Pressure')}</Text>
                   <Text style={styles.weatherStatVal}>{weather.main?.pressure} hPa</Text>
                 </View>
               </View>
             </View>
           ) : (
             <Text style={styles.weatherFallbackText}>
-              Tap to check detailed 5-day weather & farm spray recommendations.
+              {t('dashboard_ui.view_forecast', 'Tap to check detailed 5-day weather & farm spray recommendations.')}
             </Text>
           )}
 
           <View style={styles.weatherCardFooter}>
-            <Text style={styles.weatherCardFooterText}>View Hourly Forecast & Spray Advisory</Text>
+            <Text style={styles.weatherCardFooterText}>{t('dashboard_ui.view_forecast', 'View Hourly Forecast & Spray Advisory')}</Text>
             <MaterialCommunityIcons name="chevron-right" size={18} color="#0284C7" />
           </View>
         </TouchableOpacity>
 
         {/* Quick Access Modules Grid */}
-        <Text style={styles.sectionHeading}>Agricultural Services</Text>
+        <Text style={styles.sectionHeading}>{t('dashboard_ui.quick_tools', 'Agricultural Services')}</Text>
         <View style={styles.grid}>
           {/* My Crops */}
           <TouchableOpacity
@@ -368,8 +368,8 @@ const DashboardScreen = ({ navigation }) => {
             <View style={[styles.gridIconCircle, { backgroundColor: '#DCFCE7' }]}>
               <MaterialCommunityIcons name="sprout" size={26} color="#15803D" />
             </View>
-            <Text style={styles.gridTitle}>My Crops</Text>
-            <Text style={styles.gridSubtitle}>Tracking & Expenses</Text>
+            <Text style={styles.gridTitle}>{t('dashboard.my_crops', 'My Crops')}</Text>
+            <Text style={styles.gridSubtitle}>{t('crops_ui.subtitle', 'Tracking & Expenses')}</Text>
           </TouchableOpacity>
 
           {/* Rent Machinery */}
@@ -381,8 +381,8 @@ const DashboardScreen = ({ navigation }) => {
             <View style={[styles.gridIconCircle, { backgroundColor: '#E0F2FE' }]}>
               <MaterialCommunityIcons name="tractor" size={26} color="#0369A1" />
             </View>
-            <Text style={styles.gridTitle}>Rent Machinery</Text>
-            <Text style={styles.gridSubtitle}>Book Equipment</Text>
+            <Text style={styles.gridTitle}>{t('dashboard.rent_machinery', 'Rent Machinery')}</Text>
+            <Text style={styles.gridSubtitle}>{t('machinery_ui.subtitle', 'Book Equipment')}</Text>
           </TouchableOpacity>
 
           {/* Buyer Market */}
@@ -394,8 +394,8 @@ const DashboardScreen = ({ navigation }) => {
             <View style={[styles.gridIconCircle, { backgroundColor: '#FEF3C7' }]}>
               <MaterialCommunityIcons name="shopping-outline" size={26} color="#B45309" />
             </View>
-            <Text style={styles.gridTitle}>Buyer Market</Text>
-            <Text style={styles.gridSubtitle}>Sell & Buy Produce</Text>
+            <Text style={styles.gridTitle}>{t('dashboard.buyer_market', 'Buyer Market')}</Text>
+            <Text style={styles.gridSubtitle}>{t('market_ui.buyer_subtitle', 'Sell & Buy Produce')}</Text>
           </TouchableOpacity>
 
           {/* Community */}
@@ -407,8 +407,8 @@ const DashboardScreen = ({ navigation }) => {
             <View style={[styles.gridIconCircle, { backgroundColor: '#F3E8FF' }]}>
               <MaterialCommunityIcons name="account-group-outline" size={26} color="#7E22CE" />
             </View>
-            <Text style={styles.gridTitle}>Community</Text>
-            <Text style={styles.gridSubtitle}>Farmer Knowledge</Text>
+            <Text style={styles.gridTitle}>{t('dashboard.community', 'Community')}</Text>
+            <Text style={styles.gridSubtitle}>{t('community_ui.subtitle', 'Farmer Knowledge')}</Text>
           </TouchableOpacity>
 
           {/* Village Chat */}
@@ -420,8 +420,8 @@ const DashboardScreen = ({ navigation }) => {
             <View style={[styles.gridIconCircle, { backgroundColor: '#FFE4E6' }]}>
               <MaterialCommunityIcons name="message-text-outline" size={26} color="#BE123C" />
             </View>
-            <Text style={styles.gridTitle}>Village Chat</Text>
-            <Text style={styles.gridSubtitle}>Direct Messages</Text>
+            <Text style={styles.gridTitle}>{t('chat_ui.title', 'Village Chat')}</Text>
+            <Text style={styles.gridSubtitle}>{t('chat_ui.subtitle', 'Direct Messages')}</Text>
           </TouchableOpacity>
 
           {/* Workgroups */}
@@ -433,8 +433,8 @@ const DashboardScreen = ({ navigation }) => {
             <View style={[styles.gridIconCircle, { backgroundColor: '#EDE9FE' }]}>
               <MaterialCommunityIcons name="handshake-outline" size={26} color="#6D28D9" />
             </View>
-            <Text style={styles.gridTitle}>Workgroups</Text>
-            <Text style={styles.gridSubtitle}>Labor & Sharing</Text>
+            <Text style={styles.gridTitle}>{t('dashboard.work_groups', 'Workgroups')}</Text>
+            <Text style={styles.gridSubtitle}>{t('groups_ui.subtitle', 'Labor & Sharing')}</Text>
           </TouchableOpacity>
 
           {/* Mandi Rates */}
@@ -446,8 +446,8 @@ const DashboardScreen = ({ navigation }) => {
             <View style={[styles.gridIconCircle, { backgroundColor: '#FFEDD5' }]}>
               <MaterialCommunityIcons name="trending-up" size={26} color="#C2410C" />
             </View>
-            <Text style={styles.gridTitle}>Mandi Rates</Text>
-            <Text style={styles.gridSubtitle}>Live Crop Prices</Text>
+            <Text style={styles.gridTitle}>{t('dashboard.mandi_rates', 'Mandi Rates')}</Text>
+            <Text style={styles.gridSubtitle}>{t('market_ui.mandi_subtitle', 'Live Crop Prices')}</Text>
           </TouchableOpacity>
 
           {/* Schemes */}
@@ -459,16 +459,16 @@ const DashboardScreen = ({ navigation }) => {
             <View style={[styles.gridIconCircle, { backgroundColor: '#CCFBF1' }]}>
               <MaterialCommunityIcons name="bank-outline" size={26} color="#0F766E" />
             </View>
-            <Text style={styles.gridTitle}>Govt Schemes</Text>
-            <Text style={styles.gridSubtitle}>Subsidies & Grants</Text>
+            <Text style={styles.gridTitle}>{t('dashboard.govt_schemes', 'Govt Schemes')}</Text>
+            <Text style={styles.gridSubtitle}>{t('schemes_ui.subtitle', 'Subsidies & Grants')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Active Crops Summary */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeading}>My Active Crops</Text>
+          <Text style={styles.sectionHeading}>{t('dashboard_ui.active_cultivation', 'My Active Crops')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Crops')}>
-            <Text style={styles.seeAllText}>View All ({crops.length})</Text>
+            <Text style={styles.seeAllText}>{t('common.view_all', 'View All')} ({crops.length})</Text>
           </TouchableOpacity>
         </View>
 
@@ -479,9 +479,9 @@ const DashboardScreen = ({ navigation }) => {
         ) : activeCrops.length === 0 ? (
           <EmptyState
             icon="sprout-outline"
-            title="No Active Crops"
-            description="You have not added any active crop cycles yet. Record your sowing to track expenses and yields."
-            actionTitle="Add New Crop"
+            title={t('crops_ui.no_active_title', 'No Active Crops')}
+            description={t('crops_ui.no_active_desc', 'You have not added any active crop cycles yet. Record your sowing to track expenses and yields.')}
+            actionTitle={t('crops_ui.add_cycle_btn', 'Add New Crop')}
             onAction={() => navigation.navigate('AddCrop')}
           />
         ) : (
@@ -498,9 +498,11 @@ const DashboardScreen = ({ navigation }) => {
                       <MaterialCommunityIcons name="barley" size={22} color={colors.primary} />
                     </View>
                     <View>
-                      <Text style={styles.cropName}>{crop.cropName || 'Crop'}</Text>
+                      <Text style={styles.cropName}>
+                        {t(`crops_list.${(crop.cropName || '').toLowerCase()}`, crop.cropName || 'Crop')}
+                      </Text>
                       <Text style={styles.cropVariety}>
-                        {crop.variety ? `Var: ${crop.variety}` : 'Local Variety'} • {crop.area} {crop.areaUnit || 'Acres'}
+                        {crop.variety ? `${t('crops_ui.variety', 'Var')}: ${crop.variety}` : t('crops_ui.local_variety', 'Local Variety')} • {crop.area} {t('crops_ui.acres', crop.areaUnit || 'Acres')}
                       </Text>
                     </View>
                   </View>
@@ -509,19 +511,19 @@ const DashboardScreen = ({ navigation }) => {
 
                 <View style={styles.cropMetaRow}>
                   <View style={styles.cropMetaItem}>
-                    <Text style={styles.cropMetaLabel}>Sown On</Text>
+                    <Text style={styles.cropMetaLabel}>{t('crops_ui.sown_date', 'Sown On')}</Text>
                     <Text style={styles.cropMetaValue}>{formatDate(crop.sowingDate)}</Text>
                   </View>
                   <View style={styles.cropMetaItem}>
-                    <Text style={styles.cropMetaLabel}>Total Expenses</Text>
+                    <Text style={styles.cropMetaLabel}>{t('crops_ui.total_expenses', 'Total Expenses')}</Text>
                     <Text style={styles.cropMetaValueHighlight}>
                       {formatCurrency(crop.totalExpense || 0)}
                     </Text>
                   </View>
                   <View style={styles.cropMetaItem}>
-                    <Text style={styles.cropMetaLabel}>Market Listing</Text>
+                    <Text style={styles.cropMetaLabel}>{t('crops_ui.market_status', 'Market Listing')}</Text>
                     <Text style={styles.cropMetaValue}>
-                      {crop.isListedOnMarket ? 'Listed' : 'Private'}
+                      {crop.isListedOnMarket ? t('crops_ui.listed', 'Listed') : t('crops_ui.private', 'Private')}
                     </Text>
                   </View>
                 </View>
@@ -534,9 +536,9 @@ const DashboardScreen = ({ navigation }) => {
         {mandiRates.length > 0 && (
           <View style={styles.mandiSection}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeading}>Live Mandi Prices</Text>
+              <Text style={styles.sectionHeading}>{t('dashboard_ui.live_mandi', 'Live Mandi Prices')}</Text>
               <TouchableOpacity onPress={() => navigation.navigate('MandiRates')}>
-                <Text style={styles.seeAllText}>View All</Text>
+                <Text style={styles.seeAllText}>{t('common.view_all', 'View All')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -550,7 +552,7 @@ const DashboardScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.mandiRight}>
                   <Text style={styles.mandiPrice}>{formatCurrency(rate.modal_price || rate.modalPrice || 0)}</Text>
-                  <Text style={styles.mandiUnit}>per Quintal</Text>
+                  <Text style={styles.mandiUnit}>{t('market_ui.per_quintal', 'per Quintal')}</Text>
                 </View>
               </View>
             ))}

@@ -108,7 +108,7 @@ const AddCrop = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-800 dark:text-white">{t('crop.add', { defaultValue: 'Add New Crop' })}</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Track stages, predict yield & schedule machinery</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('crops_ui.add_crop_sub', 'Start a New Cultivation Cycle')}</p>
           </div>
         </div>
 
@@ -130,7 +130,7 @@ const AddCrop = () => {
 
           <div>
             <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-              {t('dashboard.area', { defaultValue: 'Area' })} (Acres) <span className="text-red-500">*</span>
+              {t('dashboard.area', { defaultValue: 'Area' })} ({t('crops_ui.acres', 'Acres')}) <span className="text-red-500">*</span>
             </label>
             <input
               name="area"
@@ -166,10 +166,10 @@ const AddCrop = () => {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Saving Crop...</span>
+                <span>{t('common.loading', 'Saving Crop...')}</span>
               </>
             ) : (
-              <span>Save & Track Crop</span>
+              <span>{t('crops_ui.record_crop_btn', 'Save & Track Crop')}</span>
             )}
           </button>
         </form>

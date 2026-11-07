@@ -87,10 +87,14 @@ const CropsListScreen = ({ navigation }) => {
               <MaterialCommunityIcons name="barley" size={24} color={colors.primary} />
             </View>
             <View style={styles.titleTextCol}>
-              <Text style={styles.cropName}>{item.cropName}</Text>
+              <Text style={styles.cropName}>
+                {t(`crops_list.${(item.cropName || '').toLowerCase()}`, item.cropName)}
+              </Text>
               <Text style={styles.cropVariety}>
-                {item.variety ? `Variety: ${item.variety}` : 'Local Variety'} • {item.area}{' '}
-                {item.areaUnit || 'Acres'}
+                {item.variety
+                  ? `${t('crops_ui.variety', 'Variety')}: ${item.variety}`
+                  : t('crops_ui.local_variety', 'Local Variety')} • {item.area}{' '}
+                {t('crops_ui.acres', item.areaUnit || 'Acres')}
               </Text>
             </View>
           </View>
@@ -99,27 +103,31 @@ const CropsListScreen = ({ navigation }) => {
 
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Sown Date</Text>
+            <Text style={styles.statLabel}>{t('crops_ui.sown_date', 'Sown Date')}</Text>
             <Text style={styles.statValue}>{formatDate(item.sowingDate)}</Text>
           </View>
 
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Total Expenses</Text>
+            <Text style={styles.statLabel}>{t('crops_ui.total_expenses', 'Total Expenses')}</Text>
             <Text style={[styles.statValue, { color: colors.primary }]}>
               {formatCurrency(item.totalExpense || 0)}
             </Text>
           </View>
 
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Market Status</Text>
+            <Text style={styles.statLabel}>{t('crops_ui.market_status', 'Market Status')}</Text>
             <Text style={styles.statValue}>
-              {item.isListedOnMarket ? '🛒 Listed' : '🔒 Private'}
+              {item.isListedOnMarket
+                ? t('crops_ui.listed', '🛒 Listed on Market')
+                : t('crops_ui.private', '🔒 Private Farm Record')}
             </Text>
           </View>
         </View>
 
         <View style={styles.cardFooter}>
-          <Text style={styles.footerActionText}>View Full Timeline & Financials</Text>
+          <Text style={styles.footerActionText}>
+            {t('crops_ui.view_timeline', 'View Full Timeline & Financials')}
+          </Text>
           <MaterialCommunityIcons name="arrow-right" size={16} color={colors.primary} />
         </View>
       </Card>
@@ -130,8 +138,8 @@ const CropsListScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('dashboard.my_crops', 'My Crops')}
-        subtitle="Cultivation, Expenses & Yields"
+        title={t('crops_ui.title', 'My Crops')}
+        subtitle={t('crops_ui.subtitle', 'Cultivation, Expenses & Yields')}
         onBack={() => navigation.goBack()}
         rightAction={
           <TouchableOpacity
@@ -148,7 +156,7 @@ const CropsListScreen = ({ navigation }) => {
         <View style={styles.searchBar}>
           <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
           <TextInput
-            placeholder="Search crop or variety (e.g. Paddy, Cotton)..."
+            placeholder={t('crops_ui.search_placeholder', 'Search crop or variety (e.g. Paddy, Cotton)...')}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -169,7 +177,7 @@ const CropsListScreen = ({ navigation }) => {
           style={[styles.tabBtn, activeTab === 'active' && styles.tabBtnActive]}
         >
           <Text style={[styles.tabBtnText, activeTab === 'active' && styles.tabBtnTextActive]}>
-            Active Cultivation ({activeCount})
+            {t('crops_ui.tab_active', 'Active Cultivation')} ({activeCount})
           </Text>
         </TouchableOpacity>
 
@@ -178,7 +186,7 @@ const CropsListScreen = ({ navigation }) => {
           style={[styles.tabBtn, activeTab === 'harvested' && styles.tabBtnActive]}
         >
           <Text style={[styles.tabBtnText, activeTab === 'harvested' && styles.tabBtnTextActive]}>
-            Harvested Archive ({harvestedCount})
+            {t('crops_ui.tab_harvested', 'Harvested Archive')} ({harvestedCount})
           </Text>
         </TouchableOpacity>
       </View>
@@ -211,15 +219,15 @@ const CropsListScreen = ({ navigation }) => {
               icon="sprout-outline"
               title={
                 activeTab === 'active'
-                  ? 'No Active Crop Cycles'
-                  : 'No Harvested Records'
+                  ? t('crops_ui.no_active_title', 'No Active Crop Cycles')
+                  : t('crops_ui.no_harvested_title', 'No Harvested Records')
               }
               description={
                 activeTab === 'active'
-                  ? 'Record your sowing to keep track of fertilizers, machinery costs, labor, and crop profits.'
-                  : 'Completed and harvested crops will appear here with final profit analysis.'
+                  ? t('crops_ui.no_active_desc', 'Record your sowing to keep track of fertilizers, machinery costs, labor, and crop profits.')
+                  : t('crops_ui.no_harvested_desc', 'Completed and harvested crops will appear here with final profit analysis.')
               }
-              actionTitle={activeTab === 'active' ? 'Add New Crop Cycle' : null}
+              actionTitle={activeTab === 'active' ? t('crops_ui.add_cycle_btn', 'Add New Crop Cycle') : null}
               onAction={activeTab === 'active' ? () => navigation.navigate('AddCrop') : null}
             />
           }

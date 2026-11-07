@@ -165,7 +165,7 @@ const RegisterScreen = ({ navigation }) => {
             {/* Name */}
             <Input
               ref={nameRef}
-              label="Full Name"
+              label={t('auth.fullname', 'Full Name')}
               placeholder="e.g. Ramesh Reddy"
               value={name}
               onChangeText={(val) => {
@@ -189,7 +189,7 @@ const RegisterScreen = ({ navigation }) => {
             {/* Phone */}
             <Input
               ref={phoneRef}
-              label="Phone Number"
+              label={t('auth.phone', 'Phone Number')}
               placeholder="10-digit mobile number"
               value={phone}
               onChangeText={(val) => {
@@ -215,7 +215,7 @@ const RegisterScreen = ({ navigation }) => {
             {/* Password */}
             <Input
               ref={passwordRef}
-              label="Password"
+              label={t('auth.password', 'Password')}
               placeholder="Minimum 6 characters"
               value={password}
               onChangeText={(val) => {
@@ -240,7 +240,7 @@ const RegisterScreen = ({ navigation }) => {
             {/* Confirm Password */}
             <Input
               ref={confirmPasswordRef}
-              label="Confirm Password"
+              label={t('auth.confirm_pass', 'Confirm Password')}
               placeholder="Re-enter your password"
               value={confirmPassword}
               onChangeText={(val) => {
@@ -267,7 +267,7 @@ const RegisterScreen = ({ navigation }) => {
               <View style={styles.halfWidth}>
                 <Input
                   ref={villageRef}
-                  label="Village"
+                  label={t('auth.village', 'Village')}
                   placeholder="e.g. Rampur"
                   value={village}
                   onChangeText={setVillage}
@@ -287,7 +287,7 @@ const RegisterScreen = ({ navigation }) => {
               <View style={styles.halfWidth}>
                 <Input
                   ref={districtRef}
-                  label="District"
+                  label={t('auth.district', 'District')}
                   placeholder="e.g. Warangal"
                   value={district}
                   onChangeText={setDistrict}
@@ -306,7 +306,7 @@ const RegisterScreen = ({ navigation }) => {
 
             {/* Submit Button */}
             <Button
-              title="Create Account"
+              title={t('auth.register_btn', 'Create Account')}
               onPress={handleRegister}
               loading={loading}
               disabled={loading}
@@ -316,13 +316,13 @@ const RegisterScreen = ({ navigation }) => {
 
             {/* Login Link */}
             <View style={styles.footerRow}>
-              <Text style={styles.footerText}>Already registered with AgriSpine?</Text>
+              <Text style={styles.footerText}>{t('auth.have_account', 'Already registered with AgriSpine?')}</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('Login')}
                 disabled={loading}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Text style={styles.loginLink}> Log In</Text>
+                <Text style={styles.loginLink}> {t('auth.login_here', 'Log In')}</Text>
               </TouchableOpacity>
             </View>
           </View>

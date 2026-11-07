@@ -18,17 +18,19 @@ import PostCard from './components/PostCard';
 import CreatePostModal from './components/CreatePostModal';
 import MediaLightbox from './components/MediaLightbox';
 
-const CATEGORIES = [
-    'All',
-    'Crop Management',
-    'Pest & Disease',
-    'Irrigation',
-    'Fertilizers',
-    'Weather',
-    'Equipment',
-    'Market Prices',
-    'Others'
- ];
+const CATEGORY_ITEMS = [
+    { key: 'All', labelKey: 'community_ui.cat_all', fallback: 'All' },
+    { key: 'Crop Management', labelKey: 'community_ui.cat_crop_management', fallback: 'Crop Management' },
+    { key: 'Pest & Disease', labelKey: 'community_ui.cat_pest_disease', fallback: 'Pest & Disease' },
+    { key: 'Irrigation', labelKey: 'community_ui.cat_irrigation', fallback: 'Irrigation' },
+    { key: 'Fertilizers', labelKey: 'community_ui.cat_fertilizers', fallback: 'Fertilizers' },
+    { key: 'Weather', labelKey: 'community_ui.cat_weather', fallback: 'Weather' },
+    { key: 'Equipment', labelKey: 'community_ui.cat_equipment', fallback: 'Equipment' },
+    { key: 'Market Prices', labelKey: 'community_ui.cat_market_prices', fallback: 'Market Prices' },
+    { key: 'Others', labelKey: 'community_ui.cat_others', fallback: 'Others' }
+];
+
+const CATEGORIES = CATEGORY_ITEMS.map(c => c.key);
 
 const Community = () => {
     const { t } = useTranslation();
@@ -323,10 +325,10 @@ const Community = () => {
                             </div>
 
                             <h3 className="font-bold text-slate-900 dark:text-white text-base mt-2">
-                                {currentUser?.name || 'Welcome, Farmer'}
+                                {currentUser?.name || t('common.farmer', 'Farmer')}
                             </h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
-                                {currentUser?.userType || 'Farmer'} {currentUser?.village ? `• ${currentUser.village}` : ''}
+                                {currentUser?.userType || t('common.farmer', 'Farmer')} {currentUser?.village ? `• ${currentUser.village}` : ''}
                             </p>
 
                             {/* Stats */}
@@ -335,7 +337,7 @@ const Community = () => {
                                     onClick={() => setActiveTab('my_posts')}
                                     className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
                                 >
-                                    <span className="text-xs text-slate-400 block font-medium">My Posts</span>
+                                    <span className="text-xs text-slate-400 block font-medium">{t('community_ui.my_posts', 'My Posts')}</span>
                                     <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">
                                         {myPostsCount}
                                     </span>
@@ -344,7 +346,7 @@ const Community = () => {
                                     onClick={() => setActiveTab('my_discussions')}
                                     className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
                                 >
-                                    <span className="text-xs text-slate-400 block font-medium">Activity</span>
+                                    <span className="text-xs text-slate-400 block font-medium">{t('community_ui.activity_tab', 'Activity')}</span>
                                     <span className="text-base font-bold text-blue-600 dark:text-blue-400">
                                         {myDiscussionsCount}
                                     </span>
@@ -364,7 +366,7 @@ const Community = () => {
                             >
                                 <span className="flex items-center gap-2.5">
                                     <Sparkles className="w-4 h-4 text-emerald-600" />
-                                    Community Feed
+                                    {t('community_ui.feed_tab', 'Community Feed')}
                                 </span>
                                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500">
                                     {posts.length}
@@ -381,7 +383,7 @@ const Community = () => {
                             >
                                 <span className="flex items-center gap-2.5">
                                     <BookOpen className="w-4 h-4 text-emerald-600" />
-                                    My Posts
+                                    {t('community_ui.my_posts', 'My Posts')}
                                 </span>
                                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500">
                                     {myPostsCount}
@@ -398,7 +400,7 @@ const Community = () => {
                             >
                                 <span className="flex items-center gap-2.5">
                                     <MessageSquare className="w-4 h-4 text-emerald-600" />
-                                    My Discussions
+                                    {t('community_ui.all_forum', 'My Discussions')}
                                 </span>
                                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500">
                                     {myDiscussionsCount}
@@ -410,23 +412,23 @@ const Community = () => {
                         <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm hidden lg:block">
                             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
                                 <Tag className="w-3.5 h-3.5 text-emerald-600" />
-                                Browse by Topic
+                                {t('community_ui.browse_topic', 'Browse by Topic')}
                             </h4>
                             <div className="space-y-1">
-                                {CATEGORIES.map((cat) => (
+                                {CATEGORY_ITEMS.map((item) => (
                                     <button
-                                        key={cat}
-                                        onClick={() => setSelectedCategory(cat)}
+                                        key={item.key}
+                                        onClick={() => setSelectedCategory(item.key)}
                                         className={`w-full px-3 py-1.5 rounded-xl text-left text-xs font-medium transition flex items-center justify-between ${
-                                            selectedCategory === cat
+                                            selectedCategory === item.key
                                                 ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold'
                                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'
                                         }`}
                                     >
-                                        <span>{cat}</span>
-                                        {cat !== 'All' && (
+                                        <span>{t(item.labelKey, item.fallback)}</span>
+                                        {item.key !== 'All' && (
                                             <span className="text-[10px] text-slate-400">
-                                                {posts.filter(p => p.category === cat).length}
+                                                {posts.filter(p => p.category === item.key).length}
                                             </span>
                                         )}
                                     </button>
@@ -453,10 +455,10 @@ const Community = () => {
                                         className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
                                     >
                                         <ArrowLeft className="w-4 h-4 text-emerald-600" />
-                                        <span>Back to Community Feed</span>
+                                        <span>{t('community_ui.back_feed', 'Back to Community Feed')}</span>
                                     </button>
                                     <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800">
-                                        Post Discussion
+                                        {t('community_ui.post_discussion', 'Post Discussion')}
                                     </span>
                                 </div>
 
@@ -519,7 +521,7 @@ const Community = () => {
                                             }}
                                             className="flex-1 text-left px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium transition"
                                         >
-                                            What would you like to share with the community?
+                                            {t('community_ui.share_prompt', 'What would you like to share with the community?')}
                                         </button>
                                     </div>
 
@@ -533,7 +535,7 @@ const Community = () => {
                                             className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition"
                                         >
                                             <ImageIcon className="w-4 h-4 text-emerald-600" />
-                                            <span>Photo</span>
+                                            <span>{t('community_ui.photo', 'Photo')}</span>
                                         </button>
 
                                         <button
@@ -544,7 +546,7 @@ const Community = () => {
                                             className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition"
                                         >
                                             <Video className="w-4 h-4 text-blue-600" />
-                                            <span>Video</span>
+                                            <span>{t('community_ui.video', 'Video')}</span>
                                         </button>
 
                                         <button
@@ -555,7 +557,7 @@ const Community = () => {
                                             className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition"
                                         >
                                             <HelpCircle className="w-4 h-4 text-amber-500" />
-                                            <span>Ask Question</span>
+                                            <span>{t('community_ui.ask_question', 'Ask Question')}</span>
                                         </button>
 
                                         <button
@@ -566,7 +568,7 @@ const Community = () => {
                                             className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition"
                                         >
                                             <ShieldCheck className="w-4 h-4 text-purple-600" />
-                                            <span>Experience</span>
+                                            <span>{t('community_ui.experience', 'Experience')}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -578,7 +580,7 @@ const Community = () => {
                                             <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none shrink-0" />
                                             <input
                                                 type="text"
-                                                placeholder="Search discussions, crop issues, authors..."
+                                                placeholder={t('community_ui.search_placeholder', 'Search discussions, crop issues, authors...')}
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                                 className="w-full !pl-11 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[42px]"
@@ -599,8 +601,8 @@ const Community = () => {
                                             onChange={(e) => setSortBy(e.target.value)}
                                             className="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                         >
-                                            <option value="newest">Latest</option>
-                                            <option value="popular">Most Popular</option>
+                                            <option value="newest">{t('community_ui.sort_newest', 'Newest First')}</option>
+                                            <option value="popular">{t('community_ui.sort_popular', 'Most Popular')}</option>
                                         </select>
 
                                         {/* Refresh */}

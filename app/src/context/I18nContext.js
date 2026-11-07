@@ -55,10 +55,27 @@ export const I18nProvider = ({ children }) => {
 
   /**
    * Translate a dotted key path (e.g. 'common.save', 'dashboard.my_crops', 'auth.phone')
+   * Supports i18next-style interpolations:
+   *   t('welcome', { name: 'Ravi' })
+   *   t('welcome', 'Default string', { name: 'Ravi' })
+   *   t('welcome', { defaultValue: 'Default string', name: 'Ravi' })
    */
   const t = useCallback(
-    (keyPath, fallback = '') => {
-      if (!keyPath) return fallback;
+    (keyPath, fallbackOrParams = '', maybeParams = {}) => {
+      if (!keyPath) return '';
+
+      let fallback = '';
+      let params = {};
+
+      if (typeof fallbackOrParams === 'object' && fallbackOrParams !== null) {
+        params = fallbackOrParams;
+        fallback = params.defaultValue || '';
+      } else {
+        fallback = typeof fallbackOrParams === 'string' ? fallbackOrParams : '';
+        if (typeof maybeParams === 'object' && maybeParams !== null) {
+          params = maybeParams;
+        }
+      }
 
       const keys = keyPath.split('.');
       
@@ -73,26 +90,36 @@ export const I18nProvider = ({ children }) => {
         }
       }
 
+      let result = '';
       if (typeof current === 'string' && current.trim()) {
-        return current;
-      }
+        result = current;
+      } else {
+        // Fallback to English
+        let fallbackCurrent = translations.en;
+        for (const k of keys) {
+          if (fallbackCurrent && typeof fallbackCurrent === 'object' && k in fallbackCurrent) {
+            fallbackCurrent = fallbackCurrent[k];
+          } else {
+            fallbackCurrent = undefined;
+            break;
+          }
+        }
 
-      // Fallback to English
-      let fallbackCurrent = translations.en;
-      for (const k of keys) {
-        if (fallbackCurrent && typeof fallbackCurrent === 'object' && k in fallbackCurrent) {
-          fallbackCurrent = fallbackCurrent[k];
+        if (typeof fallbackCurrent === 'string' && fallbackCurrent.trim()) {
+          result = fallbackCurrent;
         } else {
-          fallbackCurrent = undefined;
-          break;
+          result = fallback || keyPath;
         }
       }
 
-      if (typeof fallbackCurrent === 'string' && fallbackCurrent.trim()) {
-        return fallbackCurrent;
+      // Variable interpolation: {{varName}}
+      if (typeof result === 'string' && Object.keys(params).length > 0) {
+        return result.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (match, p1) => {
+          return params[p1] !== undefined ? String(params[p1]) : match;
+        });
       }
 
-      return fallback || keyPath;
+      return result;
     },
     [language]
   );

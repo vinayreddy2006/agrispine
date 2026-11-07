@@ -91,9 +91,11 @@ const MandiRatesScreen = ({ navigation }) => {
             <MaterialCommunityIcons name="barley" size={24} color="#C2410C" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.cropName}>{cropName}</Text>
+            <Text style={styles.cropName}>
+              {t(`crops_list.${cropName.toLowerCase()}`, cropName)}
+            </Text>
             <Text style={styles.cropVariety}>
-              Variety: {item.variety || 'Standard'} • {market}
+              {t('crops_ui.variety', 'Variety')}: {item.variety || 'Standard'} • {market}
             </Text>
           </View>
 
@@ -116,16 +118,16 @@ const MandiRatesScreen = ({ navigation }) => {
 
         <View style={styles.priceRow}>
           <View style={styles.modalPriceCol}>
-            <Text style={styles.priceLabel}>Modal Price (APMC)</Text>
+            <Text style={styles.priceLabel}>{t('market_ui.modal_price', 'Modal Price (APMC)')}</Text>
             <Text style={styles.modalPriceText}>
               {formatCurrency(price)}
-              <Text style={styles.unitText}> /Quintal</Text>
+              <Text style={styles.unitText}> {t('market_ui.per_quintal', '/Quintal')}</Text>
             </Text>
           </View>
 
           {(minPrice || maxPrice) && (
             <View style={styles.rangeCol}>
-              <Text style={styles.rangeLabel}>Range (Min - Max)</Text>
+              <Text style={styles.rangeLabel}>{t('market_ui.min_price', 'Min')} - {t('market_ui.max_price', 'Max')}</Text>
               <Text style={styles.rangeVal}>
                 {formatCurrency(minPrice || price)} - {formatCurrency(maxPrice || price)}
               </Text>
@@ -134,7 +136,9 @@ const MandiRatesScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.cardFooter}>
-          <Text style={styles.footerDate}>Updated: {formatDate(item.arrival_date || item.date || item.updatedAt)}</Text>
+          <Text style={styles.footerDate}>
+            {t('market_ui.updated_today', 'Updated')}: {formatDate(item.arrival_date || item.date || item.updatedAt)}
+          </Text>
           <Text style={styles.footerSource}>Official APMC Source</Text>
         </View>
       </Card>
@@ -145,8 +149,8 @@ const MandiRatesScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('market.col_market', 'Mandi Rates')}
-        subtitle="Agricultural Market Committee Prices"
+        title={t('market_ui.mandi_title', 'Live APMC Mandi Rates')}
+        subtitle={t('market_ui.mandi_subtitle', 'Daily Market Arrivals & Commodity Prices')}
         onBack={() => navigation.goBack()}
       />
 
@@ -155,7 +159,7 @@ const MandiRatesScreen = ({ navigation }) => {
         <View style={styles.searchBar}>
           <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
           <TextInput
-            placeholder="Search crop (e.g. Paddy, Cotton, Chilli)..."
+            placeholder={t('market_ui.mandi_search', 'Search commodity or market...')}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -186,7 +190,7 @@ const MandiRatesScreen = ({ navigation }) => {
                   style={[styles.marketChip, isSelected && styles.marketChipSelected]}
                 >
                   <Text style={[styles.marketChipText, isSelected && styles.marketChipTextSelected]}>
-                    {item}
+                    {item === 'All' ? t('common.all', 'All') : item}
                   </Text>
                 </TouchableOpacity>
               );
@@ -217,13 +221,10 @@ const MandiRatesScreen = ({ navigation }) => {
           ListEmptyComponent={
             <EmptyState
               icon="trending-up"
-              title="No Rates Matching Query"
-              description="No mandi records found for this crop or market. Try clearing filters to see all regional rates."
-              actionTitle="Reset Filters"
-              onAction={() => {
-                setSearchQuery('');
-                setSelectedMarket('All');
-              }}
+              title={t('ui.no_matching_records', 'No Rates Matching Query')}
+              description={t('ui.try_diff_keyword', 'No mandi prices matched your search query. Try another crop name or APMC yard.')}
+              actionTitle={searchQuery ? t('machinery_ui.clear_search', 'Clear Search') : null}
+              onAction={searchQuery ? () => setSearchQuery('') : null}
             />
           }
         />

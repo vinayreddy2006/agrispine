@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import fetchuser, { optionalFetchUser } from "../middlewares/fetchUser.js";
 import {
+    getAIHealthStatus,
     getAllChats,
     createChat,
     getChatById,
@@ -9,6 +10,7 @@ import {
     deleteChat,
     processChat,
     processVoice,
+    transcribeAudio,
     getAllMessengerConversations,
     getMessengerConversationByName,
     getWeatherRecommendations
@@ -16,6 +18,9 @@ import {
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() }); // Store audio in memory
+
+// Health Check (Public diagnostic)
+router.get("/health", getAIHealthStatus);
 
 // AI Chat Operations
 router.get("/chats", fetchuser, getAllChats);
@@ -27,6 +32,7 @@ router.delete("/chats/:id", fetchuser, deleteChat);
 // Main AI Endpoints
 router.post("/chat", fetchuser, processChat);
 router.post("/voice", fetchuser, upload.single("audio_file"), processVoice);
+router.post("/transcribe", fetchuser, upload.single("audio_file"), transcribeAudio);
 
 // Messenger AI Endpoints
 router.get("/messenger/conversations", fetchuser, getAllMessengerConversations);

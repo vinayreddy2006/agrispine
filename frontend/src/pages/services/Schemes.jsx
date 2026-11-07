@@ -91,7 +91,7 @@ const Schemes = () => {
             <div className="p-4 space-y-4 max-w-5xl mx-auto">
                 {/* Search Bar */}
                 <SearchInput 
-                    placeholder="Search government schemes by name, provider or benefit..."
+                    placeholder={t('schemes.search', { defaultValue: "Search government schemes by name, provider or benefit..." })}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -100,7 +100,7 @@ const Schemes = () => {
                     <CardSkeleton count={3} />
                 ) : error ? (
                     <ErrorState
-                        title="Unable to Load Schemes"
+                        title={t('ui.error_title', "Unable to Load Schemes")}
                         message={error}
                         onRetry={processSchemes}
                     />
@@ -108,19 +108,14 @@ const Schemes = () => {
                     <NoSearchResults
                         query={searchTerm}
                         onClear={() => setSearchTerm("")}
-                        suggestions={[
-                            "Search for major schemes like Rythu Bandhu, PM-Kisan, or Drip Irrigation",
-                            "Search by authority like Central Government or State Agriculture Department",
-                            "Clear your search query to view all active farmer support programs"
-                        ]}
                     />
                 ) : schemes.length === 0 ? (
                     <EmptyState 
-                        title="No Government Schemes Published Yet" 
-                        description="Verified state and central agricultural subsidy programs will appear here with application deadlines and direct portals."
+                        title={t('schemes.no_schemes', { defaultValue: "No Government Schemes Published Yet" })} 
+                        description={t('ui.empty_desc', "Verified state and central agricultural subsidy programs will appear here with application deadlines and direct portals.")}
                         tip="AgriSpine synchronizes official DBT and subsidy announcements directly from government gazettes."
                         icon={Landmark}
-                        actionText="Refresh Schemes"
+                        actionText={t('common.refresh', "Refresh Schemes")}
                         onAction={processSchemes}
                     />
                 ) : (

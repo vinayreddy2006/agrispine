@@ -333,8 +333,8 @@ const ConversationsScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('dashboard.village', 'Village Chat')}
-        subtitle="Direct Messaging with Local Farmers & Groups"
+        title={t('chat_ui.title', 'Village Chat')}
+        subtitle={t('chat_ui.subtitle', 'Direct Messaging with Local Farmers & Groups')}
         onBack={() => navigation.goBack()}
         rightAction={
           <TouchableOpacity
@@ -351,7 +351,7 @@ const ConversationsScreen = ({ navigation }) => {
         <View style={styles.searchInner}>
           <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
           <TextInput
-            placeholder="Search conversations or farmers..."
+            placeholder={t('chat_ui.search_placeholder', 'Search conversations or farmers...')}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -381,7 +381,9 @@ const ConversationsScreen = ({ navigation }) => {
                   isActive && styles.filterChipTextActive,
                 ]}
               >
-                {filter === 'Notes' ? 'Personal Notes' : filter}
+                {filter === 'All' ? t('common.all', 'All') :
+                 filter === 'Notes' ? t('chat_ui.notes_badge', 'Personal Notes') :
+                 filter}
               </Text>
             </TouchableOpacity>
           );
@@ -413,15 +415,13 @@ const ConversationsScreen = ({ navigation }) => {
           ListEmptyComponent={
             <EmptyState
               icon="message-text-outline"
-              title="No Messages Found"
+              title={t('chat_ui.no_conversations', 'No Messages Found')}
               description={
                 searchQuery
-                  ? `No conversations matching "${searchQuery}". Tap "New Chat" to search registered farmers.`
-                  : activeFilter !== 'All'
-                  ? `No ${activeFilter.toLowerCase()} conversations found.`
-                  : 'Connect with farmers in your village or nearby mandals to discuss crop rates, machinery, and farming techniques.'
+                  ? t('ui.no_matching_records', 'No matching conversations found')
+                  : t('chat_ui.no_conversations', 'Connect with farmers in your village or nearby mandals.')
               }
-              actionTitle="Start New Chat"
+              actionTitle={t('chat_ui.start_chat', 'Start New Chat')}
               onAction={() => setIsNewChatModalOpen(true)}
             />
           }

@@ -1,6 +1,7 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
-import { CardSkeleton, StatCardSkeleton, PostSkeleton, TableRowSkeleton, Skeleton } from './LoadingSkeleton';
+import { CardSkeleton, StatCardSkeleton, PostSkeleton, TableRowSkeleton } from './LoadingSkeleton';
 
 /**
  * LoadingState Component
@@ -8,12 +9,15 @@ import { CardSkeleton, StatCardSkeleton, PostSkeleton, TableRowSkeleton, Skeleto
  * Supports skeleton shapes ('card', 'stat', 'post', 'table') or a fallback spinner.
  */
 const LoadingState = ({ 
-  message = "Loading information...", 
+  message, 
   fullScreen = false,
   shape = null, // 'card' | 'stat' | 'post' | 'table' | null
   count = 3,
   className = "",
 }) => {
+  const { t } = useTranslation();
+  const displayMsg = message || t('ui.loading_text', 'Loading information...');
+
   if (shape === 'card') {
     return <CardSkeleton count={count} />;
   }
@@ -39,7 +43,7 @@ const LoadingState = ({
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       </div>
-      <p className="text-text-secondary dark:text-gray-300 font-medium text-sm animate-pulse">{message}</p>
+      <p className="text-text-secondary dark:text-gray-300 font-medium text-sm animate-pulse">{displayMsg}</p>
     </div>
   );
 };

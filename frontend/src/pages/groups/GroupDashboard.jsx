@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
     Users, Plus, IndianRupee, Briefcase, CheckCircle2, TrendingUp, 
     LayoutGrid, Table, Search, ShieldCheck, ArrowRight, MapPin, 
@@ -14,6 +15,7 @@ import { CardSkeleton, StatCardSkeleton, TableRowSkeleton } from '../../componen
 import { getUserGroups, getPersonalDashboard } from '../../api/groupService';
 
 const GroupDashboard = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [groups, setGroups] = useState([]);
     const [personalStats, setPersonalStats] = useState(null);
@@ -146,10 +148,10 @@ const GroupDashboard = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                        Agricultural Workgroups
+                        {t('groups_ui.title', 'Agricultural Workgroups')}
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">
-                        Coordinate labor teams, manage daily farm tasks, and track settlements
+                        {t('groups_ui.cooperative_labor', 'Coordinate labor teams, manage daily farm tasks, and track settlements')}
                     </p>
                 </div>
 
@@ -166,7 +168,7 @@ const GroupDashboard = () => {
                         title="Workgroups you belong to as a member or manager"
                     >
                         <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                        <span>My Workgroups</span>
+                        <span>{t('groups_ui.my_groups', 'My Workgroups')}</span>
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
                             {groups.length}
                         </span>
@@ -184,7 +186,7 @@ const GroupDashboard = () => {
                             title="Administrative management for groups you administer"
                         >
                             <ShieldCheck className="w-4 h-4" />
-                            <span>Admin Dashboard</span>
+                            <span>{t('groups_ui.manage_workgroup', 'Admin Dashboard')}</span>
                             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                                 activeSection === 'admin_dashboard' 
                                     ? 'bg-emerald-700 text-white' 
@@ -214,7 +216,7 @@ const GroupDashboard = () => {
                             className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
                         >
                             <IndianRupee className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>{showEarningsSummary ? 'Hide My Work & Earnings' : 'View My Work & Earnings Summary'}</span>
+                            <span>{showEarningsSummary ? 'Hide My Work & Earnings' : t('groups_ui.personal_labor_summary', 'View My Work & Earnings Summary')}</span>
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold">
                                 ₹{Math.round(personalStats?.totalEarned || 0)} Total
                             </span>
@@ -226,7 +228,7 @@ const GroupDashboard = () => {
                             <Card className="p-5 bg-gradient-to-br from-emerald-600 to-green-700 text-white border-none shadow-sm relative overflow-hidden">
                                 <IndianRupee className="absolute -right-3 -bottom-3 w-24 h-24 opacity-10" />
                                 <div className="relative z-10">
-                                    <p className="text-emerald-100 text-xs font-semibold uppercase tracking-wider">Total Earned</p>
+                                    <p className="text-emerald-100 text-xs font-semibold uppercase tracking-wider">{t('groups_ui.total_earned', 'Total Earned')}</p>
                                     <h3 className="text-2xl font-bold mt-1">₹{Math.round(personalStats?.totalEarned || 0)}</h3>
                                     <p className="text-xs text-emerald-100/90 mt-2 flex items-center gap-1">
                                         <TrendingUp className="w-3.5 h-3.5" /> Lifetime farm earnings
@@ -237,7 +239,7 @@ const GroupDashboard = () => {
                             <Card className="p-5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 relative overflow-hidden">
                                 <CheckCircle2 className="absolute -right-3 -bottom-3 w-24 h-24 text-amber-500/10" />
                                 <div className="relative z-10">
-                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Pending Payments</p>
+                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">{t('groups_ui.pending', 'Pending Payments')}</p>
                                     <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">₹{Math.round(personalStats?.pendingEarned || 0)}</h3>
                                     <p className="text-xs text-slate-400 mt-2">Awaiting settlement from landowners</p>
                                 </div>
@@ -246,7 +248,7 @@ const GroupDashboard = () => {
                             <Card className="p-5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 relative overflow-hidden">
                                 <Briefcase className="absolute -right-3 -bottom-3 w-24 h-24 text-blue-500/10" />
                                 <div className="relative z-10">
-                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Days Worked</p>
+                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">{t('groups_ui.days_worked', 'Days Worked')}</p>
                                     <h3 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{personalStats?.daysWorked || 0} Days</h3>
                                     <p className="text-xs text-slate-400 mt-2">Logged across {personalStats?.groupsCount || groups.length} workgroups</p>
                                 </div>
@@ -269,7 +271,7 @@ const GroupDashboard = () => {
                         onClick={() => navigate('/groups/create')}
                         className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition"
                     >
-                        Create Workgroup
+                        {t('groups_ui.new_group', 'Create Workgroup')}
                     </button>
                 </div>
             )}
@@ -303,14 +305,14 @@ const GroupDashboard = () => {
 
                     <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between">
                         <div>
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Admin Quick Action</span>
-                            <p className="text-xs text-slate-500 mt-1">Form another farm team</p>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('groups.admin_actions', 'Admin Quick Action')}</span>
+                            <p className="text-xs text-slate-500 mt-1">{t('groups_extra.cooperative_desc', 'Form another farm team')}</p>
                             <button
                                 onClick={() => navigate('/groups/create')}
                                 className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
                             >
                                 <Plus className="w-3.5 h-3.5" />
-                                <span>Create Group</span>
+                                <span>{t('groups_extra.create_group', 'Create Group')}</span>
                             </button>
                         </div>
                         <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center">
@@ -331,7 +333,7 @@ const GroupDashboard = () => {
                         <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none shrink-0" />
                         <input
                             type="text"
-                            placeholder="Search workgroups by name, village..."
+                            placeholder={t('common.search_placeholder', 'Search workgroups by name, village...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full !pl-11 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[42px]"
@@ -354,9 +356,9 @@ const GroupDashboard = () => {
                                 onChange={(e) => setRoleFilter(e.target.value)}
                                 className="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             >
-                                <option value="all">All Roles</option>
-                                <option value="admin_or_owner">Admin / Owner</option>
-                                <option value="member">Member Only</option>
+                                <option value="all">{t('common.all', 'All Roles')}</option>
+                                <option value="admin_or_owner">{t('groups.admin_overview', 'Admin / Owner')}</option>
+                                <option value="member">{t('groups.member_only', 'Member Only')}</option>
                             </select>
                         </div>
                     )}
@@ -374,7 +376,7 @@ const GroupDashboard = () => {
                             title="Display workgroups as visual cards"
                         >
                             <LayoutGrid className="w-4 h-4" />
-                            <span>Card View</span>
+                            <span>{t('groups.card_view', 'Card View')}</span>
                         </button>
 
                         {/* Option 2: Table View */}
@@ -385,10 +387,10 @@ const GroupDashboard = () => {
                                     ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
                                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                             }`}
-                            title="Display workgroups in a structured tabular layout"
+                            title="Display workgroups as a compact table"
                         >
                             <Table className="w-4 h-4" />
-                            <span>Table View</span>
+                            <span>{t('groups.table_view', 'Table View')}</span>
                         </button>
                     </div>
 

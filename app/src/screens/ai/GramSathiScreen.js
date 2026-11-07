@@ -25,18 +25,13 @@ import aiService from '../../services/aiService';
 import { useTranslation } from '../../hooks/useTranslation';
 import { formatDate } from '../../utils/formatters';
 
+import audioRecorder from '../../utils/audioRecorder';
+
 let Speech;
 try {
   Speech = require('expo-speech');
 } catch (e) {
   Speech = null;
-}
-
-let Audio;
-try {
-  Audio = require('expo-av').Audio;
-} catch (e) {
-  Audio = null;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -115,7 +110,10 @@ const GramSathiScreen = ({ navigation }) => {
       if (Speech && Speech.stop) {
         Speech.stop();
       }
-      stopAndCleanupRecording();
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+      audioRecorder.cancelRecording();
     };
   }, []);
 
@@ -275,8 +273,8 @@ const GramSathiScreen = ({ navigation }) => {
     );
   };
 
-  // Send text message
-  const handleSend = async (messageToSend = inputText) => {
+  // Send message (typed = text only with manual TTS; voice = auto-speaks AI response)
+  const handleSend = async (messageToSend = inputText, isVoiceInput = false) => {
     const text = (messageToSend || '').trim();
     if (!text || loading || isProcessingVoice) return;
 
@@ -285,7 +283,7 @@ const GramSathiScreen = ({ navigation }) => {
       setSpeakingMessageIndex(null);
     }
 
-    const userMessage = { sender: 'user', text };
+    const userMessage = { sender: 'user', text, isVoice: isVoiceInput };
     setMessages((prev) => [...prev, userMessage]);
     setInputText('');
     setLoading(true);
@@ -309,19 +307,44 @@ const GramSathiScreen = ({ navigation }) => {
         text: res.reply || res.message || 'I have analyzed your farm query.',
         structuredData: res.structured_data,
         action: res.action,
+        isVoiceResponse: isVoiceInput,
       };
 
-      setMessages((prev) => [...prev, aiReply]);
+      setMessages((prev) => {
+        const next = [...prev, aiReply];
+        // Automatically speak response if prompt was from voice
+        if (isVoiceInput && aiReply.text) {
+          setTimeout(() => {
+            speakText(aiReply.text, next.length - 1);
+          }, 200);
+        }
+        return next;
+      });
       loadChatSessions();
     } catch (err) {
+      let friendlyError = t(
+        'gramsathi_ai.offline_msg',
+        'Unable to reach GramSathi service. Please check your internet connection or verify the AI backend server.'
+      );
+
+      if (err?.status === 401) {
+        friendlyError = 'Your session has expired. Please log out and sign in again to continue chatting.';
+      } else if (err?.data?.reply) {
+        friendlyError = err.data.reply;
+      } else if (err?.data?.details || err?.data?.message) {
+        friendlyError = `Server error: ${err.data.details || err.data.message}`;
+      } else if (err?.isTimeout) {
+        friendlyError = 'Request timed out waiting for GramSathi AI. Please ensure your computer and phone are connected to the same Wi-Fi.';
+      } else if (err?.isNetworkError) {
+        friendlyError = err.message || 'Unable to connect to AgriSpine backend server. Please verify Wi-Fi connection.';
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           sender: 'ai',
-          text: t(
-            'gramsathi_ai.offline_msg',
-            'Unable to reach GramSathi service. Please check your internet connection or verify the AI backend server.'
-          ),
+          text: friendlyError,
+          isError: true,
         },
       ]);
     } finally {
@@ -331,31 +354,18 @@ const GramSathiScreen = ({ navigation }) => {
 
   // Voice Recording Functions
   const startRecording = async () => {
-    if (!Audio) {
-      Alert.alert('Unsupported', 'Audio recording is not supported in this runtime.');
-      return;
+    if (Speech && Speech.stop) {
+      Speech.stop();
+      setSpeakingMessageIndex(null);
     }
 
     try {
-      const permission = await Audio.requestPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          'Permission Required',
-          'Microphone permission is required to ask questions by voice.'
-        );
+      const res = await audioRecorder.startRecording();
+      if (!res.success) {
+        // If permission was denied or unsupported, startRecording already prompted user
         return;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-
-      setRecordingInstance(recording);
       setIsRecording(true);
       setRecordingDuration(0);
 
@@ -364,8 +374,8 @@ const GramSathiScreen = ({ navigation }) => {
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
     } catch (err) {
-      console.log('Failed to start recording:', err);
-      Alert.alert('Error', 'Unable to start audio recording.');
+      console.warn('Failed to start recording:', err);
+      Alert.alert('Recording Error', 'Unable to start audio recording. Please try again.');
     }
   };
 
@@ -375,10 +385,7 @@ const GramSathiScreen = ({ navigation }) => {
         clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
       }
-      if (recordingInstance) {
-        await recordingInstance.stopAndUnloadAsync();
-        setRecordingInstance(null);
-      }
+      await audioRecorder.cancelRecording();
     } catch (e) {
       console.log('Error canceling recording:', e);
     } finally {
@@ -387,92 +394,69 @@ const GramSathiScreen = ({ navigation }) => {
     }
   };
 
-  const stopAndCleanupRecording = async () => {
+  const stopAndTranscribeRecording = async () => {
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
-    if (recordingInstance) {
-      try {
-        await recordingInstance.stopAndUnloadAsync();
-      } catch (e) {}
-      setRecordingInstance(null);
-    }
-    setIsRecording(false);
-  };
 
-  const stopAndSendRecording = async () => {
-    if (!recordingInstance) return;
+    const duration = recordingDuration;
+    setIsRecording(false);
+    setRecordingDuration(0);
+
+    if (duration < 1) {
+      await audioRecorder.cancelRecording();
+      Alert.alert(
+        'Recording Too Short',
+        'Please hold or tap the mic and speak for at least 1-2 seconds.'
+      );
+      return;
+    }
+
+    setIsProcessingVoice(true);
 
     try {
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-        recordingTimerRef.current = null;
+      const stopRes = await audioRecorder.stopRecording();
+      if (!stopRes.success || !stopRes.uri) {
+        throw new Error(stopRes.error || 'Failed to capture recorded audio');
       }
 
-      setIsProcessingVoice(true);
-      setIsRecording(false);
-
-      await recordingInstance.stopAndUnloadAsync();
-      const uri = recordingInstance.getURI();
-      setRecordingInstance(null);
-
-      if (!uri) {
-        setIsProcessingVoice(false);
-        return;
-      }
-
-      // Add optimistic user voice message bubble
-      const userVoiceMsg = {
-        sender: 'user',
-        text: '🎤 Voice Query (' + formatDuration(recordingDuration) + ')',
-      };
-      setMessages((prev) => [...prev, userVoiceMsg]);
-
-      // Prepare FormData
-      const formData = new FormData();
+      const uri = stopRes.uri;
       const cleanUri = Platform.OS === 'android' ? uri : uri.replace('file://', '');
+
+      // Prepare FormData for transcription
+      const formData = new FormData();
       formData.append('audio_file', {
         uri: cleanUri,
         name: `voice_${Date.now()}.m4a`,
         type: 'audio/m4a',
       });
-      formData.append('session_id', sessionId || 'new');
       formData.append('language', language || 'en');
 
-      const res = await aiService.sendVoiceMessage(formData);
+      const res = await aiService.transcribeAudio(formData);
 
-      if (res && (res.reply || res.message)) {
-        const replyText = res.reply || res.message;
-        const aiVoiceReply = {
-          sender: 'ai',
-          text: replyText,
-          structuredData: res.structured_data,
-          action: res.action,
-        };
-        setMessages((prev) => [...prev, aiVoiceReply]);
+      const transcribedText = (res?.text || res?.transcribed_text || '').trim();
 
-        // Speak reply automatically
-        speakText(replyText, messages.length + 1);
-        loadChatSessions();
+      if (transcribedText) {
+        // Automatically send the voice query and auto-speak the AI response
+        handleSend(transcribedText, true);
       } else {
-        throw new Error('No reply from voice service');
+        Alert.alert(
+          'No Speech Detected',
+          res?.message || 'Could not recognize clear speech. Please speak clearly into your phone microphone and try again.'
+        );
       }
     } catch (err) {
-      console.log('Voice processing error:', err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: 'ai',
-          text: t(
-            'gramsathi_ai.voice_error',
-            'Could not process voice message. Please check the network and speak clearly.'
-          ),
-        },
-      ]);
+      console.warn('[GramSathi] Voice transcription error:', err);
+      let errorMsg = 'Could not transcribe voice recording. Please check your network and try again.';
+      if (err?.isTimeout) {
+        errorMsg = 'Voice recognition timed out. Please check your connection and try again.';
+      } else if (err?.data?.message || err?.data?.error) {
+        errorMsg = err.data.message || err.data.error;
+      }
+      Alert.alert('Voice Recognition Error', errorMsg);
     } finally {
       setIsProcessingVoice(false);
-      setRecordingDuration(0);
     }
   };
 
@@ -727,39 +711,48 @@ const GramSathiScreen = ({ navigation }) => {
 
               <TouchableOpacity
                 style={styles.sendRecordBtn}
-                onPress={stopAndSendRecording}
-                accessibilityLabel="Send Voice Question"
+                onPress={stopAndTranscribeRecording}
+                accessibilityLabel="Finish and Transcribe Voice"
               >
-                <MaterialCommunityIcons name="send" size={18} color="#FFFFFF" />
+                <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           </View>
         ) : (
           <View style={styles.inputBar}>
             <TextInput
-              placeholder={t(
-                'gramsathi_ai.placeholder',
-                'Ask any farming query (Telugu, Hindi, English)...'
-              )}
-              placeholderTextColor={colors.textMuted}
+              placeholder={
+                isProcessingVoice
+                  ? 'Transcribing speech to text...'
+                  : t(
+                      'gramsathi_ai.placeholder',
+                      'Ask any farming query (Telugu, Hindi, English)...'
+                    )
+              }
+              placeholderTextColor={isProcessingVoice ? colors.primary : colors.textMuted}
               value={inputText}
               onChangeText={setInputText}
-              style={styles.textInput}
+              style={[styles.textInput, isProcessingVoice && { opacity: 0.7 }]}
               multiline
               maxLength={500}
+              editable={!isProcessingVoice && !loading}
             />
 
             {/* Voice Mic Button */}
             <TouchableOpacity
               style={[
                 styles.micBtn,
-                isProcessingVoice && { opacity: 0.5 },
+                isProcessingVoice && { opacity: 0.7, backgroundColor: '#E2FBE8' },
               ]}
               onPress={startRecording}
               disabled={isProcessingVoice || loading}
               accessibilityLabel="Record Voice Question"
             >
-              <MaterialCommunityIcons name="microphone" size={22} color={colors.primary} />
+              {isProcessingVoice ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <MaterialCommunityIcons name="microphone" size={22} color={colors.primary} />
+              )}
             </TouchableOpacity>
 
             {/* Send Text Button */}

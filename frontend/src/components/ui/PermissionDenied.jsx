@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ShieldAlert, Home, ArrowLeft, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from './Button';
@@ -8,13 +9,17 @@ import Button from './Button';
  * Following Principle 7: Clear explanation of role/access requirement, safe navigation options.
  */
 const PermissionDenied = ({
-  title = "Access Restricted",
-  message = "You do not have permission to view this resource. This feature may require specific group or owner privileges.",
+  title,
+  message,
   requiredRole = null,
   showLogin = false,
   className = "",
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const displayTitle = title || t('ui.permission_denied_title', 'Access Restricted');
+  const displayMessage = message || t('ui.permission_denied_desc', 'You do not have permission to view this resource. This feature may require specific group or owner privileges.');
 
   return (
     <div className={`p-8 md:p-14 bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 text-center max-w-lg mx-auto shadow-sm ${className}`}>
@@ -23,11 +28,11 @@ const PermissionDenied = ({
       </div>
 
       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-        {title}
+        {displayTitle}
       </h3>
 
       <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
-        {message}
+        {displayMessage}
       </p>
 
       {requiredRole && (
@@ -44,7 +49,7 @@ const PermissionDenied = ({
             className="flex items-center gap-2"
           >
             <LogIn className="w-4 h-4" />
-            Log In With Authorized Account
+            {t('auth.login', 'Log In')}
           </Button>
         ) : (
           <Button
@@ -53,7 +58,7 @@ const PermissionDenied = ({
             className="flex items-center gap-2"
           >
             <Home className="w-4 h-4" />
-            Return to Dashboard
+            {t('nav.home', 'Back to Home')}
           </Button>
         )}
 
@@ -63,7 +68,7 @@ const PermissionDenied = ({
           className="flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
-          Go Back
+          {t('common.back', 'Go Back')}
         </Button>
       </div>
     </div>
@@ -71,4 +76,3 @@ const PermissionDenied = ({
 };
 
 export default PermissionDenied;
-

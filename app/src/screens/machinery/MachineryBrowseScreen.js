@@ -25,14 +25,14 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { formatCurrency } from '../../utils/formatters';
 
 const CATEGORIES = [
-  { key: 'all', label: 'All', icon: 'apps' },
-  { key: 'tractor', label: 'Tractor', icon: 'tractor' },
-  { key: 'harvester', label: 'Harvester', icon: 'combine-harvester' },
-  { key: 'rotavator', label: 'Rotavator', icon: 'cog-outline' },
-  { key: 'drone', label: 'Drone', icon: 'quadcopter' },
-  { key: 'jcb', label: 'JCB', icon: 'excavator' },
-  { key: 'rice_planter', label: 'Planter', icon: 'sprout-outline' },
-  { key: 'baler', label: 'Baler', icon: 'package-variant-closed' },
+  { key: 'all', labelKey: 'machinery_ui.cat_all', fallback: 'All', icon: 'apps' },
+  { key: 'tractor', labelKey: 'machinery_ui.cat_tractor', fallback: 'Tractor', icon: 'tractor' },
+  { key: 'harvester', labelKey: 'machinery_ui.cat_harvester', fallback: 'Harvester', icon: 'combine-harvester' },
+  { key: 'rotavator', labelKey: 'machinery_ui.cat_rotavator', fallback: 'Rotavator', icon: 'cog-outline' },
+  { key: 'drone', labelKey: 'machinery_ui.cat_drone', fallback: 'Drone', icon: 'quadcopter' },
+  { key: 'jcb', labelKey: 'machinery_ui.cat_jcb', fallback: 'JCB', icon: 'excavator' },
+  { key: 'rice_planter', labelKey: 'machinery_ui.cat_planter', fallback: 'Planter', icon: 'sprout-outline' },
+  { key: 'baler', labelKey: 'machinery_ui.cat_baler', fallback: 'Baler', icon: 'package-variant-closed' },
 ];
 
 const MachineryBrowseScreen = ({ navigation }) => {
@@ -118,7 +118,7 @@ const MachineryBrowseScreen = ({ navigation }) => {
             {item.ownerName ? (
               <View style={styles.ownerRow}>
                 <MaterialCommunityIcons name="account-circle-outline" size={15} color={colors.textSecondary} />
-                <Text style={styles.ownerText}>Owner: {item.ownerName}</Text>
+                <Text style={styles.ownerText}>{t('machinery_ui.owner', 'Owner')}: {item.ownerName}</Text>
               </View>
             ) : null}
           </View>
@@ -126,7 +126,7 @@ const MachineryBrowseScreen = ({ navigation }) => {
           {/* Pricing & Booking Action */}
           <View style={styles.cardBottom}>
             <View>
-              <Text style={styles.priceLabel}>Starting from</Text>
+              <Text style={styles.priceLabel}>{t('machinery_ui.starting_from', 'Starting from')}</Text>
               <Text style={styles.priceText}>
                 {formatCurrency(item.pricePerUnit || item.price || 800)}{' '}
                 <Text style={styles.priceUnitText}>/{priceUnit}</Text>
@@ -137,7 +137,7 @@ const MachineryBrowseScreen = ({ navigation }) => {
               style={styles.viewDetailsBtn}
               onPress={() => navigation.navigate('MachineDetails', { machineId: item._id })}
             >
-              <Text style={styles.viewDetailsBtnText}>Check Services</Text>
+              <Text style={styles.viewDetailsBtnText}>{t('machinery_ui.check_services', 'Check Services')}</Text>
               <MaterialCommunityIcons name="arrow-right" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -150,15 +150,15 @@ const MachineryBrowseScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('rent.title', 'Rent Machinery')}
-        subtitle="Explore & Book Farm Equipment"
+        title={t('machinery_ui.title', 'Rent Machinery')}
+        subtitle={t('machinery_ui.subtitle', 'Explore & Book Farm Equipment')}
         onBack={() => navigation.goBack()}
         rightAction={
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={styles.calendarNavBtn}
               onPress={() => navigation.navigate('MachineryCalendar', { role: 'renter' })}
-              accessibilityLabel="Machinery Calendar"
+              accessibilityLabel={t('machinery_ui.calendar', 'Machinery Calendar')}
             >
               <MaterialCommunityIcons name="calendar-month" size={20} color="#FFFFFF" />
             </TouchableOpacity>
@@ -166,16 +166,16 @@ const MachineryBrowseScreen = ({ navigation }) => {
             <TouchableOpacity
               style={styles.fleetNavBtn}
               onPress={() => navigation.navigate('MyFleet')}
-              accessibilityLabel="My Fleet"
+              accessibilityLabel={t('machinery_ui.my_fleet', 'My Fleet')}
             >
               <MaterialCommunityIcons name="tractor-variant" size={20} color={colors.primary} />
-              <Text style={styles.fleetNavText}>{t('rent.my_machines', 'My Fleet')}</Text>
+              <Text style={styles.fleetNavText}>{t('machinery_ui.my_fleet', 'My Fleet')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.bookingsNavBtn}
               onPress={() => navigation.navigate('MyBookings')}
-              accessibilityLabel="Bookings"
+              accessibilityLabel={t('machinery_ui.bookings', 'My Bookings')}
             >
               <MaterialCommunityIcons name="calendar-clock" size={20} color="#FFFFFF" />
             </TouchableOpacity>
@@ -188,7 +188,7 @@ const MachineryBrowseScreen = ({ navigation }) => {
         <View style={styles.searchBar}>
           <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
           <TextInput
-            placeholder="Search tractor, harvester, drone, location..."
+            placeholder={t('machinery_ui.search_placeholder', 'Search tractor, harvester, drone, location...')}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -223,7 +223,7 @@ const MachineryBrowseScreen = ({ navigation }) => {
                   color={isSelected ? colors.primaryDark : colors.textSecondary}
                 />
                 <Text style={[styles.categoryBtnText, isSelected && styles.categoryBtnTextActive]}>
-                  {item.label}
+                  {t(item.labelKey, item.fallback)}
                 </Text>
               </TouchableOpacity>
             );
@@ -257,9 +257,9 @@ const MachineryBrowseScreen = ({ navigation }) => {
           ListEmptyComponent={
             <EmptyState
               icon="tractor"
-              title="No Machinery Found"
-              description="No machines matched your search criteria. Try choosing another category or clear the search filter."
-              actionTitle="Reset Filters"
+              title={t('machinery_ui.no_found_title', 'No Machinery Found')}
+              description={t('machinery_ui.no_found_desc', 'No farm machinery matches your search query. Try another keyword or category.')}
+              actionTitle={t('machinery_ui.clear_search', 'Clear Search')}
               onAction={() => {
                 setSelectedCategory('all');
                 setSearchQuery('');

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Flag, AlertTriangle, Loader2, CheckCircle2 } from 'lucide-react';
 import api from '../../../utils/api';
 import Swal from 'sweetalert2';
@@ -13,6 +14,7 @@ const REPORT_REASONS = [
 ];
 
 const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
+    const { t } = useTranslation();
     const [selectedReason, setSelectedReason] = useState('Misleading Agricultural Information');
     const [description, setDescription] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -169,7 +171,7 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                             disabled={submitting}
                             className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300"
                         >
-                            Cancel
+                            {t('common.cancel', 'Cancel')}
                         </button>
                         <button
                             type="submit"
@@ -179,12 +181,12 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                             {submitting ? (
                                 <>
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    Submitting...
+                                    {t('common.loading', 'Submitting...')}
                                 </>
                             ) : (
                                 <>
                                     <Flag className="w-3.5 h-3.5" />
-                                    Submit Report
+                                    {t('community_extra.report_post', 'Submit Report')}
                                 </>
                             )}
                         </button>

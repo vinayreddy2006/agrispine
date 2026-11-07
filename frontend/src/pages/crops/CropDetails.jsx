@@ -366,29 +366,29 @@ const CropDetails = () => {
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm animate-in zoom-in duration-200 shadow-2xl">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-gray-800">Sell {displayCropName}</h3>
+                            <h3 className="text-lg font-bold text-gray-800">{t('crop.sell_mkt')} - {displayCropName}</h3>
                             <button onClick={() => setShowListForm(false)} className="bg-gray-100 p-1 rounded-full hover:bg-gray-200"><X className="w-5 h-5" /></button>
                         </div>
                         <form onSubmit={handleListOnMarket} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Quantity (Quintals)</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('crops_ui.total_harvested_qty', 'Quantity (Quintals)')}</label>
                                 <input type="number" required className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
                                     placeholder="e.g. 50"
                                     onChange={e => setMarketData({ ...marketData, quantity: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expected Price (₹/Qtl)</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('crops_ui.asking_price_qtl', 'Expected Price (₹/Qtl)')}</label>
                                 <input type="number" required className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
                                     placeholder="e.g. 2500"
                                     onChange={e => setMarketData({ ...marketData, price: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('common.description', 'Description')}</label>
                                 <textarea className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="e.g. Fresh organic harvest..." rows="3"
                                     onChange={e => setMarketData({ ...marketData, desc: e.target.value })} />
                             </div>
                             <Button type="submit" variant="primary" className="bg-orange-600 hover:bg-orange-700 w-full mt-4">
-                                Confirm Listing
+                                {t('common.confirm', 'Confirm Listing')}
                             </Button>
                         </form>
                     </div>

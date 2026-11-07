@@ -222,8 +222,10 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
+    const savedLng = localStorage.getItem("i18nextLng");
     localStorage.clear();
     sessionStorage.clear();
+    if (savedLng) localStorage.setItem("i18nextLng", savedLng);
     navigate("/");
   };
 
@@ -268,13 +270,13 @@ const Dashboard = () => {
               </div>
               <div>
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>Confirm Your Farm Location</span>
+                  <span>{t('location_modal.title', 'Confirm Your Farm Location')}</span>
                   <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
-                    Recommended
+                    {t('common.recommended', 'Recommended')}
                   </span>
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                  Confirming your village enables hyper-local weather alerts, spray advisories, and nearby machinery rental recommendations.
+                  {t('location_modal.desc', 'Confirming your village enables hyper-local weather alerts, spray advisories, and nearby machinery rental recommendations.')}
                 </p>
               </div>
             </div>
@@ -284,14 +286,14 @@ const Dashboard = () => {
                 onClick={handleSkipLocation}
                 className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 transition"
               >
-                Skip for Now
+                {t('common.skip', 'Skip for Now')}
               </button>
               <button
                 onClick={() => setShowLocationModal(true)}
                 className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm shadow-emerald-600/20 flex items-center gap-1.5"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Confirm Location</span>
+                <span>{t('location_modal.confirm_btn', 'Confirm Location')}</span>
               </button>
             </div>
           </div>
@@ -308,14 +310,14 @@ const Dashboard = () => {
             </span>
             {user.isLocationConfirmed ? (
               <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold ml-1">
-                Verified Farm
+                {t('common.verified_farm', 'Verified Farm')}
               </span>
             ) : (
               <button 
                 onClick={() => setShowLocationModal(true)} 
                 className="text-[11px] underline text-emerald-200 hover:text-white ml-2 font-bold cursor-pointer"
               >
-                Confirm Now
+                {t('location_modal.confirm_btn', 'Confirm Now')}
               </button>
             )}
           </p>
@@ -324,8 +326,8 @@ const Dashboard = () => {
         {/* Active Crops Section */}
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              <Sprout className="text-green-600" /> Active Crops
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <Sprout className="text-green-600" /> {t('dashboard.my_crops', 'Active Crops')}
             </h2>
             <Button onClick={() => navigate("/add-crop")} variant="primary" icon={PlusCircle}>
               {t('dashboard.add_crop')}
@@ -336,7 +338,7 @@ const Dashboard = () => {
             <CardSkeleton count={2} />
           ) : cropsError ? (
             <ErrorState
-              title="Unable to load crops"
+              title={t('ui.error_title', 'Unable to load crops')}
               message={cropsError}
               onRetry={() => loadCrops()}
               showHome={false}
@@ -345,9 +347,9 @@ const Dashboard = () => {
             <EmptyState 
               title={t('dashboard.no_crops')}
               description={t('dashboard.add_first_crop')}
-              tip="Recording your crops unlocks AI pest diagnostics, mandi rate alerts, and machinery scheduling tailored to your farm."
+              tip={t('dashboard_extra.add_crop_prompt', 'Recording your crops unlocks AI pest diagnostics, mandi rate alerts, and machinery scheduling tailored to your farm.')}
               icon={Sprout}
-              actionText="Add Crop"
+              actionText={t('dashboard.add_crop', 'Add Crop')}
               onAction={() => navigate("/add-crop")}
             />
           ) : (
@@ -366,14 +368,14 @@ const Dashboard = () => {
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-text-primary">{t(`crops_list.${crop.cropName.toLowerCase()}`, { defaultValue: crop.cropName })}</h3>
-                        <span className="text-xs font-bold px-2 py-1 rounded-md bg-green-100 text-green-700">
-                          ACTIVE
+                        <span className="text-xs font-bold px-2 py-1 rounded-md bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300">
+                          {t('common.active', 'ACTIVE')}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="text-text-secondary text-sm mt-3 space-y-2 bg-background p-3 rounded-lg border border-border">
-                    <p className="flex justify-between"><span>📏 {t('dashboard.area')}</span> <span className="font-bold text-text-primary">{crop.area} Acres</span></p>
+                    <p className="flex justify-between"><span>📏 {t('dashboard.area')}</span> <span className="font-bold text-text-primary">{crop.area} {t('crop.acres', 'Acres')}</span></p>
                     <p className="flex justify-between"><span>📅 {t('dashboard.sown')}</span> <span className="font-bold text-text-primary">{new Date(crop.sowingDate).toLocaleDateString()}</span></p>
                   </div>
                 </Card>

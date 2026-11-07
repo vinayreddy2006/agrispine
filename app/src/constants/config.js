@@ -8,7 +8,7 @@
  */
 
 // Fallback to current development machine LAN IP if environment variable is not set
-const DEFAULT_LAN_URL = 'http://192.168.1.43:5000';
+const DEFAULT_LAN_URL = 'http://10.85.213.163:5000';
 
 const rawApiUrl = process.env.EXPO_PUBLIC_API_URL || DEFAULT_LAN_URL;
 
@@ -101,11 +101,13 @@ export const API_ENDPOINTS = {
   SCHEMES: '/admin/schemes',
 
   // AI & Voice Assistant
+  AI_HEALTH: '/api/ai/health',
   AI_CHATS: '/api/ai/chats',
   AI_NEW_CHAT: '/api/ai/chats/new',
   AI_CHAT_DETAIL: (id) => `/api/ai/chats/${id}`,
   AI_CHAT_SEND: '/api/ai/chat',
   AI_VOICE: '/api/ai/voice',
+  AI_TRANSCRIBE: '/api/ai/transcribe',
   AI_WEATHER_ADVISORY: '/api/ai/weather-recommendations',
 
   // Notifications

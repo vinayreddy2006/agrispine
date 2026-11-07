@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { WifiOff, Wifi, RefreshCw, AlertTriangle } from 'lucide-react';
 import useNetworkStatus from '../../hooks/useNetworkStatus';
 
@@ -7,7 +8,8 @@ import useNetworkStatus from '../../hooks/useNetworkStatus';
  * Following Principle 4 & 5: Clear offline indication, cached status explanation, retry action.
  */
 const OfflineBanner = () => {
-  const { isOnline, isSlow, lastOnlineAt, testConnection } = useNetworkStatus();
+  const { t } = useTranslation();
+  const { isOnline, isSlow, testConnection } = useNetworkStatus();
   const [checking, setChecking] = useState(false);
   const [showRestored, setShowRestored] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
@@ -43,7 +45,7 @@ const OfflineBanner = () => {
       >
         <div className="flex items-center gap-2 max-w-6xl mx-auto w-full">
           <Wifi className="w-4 h-4 shrink-0 text-emerald-200" />
-          <span className="font-medium">Internet connection restored. Live data synchronized.</span>
+          <span className="font-medium">{t('offline.restored', 'Internet connection restored. Live data synchronized.')}</span>
         </div>
       </div>
     );
@@ -60,8 +62,8 @@ const OfflineBanner = () => {
           <div className="flex items-center gap-2.5">
             <WifiOff className="w-4 h-4 shrink-0 text-amber-200 animate-pulse" />
             <div>
-              <span className="font-bold">You are offline.</span>{' '}
-              <span className="text-amber-100">Displaying saved data where available. Actions will sync once connected.</span>
+              <span className="font-bold">{t('offline.offline_title', 'You are offline.')}</span>{' '}
+              <span className="text-amber-100">{t('offline.offline_desc', 'Displaying saved data where available. Actions will sync once connected.')}</span>
             </div>
           </div>
           <button
@@ -70,7 +72,7 @@ const OfflineBanner = () => {
             className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 active:scale-95 text-white rounded-lg text-xs font-semibold backdrop-blur-xs transition-all disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${checking ? 'animate-spin' : ''}`} />
-            {checking ? 'Checking...' : 'Check Connection'}
+            {checking ? t('common.loading', 'Checking...') : t('offline.retry_btn', 'Check Connection')}
           </button>
         </div>
       </div>
@@ -86,7 +88,7 @@ const OfflineBanner = () => {
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-orange-200" />
-            <span>Slow network connection detected. Loading optimized previews.</span>
+            <span>{t('offline.cached_notice', 'Slow network connection detected. Loading optimized previews.')}</span>
           </div>
         </div>
       </div>
@@ -97,4 +99,3 @@ const OfflineBanner = () => {
 };
 
 export default OfflineBanner;
-

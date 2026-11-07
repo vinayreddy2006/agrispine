@@ -2,8 +2,26 @@ import FormData from "form-data";
 import AIChat from "../models/AIChat.js";
 import User from "../models/User.js";
 import CropCycle from "../models/CropCycle.js";
-import { getUserContext, forwardToFastAPI, forwardVoiceToFastAPI, findMessengerConversations } from "../services/aiService.js";
+import { getUserContext, forwardToFastAPI, forwardVoiceToFastAPI, forwardTranscribeToFastAPI, findMessengerConversations, checkAIHealth } from "../services/aiService.js";
 import { getAgriculturalRecommendations } from "../services/recommendationService.js";
+
+// 0. HEALTH CHECK
+export const getAIHealthStatus = async (req, res) => {
+    try {
+        const aiHealth = await checkAIHealth();
+        return res.json({
+            status: aiHealth.online ? "healthy" : "degraded",
+            backend: "connected",
+            ai_service: aiHealth
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            backend: "connected",
+            error: error.message
+        });
+    }
+};
 
 // 1. GET ALL CHATS
 export const getAllChats = async (req, res) => {
@@ -117,7 +135,7 @@ export const deleteChat = async (req, res) => {
         const result = await forwardToFastAPI(fastApiPayload, authToken);
 
         if (!result.success) {
-            return res.json({
+            return res.status(500).json({
                 session_id: session_id,
                 ...result.data,
                 details: result.details
@@ -142,7 +160,7 @@ export const deleteChat = async (req, res) => {
         res.json(responseData);
     } catch (error) {
         console.error("AI Chat Controller Unexpected Error:", error.message);
-        res.json({
+        res.status(500).json({
             session_id: req.body.session_id,
             reply: "An unexpected error occurred in the proxy.",
             intent: "ERROR",
@@ -163,14 +181,16 @@ export const processVoice = async (req, res) => {
         const authToken = req.header("auth-token");
 
         const formData = new FormData();
-        formData.append("audio_file", req.file.buffer, {
-            filename: req.file.originalname,
-            contentType: req.file.mimetype,
-        });
+        const filename = req.file.originalname || `voice_${Date.now()}.m4a`;
+        const contentType = req.file.mimetype || "audio/m4a";
+
+        formData.append("audio", req.file.buffer, { filename, contentType });
+        formData.append("audio_file", req.file.buffer, { filename, contentType });
         formData.append("session_id", req.body.session_id || "default_session");
         formData.append("user_context", JSON.stringify(userContext));
         formData.append("current_page_context", req.body.current_page_context || "{}");
-        formData.append("auth_token", authToken);
+        formData.append("auth_token", authToken || "");
+        formData.append("language", req.body.language || "en");
 
         const result = await forwardVoiceToFastAPI(formData, authToken);
         
@@ -185,6 +205,40 @@ export const processVoice = async (req, res) => {
     } catch (error) {
         console.error("AI Voice Controller Error:", error);
         res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+// 5b. SPEECH-TO-TEXT ONLY PROXY
+export const transcribeAudio = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No audio file uploaded to backend" });
+        }
+        
+        const authToken = req.header("auth-token");
+
+        const formData = new FormData();
+        const filename = req.file.originalname || `voice_${Date.now()}.m4a`;
+        const contentType = req.file.mimetype || "audio/m4a";
+
+        formData.append("audio", req.file.buffer, { filename, contentType });
+        formData.append("audio_file", req.file.buffer, { filename, contentType });
+        formData.append("language", req.body.language || "en");
+
+        const result = await forwardTranscribeToFastAPI(formData, authToken);
+        
+        if (!result.success) {
+            return res.status(500).json({ 
+                error: "Failed to transcribe audio via AI service", 
+                details: result.error,
+                text: ""
+            });
+        }
+        
+        res.json(result.data);
+    } catch (error) {
+        console.error("AI Transcribe Controller Error:", error);
+        res.status(500).json({ error: "Internal Server Error", details: error.message });
     }
 };
 

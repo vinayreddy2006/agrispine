@@ -146,8 +146,8 @@ const MyFleetScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('rent.my_machines', 'My Equipment Fleet')}
-        subtitle="Manage Listings, Tasks & Availability"
+        title={t('machinery_ui.my_fleet_title', 'My Equipment Fleet')}
+        subtitle={t('machinery_ui.subtitle', 'Manage Listings, Tasks & Availability')}
         onBack={() => navigation.goBack()}
         rightAction={
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -189,9 +189,9 @@ const MyFleetScreen = ({ navigation }) => {
           ListEmptyComponent={
             <EmptyState
               icon="tractor-variant"
-              title="No Machinery Listed"
-              description="You have not listed any farm equipment for rent yet. List your tractor, harvester, or drone to earn extra rental income."
-              actionTitle="List New Equipment"
+              title={t('machinery_ui.no_fleet_title', 'No Machinery Listed')}
+              description={t('machinery_ui.no_fleet_desc', 'You have not listed any farm equipment for rent yet. List your tractor, harvester, or drone to earn extra rental income.')}
+              actionTitle={t('machinery_ui.add_machine', 'List New Equipment')}
               onAction={() => navigation.navigate('AddMachine')}
             />
           }

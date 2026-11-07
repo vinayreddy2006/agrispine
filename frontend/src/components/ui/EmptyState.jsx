@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PackageOpen, Lightbulb } from 'lucide-react';
 import Button from './Button';
 
@@ -7,8 +8,8 @@ import Button from './Button';
  * Following Principle 1: Explain why it is empty, give actionable next steps, provide primary/secondary actions.
  */
 const EmptyState = ({ 
-  title = "No items yet", 
-  description = "There are no records to display right now.", 
+  title, 
+  description, 
   tip,
   icon: Icon = PackageOpen, 
   actionText, 
@@ -17,6 +18,10 @@ const EmptyState = ({
   onSecondaryAction,
   className = "",
 }) => {
+  const { t } = useTranslation();
+  const displayTitle = title || t('ui.empty_title', 'No items yet');
+  const displayDesc = description || t('ui.empty_desc', 'There are no records to display right now.');
+
   return (
     <div className={`flex flex-col items-center justify-center text-center py-12 px-6 bg-surface dark:bg-slate-800 rounded-2xl border border-dashed border-border dark:border-slate-700 shadow-xs max-w-lg mx-auto ${className}`}>
       <div className="w-18 h-18 bg-primary/10 dark:bg-primary/20 text-primary rounded-2xl flex items-center justify-center mb-5 shadow-xs">
@@ -24,11 +29,11 @@ const EmptyState = ({
       </div>
 
       <h3 className="text-xl font-bold text-text-primary dark:text-white mb-2">
-        {title}
+        {displayTitle}
       </h3>
 
       <p className="text-text-secondary dark:text-gray-300 text-sm md:text-base max-w-sm mb-4 leading-relaxed">
-        {description}
+        {displayDesc}
       </p>
 
       {tip && (

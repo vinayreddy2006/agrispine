@@ -243,21 +243,21 @@ const MachineDetailsScreen = ({ route, navigation }) => {
 
           <View style={styles.infoGrid}>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>Category</Text>
+              <Text style={styles.infoLabel}>{t('common.category', 'Category')}</Text>
               <Text style={styles.infoVal}>{(machine.type || machine.category || 'Tractor').toUpperCase()}</Text>
             </View>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>Base Pricing</Text>
+              <Text style={styles.infoLabel}>{t('machinery_ui.starting_from', 'Base Pricing')}</Text>
               <Text style={[styles.infoVal, { color: colors.primary }]}>
                 {formatCurrency(machine.price || machine.pricePerUnit || 800)} /{priceUnit}
               </Text>
             </View>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>Location</Text>
+              <Text style={styles.infoLabel}>{t('dashboard.location', 'Location')}</Text>
               <Text style={styles.infoVal} numberOfLines={1}>{locationString}</Text>
             </View>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>Owner</Text>
+              <Text style={styles.infoLabel}>{t('machinery_ui.owner', 'Owner')}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
                 <Avatar source={machine.user?.profileImage} name={ownerName} size={20} />
                 <Text style={styles.infoVal} numberOfLines={1}>{ownerName}</Text>
@@ -271,12 +271,12 @@ const MachineDetailsScreen = ({ route, navigation }) => {
             onPress={() => navigation.navigate('MachineryCalendar', { role: isOwner ? 'owner' : 'renter' })}
           >
             <MaterialCommunityIcons name="calendar-month-outline" size={18} color={colors.primary} />
-            <Text style={styles.calendarScheduleText}>View Fleet Availability Calendar</Text>
+            <Text style={styles.calendarScheduleText}>{t('machinery_ui.calendar_title', 'View Fleet Availability Calendar')}</Text>
           </TouchableOpacity>
 
           {machine.description ? (
             <View style={styles.descBox}>
-              <Text style={styles.descLabel}>Equipment Description:</Text>
+              <Text style={styles.descLabel}>{t('common.description', 'Equipment Description')}:</Text>
               <Text style={styles.descText}>{machine.description}</Text>
             </View>
           ) : null}
@@ -287,12 +287,12 @@ const MachineDetailsScreen = ({ route, navigation }) => {
               {ownerPhone ? (
                 <TouchableOpacity style={styles.contactBtn} onPress={handleCallOwner}>
                   <MaterialCommunityIcons name="phone" size={18} color={colors.primary} />
-                  <Text style={styles.contactBtnText}>Call Owner</Text>
+                  <Text style={styles.contactBtnText}>{t('machinery_ui.contact_owner', 'Call Owner')}</Text>
                 </TouchableOpacity>
               ) : null}
               <TouchableOpacity style={styles.contactBtn} onPress={handleChatOwner}>
                 <MaterialCommunityIcons name="chat-outline" size={18} color={colors.primary} />
-                <Text style={styles.contactBtnText}>Message Owner</Text>
+                <Text style={styles.contactBtnText}>{t('chat_ui.start_chat', 'Message Owner')}</Text>
               </TouchableOpacity>
             </View>
           )}

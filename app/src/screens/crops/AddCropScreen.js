@@ -108,8 +108,8 @@ const AddCropScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title="Add New Crop"
-        subtitle="Start a New Cultivation Cycle"
+        title={t('crops_ui.add_crop_title', 'Add New Crop')}
+        subtitle={t('crops_ui.add_crop_sub', 'Start a New Cultivation Cycle')}
         onBack={() => navigation.goBack()}
       />
 
@@ -120,7 +120,7 @@ const AddCropScreen = ({ navigation }) => {
       >
         <Card style={styles.formCard}>
           {/* Suggested Crop Chips */}
-          <Text style={styles.sectionLabel}>Popular Crops in Your Region</Text>
+          <Text style={styles.sectionLabel}>{t('crops_ui.popular_crops', 'Popular Crops in Your Region')}</Text>
           <View style={styles.chipRow}>
             {SUGGESTED_CROPS.map((crop) => {
               const isSelected = form.cropName === crop;
@@ -131,7 +131,7 @@ const AddCropScreen = ({ navigation }) => {
                   style={[styles.chip, isSelected && styles.chipSelected]}
                 >
                   <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                    {crop}
+                    {t(`crops_list.${crop.toLowerCase().replace(/[^a-z]/g, '')}`, crop)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -139,7 +139,7 @@ const AddCropScreen = ({ navigation }) => {
           </View>
 
           <Input
-            label="Crop Name"
+            label={t('crops_ui.crop_name', 'Crop Name')}
             placeholder="e.g. Paddy, Cotton, Chilli"
             value={form.cropName}
             onChangeText={(v) => {
@@ -152,7 +152,7 @@ const AddCropScreen = ({ navigation }) => {
           />
 
           <Input
-            label="Crop Variety / Hybrid (Optional)"
+            label={t('crops_ui.variety_input', 'Crop Variety / Hybrid (Optional)')}
             placeholder="e.g. BPT 5204, BT Cotton, Teja Chilli"
             value={form.variety}
             onChangeText={(v) => setForm({ ...form, variety: v })}
@@ -162,7 +162,7 @@ const AddCropScreen = ({ navigation }) => {
           <View style={styles.areaRow}>
             <View style={{ flex: 1 }}>
               <Input
-                label="Farm Area"
+                label={t('crops_ui.area_acres', 'Farm Area (Acres)')}
                 placeholder="e.g. 3.5"
                 value={form.area}
                 keyboardType="numeric"
@@ -178,7 +178,7 @@ const AddCropScreen = ({ navigation }) => {
           </View>
 
           <Input
-            label="Sowing Date (YYYY-MM-DD)"
+            label={t('crops_ui.sowing_date', 'Sowing Date (YYYY-MM-DD)')}
             placeholder="2026-06-15"
             value={form.sowingDate}
             onChangeText={(v) => {
@@ -191,7 +191,7 @@ const AddCropScreen = ({ navigation }) => {
           />
 
           <Input
-            label="Field Notes / Remarks (Optional)"
+            label={t('crops_ui.field_notes_opt', 'Field Notes / Remarks (Optional)')}
             placeholder="e.g. Plot behind the borewell, nursery started 20 days ago"
             value={form.notes}
             onChangeText={(v) => setForm({ ...form, notes: v })}
@@ -200,7 +200,7 @@ const AddCropScreen = ({ navigation }) => {
           />
 
           <Button
-            title="Record Crop Cycle"
+            title={t('crops_ui.record_crop_btn', 'Record Crop Cycle')}
             onPress={handleSubmit}
             loading={loading}
             disabled={loading}
