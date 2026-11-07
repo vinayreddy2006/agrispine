@@ -40,6 +40,33 @@ export const communityService = {
     return await api.delete(API_ENDPOINTS.COMMUNITY_DELETE_COMMENT(postId, commentId));
   },
 
+  // Add nested reply to comment (POST /community/reply/:id/:commentId)
+  addReply: async (postId, commentId, replyText) => {
+    return await api.post(API_ENDPOINTS.COMMUNITY_REPLY(postId, commentId), {
+      text: replyText,
+    });
+  },
+
+  // Delete nested reply (DELETE /community/reply/:id/:commentId/:replyId)
+  deleteReply: async (postId, commentId, replyId) => {
+    return await api.delete(API_ENDPOINTS.COMMUNITY_DELETE_REPLY(postId, commentId, replyId));
+  },
+
+  // Like / Unlike Comment (PUT /community/like-comment/:id/:commentId)
+  toggleLikeComment: async (postId, commentId) => {
+    return await api.put(API_ENDPOINTS.COMMUNITY_LIKE_COMMENT(postId, commentId));
+  },
+
+  // Like / Unlike Reply (PUT /community/like-reply/:id/:commentId/:replyId)
+  toggleLikeReply: async (postId, commentId, replyId) => {
+    return await api.put(API_ENDPOINTS.COMMUNITY_LIKE_REPLY(postId, commentId, replyId));
+  },
+
+  // Update post
+  updatePost: async (id, postData) => {
+    return await api.put(API_ENDPOINTS.COMMUNITY_UPDATE(id), postData);
+  },
+
   // Upload media files (photos/videos) for post (POST /community/upload)
   uploadMedia: async (formData) => {
     return await api.upload(API_ENDPOINTS.COMMUNITY_UPLOAD, formData);

@@ -65,6 +65,10 @@ export const API_ENDPOINTS = {
   COMMUNITY_LIKE: (id) => `/community/like/${id}`,
   COMMUNITY_COMMENT: (id) => `/community/comment/${id}`,
   COMMUNITY_DELETE_COMMENT: (postId, commentId) => `/community/comment/${postId}/${commentId}`,
+  COMMUNITY_REPLY: (postId, commentId) => `/community/reply/${postId}/${commentId}`,
+  COMMUNITY_DELETE_REPLY: (postId, commentId, replyId) => `/community/reply/${postId}/${commentId}/${replyId}`,
+  COMMUNITY_LIKE_COMMENT: (postId, commentId) => `/community/like-comment/${postId}/${commentId}`,
+  COMMUNITY_LIKE_REPLY: (postId, commentId, replyId) => `/community/like-reply/${postId}/${commentId}/${replyId}`,
   COMMUNITY_UPLOAD: '/community/upload',
   COMMUNITY_REPORT: (id) => `/community/report/${id}`,
 

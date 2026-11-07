@@ -48,7 +48,7 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 | **9. Machinery Calendar** | ✅ Complete and tested | `pages/rent-machinery/components/BookingCalendar.jsx` | Interactive monthly calendar grid (Month navigation: Prev, Next, Today). Dual views: **My Bookings (Renter)** and **Owner Requests (Owner)**. Color-coded status dots (Amber = Pending, Green = Confirmed, Blue = Completed, Red = Rejected). Date selection with booking cards, owner actions (Accept, Reject, Complete), renter actions (Cancel, Call Owner), and empty states. |
 | **10. Booking Requests & Management** | ✅ Complete and tested | `pages/rent-machinery/MyBookings.jsx` | Renter & Owner tabs, machine photo thumbnails (`AppImage`), party avatar (`Avatar`), scheduled date, duration, total cost calculation, direct Accept/Decline/Cancel buttons, review submission modal, and header shortcut to Calendar. Endpoints: `GET /bookings/renter`, `GET /bookings/requests`, `PUT /bookings/status/:id`. |
 | **11. Buyer Produce Market** | ✅ Complete and tested | `pages/market/BuyerMarket.jsx` | Produce listings direct from local farmers. Filter by crop & district. Farmer avatar (`Avatar`), one-tap native phone dialer (`tel:${phone}`), and direct Village Chat messaging link. Endpoint: `GET /crops/market/listings`. |
-| **12. Farmer Community** | ✅ Complete and tested | `pages/community/Community.jsx` | Social feed of agronomy posts. Author avatars (`Avatar`), multi-photo gallery with tap-to-expand lightbox (`AppImage`), like toggle with live count, comments modal with commenter avatars, moderation reporting, and post deletion. Endpoints: `GET /community/fetchall`, `PUT /community/like/:id`, `POST /community/comment/:id`. |
+| **12. Farmer Community (Farmers Forum)** | ✅ Complete and tested | `pages/community/Community.jsx`, `PostCard.jsx` | Full LinkedIn-style discussion experience with single post detail view (`PostDetailsScreen.js`), full post opening on tap without accidental trigger of action buttons, nested inline replies with tree indentation, expand/collapse toggles, optimistic comments & replies with temporary IDs and rollback on failure, optimistic like toggles on posts, comments & replies, web-aligned 9 categories, search bar, forum/my_posts tabs, native Share sheet (`Share.share`), post editing & reporting modals. Endpoints: `GET /community/fetchall`, `GET /community/post/:id`, `POST /community/comment/:id`, `POST /community/reply/:id/:commentId`, `PUT /community/like/:id`, `PUT /community/like-comment/:id/:commentId`, `PUT /community/like-reply/:id/:commentId/:replyId`, `PUT /community/post/:id`, `DELETE /community/post/:id`, `POST /community/report/:id`. |
 | **13. Community Post Creation & Media** | ✅ Complete and tested | `components/community/CreatePostModal.jsx` | Multi-image photo picker from phone gallery (`expo-image-picker`), multipart upload to `POST /community/upload`, topic title, and category selection. |
 | **14. Village Messages & Real-Time Chat** | ✅ Complete and tested | `pages/messages/Messenger.jsx`, `ChatWindow.jsx` | Fixed crash on open. Self-chat ("Message Yourself"), 1-on-1 chats, group chats. Real-time Socket.IO events (`receive_message`, `message_deleted`, `message_updated`, `poll_updated`, `messages_read_update`). Image attachments (`expo-image-picker`), document attachments (`expo-document-picker`), message replying with quote preview, message starring, emoji reactions, and agricultural polls creation & voting. |
 | **15. Cooperative Workgroups** | ✅ Complete and tested | `pages/groups/LaborWorkgroups.jsx` | Mutual labor exchange (Srama Shakthi). Net labor balance banner (Days given vs received), work log feed, member roster with member profile pictures (`Avatar`), financial settlements ledger, and "+ Log Work" modal. Endpoints: `GET /api/groups`, `POST /api/groups/add`. |
@@ -231,6 +231,17 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 
 ---
 
+## 5. Community & Farmers Forum Full Web Parity Upgrade (Phase 6)
+
+### 1. Root Causes Addressed
+- **Post Card Opening Issue:** In `CommunityScreen.js`, posts previously opened an inline comments modal rather than a dedicated full post details screen, and card taps were swallowed or unhandled when clicking post body text or empty space.
+- **Comment/Reply Latency & Missing Optimistic UI:** Adding comments previously suffered from network latency without feedback. Implemented instant optimistic insertion with `isPending: true`, disabled submission button while in-flight, temporary ID substitution upon backend resolution, and error rollback preserving user input with a direct retry button.
+- **Nested Inline Reply Hierarchy:** Created LinkedIn-style inline nested replies (`margin/padding` indentation tree with `colors.primaryLight` border) directly beneath parent comments without modal popups. Included "View X replies" / "Hide replies" toggle buttons and a dedicated "Replying to [Author Name]" context banner with cancel button.
+- **Web Parity:** Aligned 9 categories with the web frontend (`'All'`, `'Crop Management'`, `'Pest & Disease'`, `'Irrigation'`, `'Fertilizers'`, `'Weather'`, `'Equipment'`, `'Market Prices'`, `'Others'`), added search query filtering, and added 'All Forum' vs 'My Posts' tabs.
+- **Native Sharing & Engagement:** Added native Android `Share.share` button, optimistic like toggling on posts, comments, and replies, and post editing/deletion modals for authors.
+
+---
+
 ## 4. GramSathi AI, Community & Village Chat Enhancements (Phase 5)
 
 ### 1. GramSathi AI – ChatGPT-Style Interface & Voice System
@@ -269,4 +280,77 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
   - Upload progress and error banner with retry capability without losing caption or image.
 - **Caption Rendering Fix:**
   - Fixed message bubble ternary so both `item.image` and `item.text` render simultaneously. Caption displays directly beneath the image attachment.
+
+---
+
+## 5. Workgroups Full-Stack Parity & Loading Fix (Phase 6)
+
+### 1. Root Cause of Missing Existing Groups
+- **The Problem:** The user's account (`Palle Vinay Reddy`, phone `9848118740`, `_id: 693ed010551b3fc7bf3abe3e`) belonged to 2 active workgroups:
+  1. `Pathi Ithulu` (`_id: 6a64fdf7026ebb9729027262`, village `Lingamonigudem`, Owner)
+  2. `Vari Natu` (`_id: 6a6587e4f0dc24172fb5336e`, village `LVG`, Owner, 4 members)
+  Both appeared on the website, but the mobile app incorrectly displayed: `"No workgroups. Create your first workgroup."`
+- **Root Cause Identified:**
+  - The backend endpoint `/api/groups` (`getUserGroups` controller) returns `{ success: true, groups: [...] }`.
+  - In `app/src/screens/groups/GroupsListScreen.js` (lines 42-44), the mobile app evaluated:
+    ```javascript
+    if (gRes.status === 'fulfilled') {
+      setGroups(Array.isArray(gRes.value) ? gRes.value : []);
+    }
+    ```
+  - Since `gRes.value` was an Object `{ success: true, groups: [...] }`, `Array.isArray(gRes.value)` returned `false`, resetting the list to `[]`!
+  - Furthermore, `GroupsListScreen.js` lacked `useFocusEffect` from `@react-navigation/native`, failing to re-query the backend upon navigating back from creating or modifying groups.
+- **The Fix:**
+  - Standardized `groupService.getUserGroups()` in `app/src/services/groupService.js` to automatically unwrap `res?.groups || res || []`.
+  - Updated `GroupsListScreen.js` with defensive extraction:
+    ```javascript
+    const raw = gRes.value;
+    const fetchedGroups = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw?.groups)
+      ? raw.groups
+      : [];
+    setGroups(fetchedGroups);
+    ```
+  - Replaced one-time `useEffect` with `useFocusEffect` so groups automatically refresh whenever the screen gains focus.
+
+### 2. Complete Workgroups Feature Parity Implementation
+- **Hub & Group Overview Screen (`GroupsListScreen.js`):**
+  - **Personal Labor & Earnings Summary Banner:** Total Earned (₹), Settled (₹), Pending Settlement (₹), and Days Worked, matching web's `PersonalDashboard.jsx`.
+  - **Section Switcher:** Seamless toggle between **"My Workgroups"** (all groups user belongs to) and **"Admin Dashboard"** (groups user administers, conditionally visible via `hasAdminAccess`).
+  - **Live Search & Filter:** Search by group name or village with real-time matching. Filter chips for role: `All`, `Owner`, `Admin`, `Member`.
+  - **Rich Group Cards:** Distinct Role Badges with icon indicators: Owner (Gold), Admin (Purple), Member (Emerald), and Closed tag if archived.
+- **Role-Based Group Detail & Administration (`GroupDetailsScreen.js`):**
+  - **Role Switcher Pill:** For Admins & Owners, provides instant switching between **"My Workgroup" (Member view)** and **"Admin Dashboard" (Admin view)** matching web's `GroupDetails.jsx`.
+  - **Member View (All Members):**
+    - Sub-tabs: `Overview`, `Work Records`, `Settlements`, `Members`.
+    - Personal metrics in this group: Days Worked, Total Earned (₹), Pending Payment (₹), Owed (₹), Net Balance (₹).
+    - Announcements & Upcoming tasks cards.
+    - Full Work Records ledger with tap-to-expand details modal.
+    - Member Settlements receipts history with payment mode and date.
+    - Group Member roster (read-only).
+  - **Admin View (Admins & Owners Only):**
+    - Sub-tabs: `Group Overview`, `Members Management`, `Work Records`, `Settlement Management`, `Reports`.
+    - **Overview:** Metric cards (Total Earnings, Pending Payments, Total Acres Worked, Total Work Days) and Member Contributions breakdown table.
+    - **Record Daily Work Modal:**
+      - External Farm Owner vs Group Member's Farm toggle.
+      - Date, Crop, Activity chips (Transplanting, Sowing, Weeding, Harvesting, Spraying, Tilling), Acres, Rate/Acre, Additional Equipment Charges.
+      - Live Total Calculated = `(Acres * Rate) + Additional`.
+      - Multi-select Attendance checkboxes for active members.
+      - Submits to `POST /api/groups/:id/work`.
+    - **Members Management:**
+      - "+ Add Member" modal with Name, 10-digit Phone, Village (auto-links to registered user if exists).
+      - Promote to Administrator / Demote to Member (`updateMemberRole`).
+      - Remove Member with confirmation alert (marks status as `removed` to preserve work history).
+      - Transfer Group Ownership to registered member (`transferOwnership`, Owner only).
+    - **Settlement Management:**
+      - Sub-switcher: "Process Net Settlement" vs "Settlement History".
+      - Net Settlement Preview: Live calculation of earned, owed, and net balance per member.
+      - Checkboxes to include/exclude specific work records and members.
+      - Payment mode selection (CASH, UPI, BANK_TRANSFER, OTHER) and remarks.
+      - Submits to `POST /api/groups/:id/settlements`.
+    - **Danger Zone (Owner Only):**
+      - Close Group (`closeGroup`) to freeze logging.
+      - Delete Group Permanently (`deleteGroup`) with safe confirmation and cascade cleanup.
+
 

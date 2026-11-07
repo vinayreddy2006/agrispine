@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   Alert,
   StatusBar,
   RefreshControl,
-  Image,
+  Share,
   Linking,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -29,8 +29,19 @@ import { ListSkeleton } from '../../components/LoadingSkeleton';
 import communityService from '../../services/communityService';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
-import { formatDate } from '../../utils/formatters';
-import { API_BASE_URL } from '../../constants/config';
+import { formatRelativeTime } from '../../utils/formatters';
+
+const CATEGORIES = [
+  'All',
+  'Crop Management',
+  'Pest & Disease',
+  'Irrigation',
+  'Fertilizers',
+  'Weather',
+  'Equipment',
+  'Market Prices',
+  'Others',
+];
 
 const CommunityScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -41,39 +52,32 @@ const CommunityScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  // Active filter
+  // Filters & Tabs
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'my_posts'
   const [selectedCategory, setSelectedCategory] = useState('All');
-
-  // Comments Modal State
-  const [activeCommentsPost, setActiveCommentsPost] = useState(null);
-  const [commentText, setCommentText] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Report Modal State
   const [activeReportPost, setActiveReportPost] = useState(null);
   const [reportReason, setReportReason] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
 
-  const categories = [
-    'All',
-    'General Agriculture',
-    'Crop Diseases',
-    'Fertilizers',
-    'Machinery Advice',
-    'Market Tips',
-  ];
+  const currentUserId = user?._id || user?.id;
 
-  const loadPosts = useCallback(async () => {
+  const loadPosts = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
       const data = await communityService.getAllPosts();
       setPosts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.log('Error loading posts:', err.message);
-      setError('Unable to load community posts. Please check your network.');
+      if (!silent) {
+        setError('Unable to load community posts. Please check your network.');
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -83,32 +87,46 @@ const CommunityScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      loadPosts();
+      // Refresh silently on focus so returning from PostDetails updates likes/comments without blanking UI
+      loadPosts(true);
     }, [loadPosts])
   );
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadPosts();
-    setRefreshing(false);
+    await loadPosts(true);
   };
 
+  // Optimistic Like Handler on Feed
   const handleLike = async (postId) => {
-    try {
-      // Optimistic update
-      setPosts((prev) =>
-        prev.map((p) => {
-          if (p._id !== postId) return p;
-          const currentLiked = p.isLiked || false;
-          const currentCount = p.likesCount || (Array.isArray(p.likes) ? p.likes.length : 0);
-          return {
-            ...p,
-            isLiked: !currentLiked,
-            likesCount: currentLiked ? Math.max(0, currentCount - 1) : currentCount + 1,
-          };
-        })
-      );
+    let prevLiked = false;
+    let prevCount = 0;
 
+    // Optimistic update
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p._id !== postId) return p;
+        prevLiked =
+          p.isLiked !== undefined
+            ? p.isLiked
+            : Array.isArray(p.likes) &&
+              p.likes.some((id) => String(id) === String(currentUserId));
+        prevCount =
+          p.likesCount !== undefined
+            ? p.likesCount
+            : Array.isArray(p.likes)
+            ? p.likes.length
+            : 0;
+
+        return {
+          ...p,
+          isLiked: !prevLiked,
+          likesCount: prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1,
+        };
+      })
+    );
+
+    try {
       const res = await communityService.toggleLike(postId);
       if (res && res.success !== undefined) {
         setPosts((prev) =>
@@ -121,34 +139,32 @@ const CommunityScreen = ({ navigation }) => {
       }
     } catch (err) {
       console.log('Error liking post:', err.message);
-      // Revert if error
-      loadPosts();
-    }
-  };
-
-  const handleAddComment = async () => {
-    if (!commentText.trim() || !activeCommentsPost) return;
-
-    try {
-      setSubmittingComment(true);
-      const updated = await communityService.addComment(
-        activeCommentsPost._id,
-        commentText.trim()
+      // Revert on failure
+      setPosts((prev) =>
+        prev.map((p) =>
+          p._id === postId
+            ? { ...p, isLiked: prevLiked, likesCount: prevCount }
+            : p
+        )
       );
-      if (updated && updated._id) {
-        setActiveCommentsPost(updated);
-        setPosts((prev) =>
-          prev.map((p) => (p._id === updated._id ? updated : p))
-        );
-      }
-      setCommentText('');
-    } catch (err) {
-      Alert.alert('Error', 'Unable to post comment.');
-    } finally {
-      setSubmittingComment(false);
     }
   };
 
+  // Share Post Action
+  const handleShare = async (post) => {
+    try {
+      const shareTitle = post.title || 'AgriSpine Farmer Post';
+      const shareMessage = `${post.title ? post.title + '\n\n' : ''}${post.content || ''}\n\nShared via AgriSpine Farmer Community`;
+      await Share.share({
+        title: shareTitle,
+        message: shareMessage,
+      });
+    } catch (err) {
+      console.log('Error sharing post:', err.message);
+    }
+  };
+
+  // Delete Post
   const handleDeletePost = (postId) => {
     Alert.alert(
       t('common.delete', 'Delete Post'),
@@ -160,10 +176,12 @@ const CommunityScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await communityService.deletePost(postId);
+              // Optimistic deletion
               setPosts((prev) => prev.filter((p) => p._id !== postId));
+              await communityService.deletePost(postId);
             } catch (err) {
               Alert.alert('Error', 'Failed to delete post.');
+              loadPosts(true);
             }
           },
         },
@@ -171,6 +189,7 @@ const CommunityScreen = ({ navigation }) => {
     );
   };
 
+  // Report Post
   const handleReportPost = async () => {
     if (!reportReason.trim() || !activeReportPost) return;
 
@@ -181,7 +200,7 @@ const CommunityScreen = ({ navigation }) => {
       setReportReason('');
       Alert.alert(
         'Report Submitted',
-        'Thank you for keeping the agricultural community safe.'
+        'Thank you for keeping the agricultural community safe and productive.'
       );
     } catch (err) {
       Alert.alert('Error', 'Unable to submit report.');
@@ -190,22 +209,66 @@ const CommunityScreen = ({ navigation }) => {
     }
   };
 
-  const filteredPosts = posts.filter((p) => {
-    if (selectedCategory === 'All') return true;
-    return p.category === selectedCategory;
-  });
+  // Filtered Posts Logic
+  const filteredPosts = useMemo(() => {
+    let list = [...posts];
+
+    // 1. Tab filter
+    if (activeTab === 'my_posts') {
+      list = list.filter((p) => {
+        const authorId = p.user?._id || p.user || p.author?._id;
+        return currentUserId && String(authorId) === String(currentUserId);
+      });
+    }
+
+    // 2. Category filter
+    if (selectedCategory && selectedCategory !== 'All') {
+      list = list.filter((p) => p.category === selectedCategory);
+    }
+
+    // 3. Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((p) => {
+        const title = (p.title || '').toLowerCase();
+        const content = (p.content || p.text || '').toLowerCase();
+        const author = (p.user?.name || p.authorName || '').toLowerCase();
+        const category = (p.category || '').toLowerCase();
+        return (
+          title.includes(q) ||
+          content.includes(q) ||
+          author.includes(q) ||
+          category.includes(q)
+        );
+      });
+    }
+
+    return list;
+  }, [posts, activeTab, selectedCategory, searchQuery, currentUserId]);
+
+  // Counts for tabs
+  const myPostsCount = useMemo(() => {
+    if (!currentUserId || !Array.isArray(posts)) return 0;
+    return posts.filter((p) => {
+      const authorId = p.user?._id || p.user || p.author?._id;
+      return String(authorId) === String(currentUserId);
+    }).length;
+  }, [posts, currentUserId]);
 
   const renderPostCard = ({ item }) => {
-    const authorName = item.user?.name || item.authorName || item.author?.name || 'Farmer';
-    const village = item.user?.village || item.village || item.author?.village || 'Telangana';
-    const currentUserId = user?._id || user?.id;
+    const authorName =
+      item.user?.name || item.authorName || item.author?.name || 'Farmer';
+    const village =
+      item.user?.village || item.village || item.author?.village || 'Telangana';
+    const district = item.user?.district || item.district || '';
     const postUserId = item.user?._id || item.user || item.author?._id;
     const isAuthor = currentUserId && String(postUserId) === String(currentUserId);
 
     const isLiked =
       item.isLiked !== undefined
         ? item.isLiked
-        : Array.isArray(item.likes) && item.likes.some((id) => String(id) === String(currentUserId));
+        : Array.isArray(item.likes) &&
+          item.likes.some((id) => String(id) === String(currentUserId));
 
     const likeCount =
       item.likesCount !== undefined
@@ -218,124 +281,194 @@ const CommunityScreen = ({ navigation }) => {
     const commentCount = item.totalCommentsCount || commentsList.length;
     const mediaList = Array.isArray(item.media) ? item.media : [];
 
+    // Navigate to post details
+    const openPostDetails = (autoFocusComment = false) => {
+      navigation.navigate('PostDetails', {
+        postId: item._id,
+        initialPost: item,
+        autoFocusComment,
+      });
+    };
+
     return (
-      <Card style={styles.postCard}>
-        {/* Post Header */}
-        <View style={styles.postHeader}>
-          <Avatar
-            source={item.author?.profileImage || item.user?.profileImage}
-            name={authorName}
-            size={42}
-          />
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.authorName}>{authorName}</Text>
-              {item.category && (
-                <View style={styles.categoryBadge}>
-                  <Text style={styles.categoryBadgeText}>{item.category}</Text>
+      <View style={styles.cardContainer}>
+        <Card style={styles.postCard}>
+          {/* Post Header: Author info (tap to open post details) & isolated Delete/Report action */}
+          <View style={styles.postHeader}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => openPostDetails(false)}
+              style={styles.authorHeaderTouchArea}
+            >
+              <Avatar
+                source={item.author?.profileImage || item.user?.profileImage}
+                name={authorName}
+                size={44}
+              />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <Text style={styles.authorName}>{authorName}</Text>
+                  {item.category && (
+                    <View style={styles.categoryBadge}>
+                      <Text style={styles.categoryBadgeText}>{item.category}</Text>
+                    </View>
+                  )}
                 </View>
-              )}
-            </View>
-            <Text style={styles.postMeta}>
-              {village} • {formatDate(item.createdAt)}
-            </Text>
+                <Text style={styles.postMeta}>
+                  {village}
+                  {district ? `, ${district}` : ''} • {formatRelativeTime(item.createdAt)}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {isAuthor ? (
+              <TouchableOpacity
+                onPress={() => handleDeletePost(item._id)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                style={styles.headerActionBtn}
+              >
+                <MaterialCommunityIcons
+                  name="trash-can-outline"
+                  size={19}
+                  color={colors.error}
+                />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => setActiveReportPost(item)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                style={styles.headerActionBtn}
+              >
+                <MaterialCommunityIcons
+                  name="flag-outline"
+                  size={18}
+                  color={colors.textMuted}
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
-          {isAuthor ? (
-            <TouchableOpacity
-              onPress={() => handleDeletePost(item._id)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.textMuted} />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => setActiveReportPost(item)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <MaterialCommunityIcons name="flag-outline" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-          )}
-        </View>
+          {/* Post Body: Title, Text Content, Media (tap anywhere to open post details) */}
+          <TouchableOpacity
+            activeOpacity={0.88}
+            onPress={() => openPostDetails(false)}
+            style={styles.postBodyTouchArea}
+          >
+            {item.title && item.title !== item.content ? (
+              <Text style={styles.postTitle}>{item.title}</Text>
+            ) : null}
+            <Text style={styles.postContent} numberOfLines={4}>
+              {item.content || item.text || ''}
+            </Text>
 
-        {/* Post Title & Content */}
-        {item.title && item.title !== item.content ? (
-          <Text style={styles.postTitle}>{item.title}</Text>
-        ) : null}
-        <Text style={styles.postContent}>{item.content || item.text || ''}</Text>
+            {/* Media Attachments Preview */}
+            {mediaList.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.mediaContainer}
+              >
+                {mediaList.map((m, idx) => {
+                  const url = typeof m === 'string' ? m : m?.url;
+                  if (!url) return null;
+                  const isDoc =
+                    (typeof m === 'object' &&
+                      (m?.type === 'document' || m?.type === 'file')) ||
+                    /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$/i.test(url);
 
-        {/* Media Attachments */}
-        {mediaList.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaContainer}>
-            {mediaList.map((m, idx) => {
-              const url = typeof m === 'string' ? m : m?.url;
-              if (!url) return null;
-              const isDoc = (typeof m === 'object' && (m?.type === 'document' || m?.type === 'file')) ||
-                /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$/i.test(url);
+                  if (isDoc) {
+                    return (
+                      <TouchableOpacity
+                        key={idx}
+                        style={styles.postDocCard}
+                        onPress={() => Linking.openURL(url)}
+                      >
+                        <MaterialCommunityIcons
+                          name="file-document-outline"
+                          size={24}
+                          color={colors.primary}
+                        />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.postDocName} numberOfLines={1}>
+                            {(typeof m === 'object' && m?.name) || 'Document'}
+                          </Text>
+                          <Text style={styles.postDocMeta}>Tap to view</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  }
 
-              if (isDoc) {
-                return (
-                  <TouchableOpacity
-                    key={idx}
-                    style={styles.postDocCard}
-                    onPress={() => Linking.openURL(url)}
-                  >
-                    <MaterialCommunityIcons name="file-document-outline" size={26} color={colors.primary} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.postDocName} numberOfLines={1}>
-                        {(typeof m === 'object' && m?.name) || 'Document'}
-                      </Text>
-                      <Text style={styles.postDocMeta}>Tap to open</Text>
+                  return (
+                    <View key={idx} style={{ marginRight: 8 }}>
+                      <AppImage
+                        source={url}
+                        style={styles.postImage}
+                        enablePreview
+                        borderRadius={12}
+                        fallbackType="generic"
+                      />
                     </View>
-                  </TouchableOpacity>
-                );
-              }
-
-              return (
-                <AppImage
-                  key={idx}
-                  source={url}
-                  style={styles.postImage}
-                  enablePreview
-                  borderRadius={12}
-                  fallbackType="generic"
-                />
-              );
-            })}
-          </ScrollView>
-        )}
-
-        {/* Post Stats & Actions */}
-        <View style={styles.actionsBar}>
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => handleLike(item._id)}
-          >
-            <MaterialCommunityIcons
-              name={isLiked ? 'heart' : 'heart-outline'}
-              size={22}
-              color={isLiked ? '#DC2626' : colors.textSecondary}
-            />
-            <Text style={[styles.actionBtnText, isLiked && { color: '#DC2626', fontWeight: '800' }]}>
-              {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
-            </Text>
+                  );
+                })}
+              </ScrollView>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => setActiveCommentsPost(item)}
-          >
-            <MaterialCommunityIcons
-              name="comment-outline"
-              size={20}
-              color={colors.textSecondary}
-            />
-            <Text style={styles.actionBtnText}>
-              {commentCount} {commentCount === 1 ? 'Reply' : 'Replies'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Card>
+          {/* Post Stats & Actions Bar */}
+          <View style={styles.actionsBar}>
+            {/* Like Button */}
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => handleLike(item._id)}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons
+                name={isLiked ? 'heart' : 'heart-outline'}
+                size={22}
+                color={isLiked ? '#DC2626' : colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.actionBtnText,
+                  isLiked && { color: '#DC2626', fontWeight: '800' },
+                ]}
+              >
+                {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Discuss Button */}
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => openPostDetails(true)}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons
+                name="comment-text-outline"
+                size={20}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.actionBtnText}>
+                {commentCount > 0 ? `${commentCount} ` : ''}Discuss
+              </Text>
+            </TouchableOpacity>
+
+            {/* Share Button */}
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => handleShare(item)}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons
+                name="share-variant-outline"
+                size={20}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.actionBtnText}>Share</Text>
+            </TouchableOpacity>
+          </View>
+        </Card>
+      </View>
     );
   };
 
@@ -343,32 +476,114 @@ const CommunityScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('community.title', 'Community')}
-        subtitle="Farmer Knowledge & Experience"
+        title={t('community.title', 'Farmers Forum')}
+        subtitle="Connect, Share & Learn with Progressive Farmers"
         onBack={() => navigation.goBack()}
         rightAction={
           <TouchableOpacity
             style={styles.createPostHeaderBtn}
             onPress={() => navigation.navigate('CreatePost')}
+            activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="plus" size={20} color="#FFFFFF" />
-            <Text style={styles.createPostHeaderText}>{t('community.post', 'Share')}</Text>
+            <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
+            <Text style={styles.createPostHeaderText}>Share Post</Text>
           </TouchableOpacity>
         }
       />
 
-      {/* Category Filter Chips */}
+      {/* Tabs Header (All Discussions vs My Posts) */}
+      <View style={styles.tabsHeader}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'all' && styles.tabButtonActive]}
+          onPress={() => setActiveTab('all')}
+        >
+          <MaterialCommunityIcons
+            name="earth"
+            size={18}
+            color={activeTab === 'all' ? colors.primary : colors.textMuted}
+          />
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === 'all' && styles.tabButtonTextActive,
+            ]}
+          >
+            All Forum
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'my_posts' && styles.tabButtonActive]}
+          onPress={() => setActiveTab('my_posts')}
+        >
+          <MaterialCommunityIcons
+            name="account-outline"
+            size={18}
+            color={activeTab === 'my_posts' ? colors.primary : colors.textMuted}
+          />
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === 'my_posts' && styles.tabButtonTextActive,
+            ]}
+          >
+            My Posts {myPostsCount > 0 ? `(${myPostsCount})` : ''}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Search Input Bar */}
+      <View style={styles.searchBarContainer}>
+        <View style={styles.searchBarBox}>
+          <MaterialCommunityIcons
+            name="magnify"
+            size={20}
+            color={colors.textMuted}
+            style={{ marginRight: 6 }}
+          />
+          <TextInput
+            placeholder="Search crop discussions, pests, fertilizers..."
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <MaterialCommunityIcons
+                name="close-circle"
+                size={18}
+                color={colors.textMuted}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Web-Matched Category Filter Chips */}
       <View style={styles.categoryFilterContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
-          {categories.map((cat) => {
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryScroll}
+        >
+          {CATEGORIES.map((cat) => {
             const isSelected = selectedCategory === cat;
             return (
               <TouchableOpacity
                 key={cat}
-                style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+                style={[
+                  styles.categoryChip,
+                  isSelected && styles.categoryChipSelected,
+                ]}
                 onPress={() => setSelectedCategory(cat)}
               >
-                <Text style={[styles.categoryChipText, isSelected && styles.categoryChipTextSelected]}>
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    isSelected && styles.categoryChipTextSelected,
+                  ]}
+                >
                   {cat === 'All' ? t('common.all', 'All') : cat}
                 </Text>
               </TouchableOpacity>
@@ -377,13 +592,14 @@ const CommunityScreen = ({ navigation }) => {
         </ScrollView>
       </View>
 
+      {/* Main Posts Feed */}
       {loading ? (
         <View style={{ padding: 16 }}>
           <ListSkeleton count={3} />
         </View>
       ) : error ? (
         <View style={{ padding: 16 }}>
-          <ErrorState message={error} onRetry={loadPosts} />
+          <ErrorState message={error} onRetry={() => loadPosts(false)} />
         </View>
       ) : (
         <FlatList
@@ -393,81 +609,49 @@ const CommunityScreen = ({ navigation }) => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+            />
           }
           ListEmptyComponent={
             <EmptyState
               icon="forum-outline"
-              title={t('community.no_posts', 'No Posts Yet')}
-              description="Be the first farmer to share an update, crop photo, or agricultural query with the village community."
-              actionTitle={t('community.create', 'Create First Post')}
-              onAction={() => navigation.navigate('CreatePost')}
+              title={
+                activeTab === 'my_posts'
+                  ? 'No posts by you yet'
+                  : searchQuery
+                  ? 'No matching discussions'
+                  : t('community.no_posts', 'No Posts Yet')
+              }
+              description={
+                activeTab === 'my_posts'
+                  ? 'Share your first farming update, question, or crop photo with your peers.'
+                  : searchQuery
+                  ? `No community posts matched "${searchQuery}". Try a different keyword.`
+                  : 'Be the first farmer to share an update, crop photo, or agricultural query with the village community.'
+              }
+              actionTitle={
+                searchQuery ? 'Clear Search' : t('community.create', 'Share Your First Post')
+              }
+              onAction={
+                searchQuery
+                  ? () => setSearchQuery('')
+                  : () => navigation.navigate('CreatePost')
+              }
             />
           }
         />
       )}
 
-      {/* Comments Modal */}
-      <Modal visible={!!activeCommentsPost} animationType="slide" transparent onRequestClose={() => setActiveCommentsPost(null)}>
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalHeading}>Community Discussion</Text>
-              <TouchableOpacity onPress={() => setActiveCommentsPost(null)}>
-                <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Comments List */}
-            <ScrollView style={styles.commentsList} showsVerticalScrollIndicator={false}>
-              {!activeCommentsPost?.comments || activeCommentsPost.comments.length === 0 ? (
-                <Text style={styles.noCommentsText}>{t('community.no_replies_yet', 'No replies yet. Start the conversation!')}</Text>
-              ) : (
-                activeCommentsPost.comments.map((comment, idx) => (
-                  <View key={comment._id || idx} style={styles.commentItem}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <Avatar
-                        source={comment.user?.profileImage || comment.profileImage}
-                        name={comment.name || comment.user?.name || comment.authorName || 'Farmer'}
-                        size={28}
-                      />
-                      <Text style={styles.commentAuthor}>
-                        {comment.name || comment.user?.name || comment.authorName || 'Farmer'}
-                      </Text>
-                    </View>
-                    <Text style={styles.commentText}>{comment.text || comment.comment || ''}</Text>
-                    <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
-                  </View>
-                ))
-              )}
-            </ScrollView>
-
-            {/* Comment Input */}
-            <View style={styles.commentInputRow}>
-              <TextInput
-                placeholder={t('community.write_reply', 'Write a helpful reply...')}
-                placeholderTextColor={colors.textMuted}
-                value={commentText}
-                onChangeText={setCommentText}
-                style={styles.commentTextInput}
-              />
-              <TouchableOpacity
-                onPress={handleAddComment}
-                disabled={submittingComment || !commentText.trim()}
-                style={[
-                  styles.sendCommentBtn,
-                  !commentText.trim() && { opacity: 0.5 },
-                ]}
-              >
-                <MaterialCommunityIcons name="send" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
-
       {/* Report Post Modal */}
-      <Modal visible={!!activeReportPost} animationType="fade" transparent onRequestClose={() => setActiveReportPost(null)}>
+      <Modal
+        visible={!!activeReportPost}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setActiveReportPost(null)}
+      >
         <View style={styles.reportModalOverlay}>
           <View style={styles.reportCard}>
             <Text style={styles.reportTitle}>Report Post</Text>
@@ -518,7 +702,7 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: colors.primary,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 16,
   },
   createPostHeaderText: {
@@ -526,21 +710,69 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  tabsHeader: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 11,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabButtonActive: {
+    borderBottomColor: colors.primary,
+  },
+  tabButtonText: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  tabButtonTextActive: {
+    color: colors.primary,
+    fontWeight: '800',
+  },
+  searchBarContainer: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  searchBarBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 40,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.textPrimary,
+  },
   categoryFilterContainer: {
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    paddingVertical: 10,
+    paddingVertical: 9,
   },
   categoryScroll: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     gap: 8,
   },
   categoryChip: {
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -549,189 +781,131 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   categoryChipText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
     color: colors.textSecondary,
   },
   categoryChipTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '800',
   },
   listContent: {
-    padding: 16,
+    padding: 14,
     paddingBottom: 40,
   },
+  cardContainer: {
+    marginBottom: 12,
+  },
   postCard: {
-    padding: 16,
-    marginBottom: 14,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   postHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
     marginBottom: 10,
   },
-  authorAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primaryLight,
+  authorHeaderTouchArea: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  avatarInitial: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: colors.primaryDark,
+  headerActionBtn: {
+    padding: 6,
+    marginLeft: 6,
+  },
+  postBodyTouchArea: {
+    paddingVertical: 2,
   },
   authorName: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 14.5,
+    fontWeight: '700',
     color: colors.textPrimary,
   },
   categoryBadge: {
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
   },
   categoryBadgeText: {
     fontSize: 10.5,
-    color: colors.textMuted,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: colors.primaryDark,
   },
   postMeta: {
-    fontSize: 11.5,
-    color: colors.textSecondary,
-    marginTop: 1,
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
   },
   postTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.textPrimary,
-    marginBottom: 6,
+    marginBottom: 4,
+    lineHeight: 20,
   },
   postContent: {
-    fontSize: 14,
-    color: colors.textPrimary,
+    fontSize: 13.5,
+    color: colors.textSecondary,
     lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   mediaContainer: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   postImage: {
-    width: 240,
-    height: 180,
+    width: 220,
+    height: 160,
     borderRadius: 12,
-    marginRight: 8,
     backgroundColor: colors.surfaceAlt,
+  },
+  postDocCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    padding: 10,
+    marginRight: 8,
+    width: 200,
+  },
+  postDocName: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  postDocMeta: {
+    fontSize: 10.5,
+    color: colors.primary,
+    marginTop: 1,
   },
   actionsBar: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 20,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingTop: 12,
-    marginTop: 4,
+    paddingTop: 10,
+    marginTop: 2,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
   },
   actionBtnText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
     color: colors.textSecondary,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: '80%',
-    minHeight: '50%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalHeading: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.textPrimary,
-  },
-  commentsList: {
-    flex: 1,
-    marginBottom: 16,
-  },
-  noCommentsText: {
-    textAlign: 'center',
-    color: colors.textMuted,
-    marginTop: 24,
-    fontSize: 14,
-  },
-  commentItem: {
-    backgroundColor: colors.background,
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  commentAuthor: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.primaryDark,
-    marginBottom: 2,
-  },
-  commentText: {
-    fontSize: 13.5,
-    color: colors.textPrimary,
-    lineHeight: 18,
-  },
-  commentDate: {
-    fontSize: 10.5,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-  commentInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  commentTextInput: {
-    flex: 1,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
-  sendCommentBtn: {
-    backgroundColor: colors.primary,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   reportModalOverlay: {
     flex: 1,
@@ -768,6 +942,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textPrimary,
     textAlignVertical: 'top',
+    height: 80,
     marginBottom: 16,
   },
   reportBtnRow: {

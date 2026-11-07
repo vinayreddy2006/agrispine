@@ -26,6 +26,7 @@ import MandiRatesScreen from '../screens/market/MandiRatesScreen';
 
 import CommunityScreen from '../screens/community/CommunityScreen';
 import CreatePostScreen from '../screens/community/CreatePostScreen';
+import PostDetailsScreen from '../screens/community/PostDetailsScreen';
 
 import ConversationsScreen from '../screens/chat/ConversationsScreen';
 import ChatScreen from '../screens/chat/ChatScreen';
@@ -155,6 +156,7 @@ export const MainNavigator = () => {
       {/* Community */}
       <Stack.Screen name="Community" component={CommunityScreen} />
       <Stack.Screen name="CreatePost" component={CreatePostScreen} />
+      <Stack.Screen name="PostDetails" component={PostDetailsScreen} />
 
       {/* Real-time Chat */}
       <Stack.Screen name="Conversations" component={ConversationsScreen} />

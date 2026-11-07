@@ -49,15 +49,21 @@ const CreateGroupScreen = ({ navigation }) => {
         description: form.description.trim(),
       };
 
-      await groupService.createGroup(payload);
+      const res = await groupService.createGroup(payload);
 
       Alert.alert(
         'Workgroup Created! 🤝',
         `"${form.name}" has been established. You are the administrator and can now log cooperative work and track member contributions.`,
         [
           {
-            text: 'Go to Workgroups',
-            onPress: () => navigateAfterComplete(navigation, 'Groups'),
+            text: 'View Workgroup',
+            onPress: () => {
+              if (res && res._id) {
+                navigation.replace('GroupDetails', { groupId: res._id });
+              } else {
+                navigateAfterComplete(navigation, 'Groups');
+              }
+            },
           },
         ]
       );

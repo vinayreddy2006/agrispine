@@ -25,11 +25,14 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { navigateAfterComplete } from '../../utils/navigationUtils';
 
 const categories = [
-  'General Agriculture',
-  'Crop Diseases',
+  'Crop Management',
+  'Pest & Disease',
+  'Irrigation',
   'Fertilizers',
-  'Machinery Advice',
-  'Market Tips',
+  'Weather',
+  'Equipment',
+  'Market Prices',
+  'Others',
 ];
 
 const CreatePostScreen = ({ navigation }) => {
@@ -38,7 +41,7 @@ const CreatePostScreen = ({ navigation }) => {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState('General Agriculture');
+  const [category, setCategory] = useState('Crop Management');
   const [selectedMedia, setSelectedMedia] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgressText, setUploadProgressText] = useState('');
