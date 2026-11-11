@@ -1,10 +1,20 @@
 import json
 import logging
 import traceback
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from fastapi.responses import JSONResponse
 from schemas.chat import ChatRequest, ChatResponse
-from engines.engine import process_request
+from engines.engine import process_request, execute_task_directly
+from pydantic import BaseModel
+from typing import Dict, Any, Optional
+
+class ActionExecuteRequest(BaseModel):
+    intent: str
+    parameters: Dict[str, Any] = {}
+    auth_token: Optional[str] = ""
+    language: Optional[str] = "en"
+    user_context: Optional[Dict[str, Any]] = None
+    current_page_context: Optional[Dict[str, Any]] = None
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -29,7 +39,10 @@ async def process_chat(request: ChatRequest):
             user_context=request.user_context or {},
             page_context=page_ctx or {},
             auth_token=request.auth_token or "",
-            language=request.language or "en"
+            language=request.language or "en",
+            pending_action=request.pending_action,
+            conversation_summary=request.conversation_summary or "",
+            context_facts=request.context_facts or {}
         )
 
         # If the underlying processing failed, return an explicit error HTTP status code (500)
@@ -39,6 +52,8 @@ async def process_chat(request: ChatRequest):
                 "reply": result.get("reply", "An error occurred while processing your request."),
                 "intent": result.get("intent", "ERROR"),
                 "action": None,
+                "requires_confirmation": False,
+                "pending_action": None,
                 "success": False,
                 "error": result.get("error", "AIProcessingError"),
                 "module": result.get("module", "engine"),
@@ -52,7 +67,12 @@ async def process_chat(request: ChatRequest):
             session_id=request.session_id,
             reply=result.get("reply", "No response generated."),
             intent=result.get("intent", "UNKNOWN"),
+            structured_data=result.get("structured_data"),
             action=result.get("action"),
+            requires_confirmation=result.get("requires_confirmation", False),
+            pending_action=result.get("pending_action"),
+            conversation_summary=result.get("conversation_summary"),
+            context_facts=result.get("context_facts"),
             success=True,
             error=None,
             module=result.get("module"),
@@ -84,3 +104,30 @@ async def process_chat(request: ChatRequest):
             "details": str(e)
         }
         return JSONResponse(status_code=500, content=error_details)
+
+@router.post("/action/execute")
+async def execute_action(request: ActionExecuteRequest):
+    """
+    Executes a confirmed task after explicit farmer confirmation.
+    """
+    try:
+        context = {
+            "auth_token": request.auth_token or "",
+            "user": request.user_context or {},
+            "page": request.current_page_context or {},
+            "language": request.language or "en"
+        }
+        result = execute_task_directly(request.intent, request.parameters, context)
+        return {
+            "success": result.get("success", False),
+            "reply": result.get("message", "Task completed."),
+            "action": result.get("action"),
+            "data": result.get("data") or result.get("structured_data")
+        }
+    except Exception as e:
+        logger.error(f"[AI Router] Action execution error: {e}")
+        return JSONResponse(status_code=500, content={
+            "success": False,
+            "reply": f"Execution failed: {str(e)}",
+            "error": str(e)
+        })

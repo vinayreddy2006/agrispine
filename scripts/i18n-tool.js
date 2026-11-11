@@ -80,8 +80,8 @@ function extractKeysFromFiles(files) {
     let match;
     while ((match = tRegex.exec(content)) !== null) {
       const key = match[1];
-      // Exclude obvious non-translation keys or dynamic variables
-      if (!key.includes('${') && key.includes('.')) {
+      // Exclude obvious non-translation keys, dynamic prefixes, or variables
+      if (!key.includes('${') && key.includes('.') && !key.endsWith('.')) {
         keys.add(key);
       }
     }

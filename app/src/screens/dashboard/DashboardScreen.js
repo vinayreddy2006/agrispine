@@ -168,7 +168,7 @@ const DashboardScreen = ({ navigation }) => {
               <MaterialCommunityIcons name="sprout" size={22} color={colors.primary} />
             </View>
             <View>
-              <Text style={styles.brandName}>AgriSpine</Text>
+              <Text style={styles.brandName}>{t('common.agrispine', 'AgriSpine')}</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('Profile')}
                 style={styles.locationPill}
@@ -225,7 +225,7 @@ const DashboardScreen = ({ navigation }) => {
         {/* Greeting Banner */}
         <View style={styles.greetingCard}>
           <View>
-            <Text style={styles.greetingTag}>NAMASTE 🙏</Text>
+            <Text style={styles.greetingTag}>{t('dashboard.welcome', 'Namaste').toUpperCase()} 🙏</Text>
             <Text style={styles.greetingName} numberOfLines={1}>
               {displayName}
             </Text>
@@ -311,7 +311,7 @@ const DashboardScreen = ({ navigation }) => {
                     {weather.weather?.[0]?.description?.toUpperCase() || 'CLEAR'}
                   </Text>
                   <Text style={styles.weatherFeels}>
-                    Feels like {Math.round(weather.main?.feels_like || 0)}°C
+                    {t('weather_ui.feels_like', 'Feels like')} {Math.round(weather.main?.feels_like || 0)}°C
                   </Text>
                 </View>
                 {weather.weather?.[0]?.icon ? (

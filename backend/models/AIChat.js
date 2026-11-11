@@ -12,13 +12,26 @@ const AIChatSchema = new mongoose.Schema({
   },
   messages: [
     {
-      sender: { type: String, enum: ['user', 'ai'], required: true },
+      sender: { type: String, enum: ['user', 'ai', 'error'], required: true },
       text: { type: String, required: true },
       intent: { type: String, default: "" },
       structured_data: { type: mongoose.Schema.Types.Mixed, default: {} },
+      action: { type: mongoose.Schema.Types.Mixed, default: null },
       timestamp: { type: Date, default: Date.now }
     }
   ],
+  pending_action: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
+  summary: {
+    type: String,
+    default: ""
+  },
+  context_facts: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

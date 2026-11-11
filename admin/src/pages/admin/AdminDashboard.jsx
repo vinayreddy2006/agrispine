@@ -8,7 +8,7 @@ const AdminDashboard = () => {
   const handleSeed = async () => {
     try {
       setSeeding(true);
-      const token = localStorage.getItem("adminToken");
+      const token = localStorage.getItem("admin-token");
       const { data } = await api.post("/admin/seed", {}, {
         headers: { "admin-token": token }
       });

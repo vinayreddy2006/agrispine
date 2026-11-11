@@ -1,12 +1,12 @@
 # AgriSpine Mobile App — Comprehensive Implementation & Audit Status
 
 **Date:** November 2026  
-**Platform:** React Native (Expo SDK 52) + JavaScript  
-**Backend:** Node.js + Express + MongoDB (`backend/`)  
+**Platform:** React Native `0.88.1` (Expo SDK 58 / `~58.0.22`) + JavaScript  
+**Backend:** Node.js + Express 5 + MongoDB (`backend/`)  
 **Real-time Layer:** Socket.IO Client 4.8  
-**Audio / TTS Engine:** `expo-speech`  
+**Audio / Voice / TTS Engine:** `expo-audio` (primary recording) + `expo-av` (fallback) + `expo-speech` (TTS)  
 **Media & Files Engine:** `expo-image-picker` + `expo-document-picker`  
-**Localization:** Centralized i18n with English, తెలుగు (Telugu), हिन्दी (Hindi)  
+**Localization:** Centralized i18n (`I18nContext.js`) with English, తెలుగు (Telugu), हिन्दी (Hindi)  
 
 ---
 
@@ -29,7 +29,7 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
    - Built reusable `AppImage.js` with loading shimmers, error recovery, and tap-to-expand full-screen preview lightbox.
    - Built reusable `Avatar.js` with initials fallback, deterministic vibrant background colors, and online status badges.
    - Connected `AppImage` and `Avatar` across Dashboard, Profile, Machinery Browse, Machine Details, My Fleet, My Bookings, Buyer Market, Community posts/comments, and Workgroup members.
-4. **Syntax & Production Verification:** All 68 JavaScript files in `app/src/` passed Babel AST parsing with 0 errors. Backend syntax verified cleanly (`node -c backend/index.js`). Frontend web production build passed with 0 errors (3,106 modules transformed).
+4. **Syntax & Production Verification:** All 74 JavaScript files in `app/src/` passed Babel AST parsing with 0 errors. Backend syntax verified cleanly (`node -c backend/index.js`). Frontend web production build passed with 0 errors (3,106 modules transformed).
 
 ---
 
@@ -38,25 +38,25 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 | Module | Classification | Web Equivalent | Key Capabilities & Verified Endpoints |
 | :--- | :--- | :--- | :--- |
 | **1. Authentication** | ✅ Complete and tested | `pages/auth/Login.jsx`, `Register.jsx` | Mobile 10-digit login & registration (Farmer, Equipment Owner, Crop Buyer). Multilingual language selector on login. Keyboard handling without losing focus. Secure token storage in `expo-secure-store`. Endpoints: `POST /auth/login`, `POST /auth/register`. |
-| **2. Dashboard** | ✅ Complete and tested | `pages/core/Dashboard.jsx` | User profile avatar with initials fallback, live weather card with humidity & wind, quick access grid (8 modules), active crops cultivation preview, live APMC mandi ticker, unread notifications badge, 1-tap language switch modal. |
-| **3. My Crops** | ✅ Complete and tested | `pages/crops/Crops.jsx` | Active and Harvested cultivation tabs, search by crop/variety, sowing date, acreage, region chips. Endpoints: `GET /crops`, `POST /crops/add`. |
-| **4. Crop Details & Profit/Expense Tracking** | ✅ Complete and tested | `pages/crops/CropDetail.jsx` | Financial overview (Total Expenses, Estimated Revenue, Net Profit/Loss), expense log by category (Seed, Fertilizer, Pesticide, Machinery, Labor), delete expense, Harvest & Sell produce modal, "List on Buyer Market" switch (`PUT /crops/market/toggle/:id`). |
-| **5. Profile & Settings** | ✅ Complete and tested | `pages/core/Profile.jsx` | User profile avatar (`Avatar`), farm profile summary, farming details (Land, soil type, irrigation source, farming style), farm analytics, edit profile modal, farm location confirmation, and language preference switcher. Endpoints: `POST /auth/getuser`, `PUT /auth/profile`. |
-| **6. Rent Machinery (Renter Workflow)** | ✅ Complete and tested | `pages/rent-machinery/Machinery.jsx` | Category filter carousel with high-res machinery illustrations (`AppImage`), keyword & location search, starting rates, owner tags, equipment availability badges, and header shortcut to Machinery Calendar. Endpoint: `GET /machines/fetchall`. |
-| **7. Rent Machinery (Owner Workflow & Fleet)** | ✅ Complete and tested | `pages/rent-machinery/Machinery.jsx` (Fleet) | Owner equipment management, machine photo display with category fallbacks, toggle availability (Available / Busy), direct header shortcut to Owner Calendar, add new listing (`POST /machines/add`). Endpoint: `GET /machines/own`. |
-| **8. Machine Details & Subtasks** | ✅ Complete and tested | `pages/rent-machinery/RentDetails.jsx` | Full-width hero machinery photo with tap-to-expand preview lightbox (`AppImage`), owner profile picture (`Avatar`), owner call and direct message actions, farmer reviews, agricultural tasks/services list with individual rates, and "View Fleet Calendar" schedule button. |
-| **9. Machinery Calendar** | ✅ Complete and tested | `pages/rent-machinery/components/BookingCalendar.jsx` | Interactive monthly calendar grid (Month navigation: Prev, Next, Today). Dual views: **My Bookings (Renter)** and **Owner Requests (Owner)**. Color-coded status dots (Amber = Pending, Green = Confirmed, Blue = Completed, Red = Rejected). Date selection with booking cards, owner actions (Accept, Reject, Complete), renter actions (Cancel, Call Owner), and empty states. |
-| **10. Booking Requests & Management** | ✅ Complete and tested | `pages/rent-machinery/MyBookings.jsx` | Renter & Owner tabs, machine photo thumbnails (`AppImage`), party avatar (`Avatar`), scheduled date, duration, total cost calculation, direct Accept/Decline/Cancel buttons, review submission modal, and header shortcut to Calendar. Endpoints: `GET /bookings/renter`, `GET /bookings/requests`, `PUT /bookings/status/:id`. |
+| **2. Dashboard** | ✅ Complete and tested | `pages/core/Dashboard.jsx` | User profile avatar with initials fallback, live weather card with humidity & wind, location confirmation banner, quick access grid, active crops cultivation preview, live APMC mandi ticker, unread notifications badge, 1-tap language switch modal. |
+| **3. My Crops** | ✅ Complete and tested | `pages/crops/MyCrops.jsx` | Active and Harvested cultivation tabs, search by crop/variety, sowing date, acreage, region chips. Endpoints: `GET /crops/fetchall`, `POST /crops/add`. |
+| **4. Crop Details & Profit/Expense Tracking** | ✅ Complete and tested | `pages/crops/CropDetails.jsx` | Financial overview (Total Expenses, Estimated Revenue, Net Profit/Loss), expense log by category (Seed, Fertilizer, Pesticide, Machinery, Labor), delete expense, Harvest & Sell produce modal, single-listing "List on Market" toggle (`PUT /crops/market/toggle/:id`). |
+| **5. Profile & Settings** | ✅ Complete and tested | `pages/core/Profile.jsx` | User profile avatar (`Avatar`), farm profile summary, farming details (Land, soil type, irrigation source, farming style), farm analytics, edit profile modal, farm location confirmation (`PUT /auth/confirm-location`), and language preference switcher. Endpoints: `POST /auth/getuser`, `PUT /auth/updateprofile`, `GET /auth/profile-analytics`. |
+| **6. Rent Machinery (Renter Workflow)** | ✅ Complete and tested | `pages/rent-machinery/RentCategories.jsx` (`RentMachineryWorkspace.jsx`) | Category filter carousel with high-res machinery illustrations (`AppImage`), keyword & location search, starting rates, owner tags, equipment availability badges, and header shortcut to Machinery Calendar. Endpoint: `GET /machines/fetchall`. |
+| **7. Rent Machinery (Owner Workflow & Fleet)** | ✅ Complete and tested | `pages/rent-machinery/RentMachineryWorkspace.jsx`, `MyMachines.jsx` | Owner equipment management, machine photo display with category fallbacks, toggle availability (Available / Busy), direct header shortcut to Owner Calendar, add new listing (`POST /machines/add`). Endpoint: `GET /machines/own`. |
+| **8. Machine Details & Subtasks** | ✅ Complete and tested | `pages/rent-machinery/RentDetails.jsx` | Full-width hero machinery photo with tap-to-expand preview lightbox (`AppImage`), owner profile picture (`Avatar`), owner call and direct message actions, farmer reviews (`GET /reviews/machine/:machineId`), agricultural tasks/services list with individual rates, and "View Fleet Calendar" schedule button. |
+| **9. Machinery Calendar** | ✅ Complete and tested | `pages/rent-machinery/components/BookingCalendar.jsx` | Interactive monthly calendar grid (Month navigation: Prev, Next, Today). Dual views: **My Bookings (Renter)** and **Owner Requests (Owner)**. Color-coded status dots (Amber = Pending, Green = Confirmed/Accepted, Blue = Completed, Red = Rejected). Date selection with booking cards, owner actions (Accept, Reject, Complete), renter actions (Cancel, Call Owner), and empty states. |
+| **10. Booking Requests & Management** | ✅ Complete and tested | `pages/rent-machinery/MyBookings.jsx` | Renter & Owner tabs, machine photo thumbnails (`AppImage`), party avatar (`Avatar`), scheduled date, duration, total cost calculation, direct Accept/Decline/Cancel buttons, review submission modal (`POST /reviews/add`), and header shortcut to Calendar. Endpoints: `GET /bookings/renter`, `GET /bookings/requests`, `PUT /bookings/status/:id`. |
 | **11. Buyer Produce Market** | ✅ Complete and tested | `pages/market/BuyerMarket.jsx` | Produce listings direct from local farmers. Filter by crop & district. Farmer avatar (`Avatar`), one-tap native phone dialer (`tel:${phone}`), and direct Village Chat messaging link. Endpoint: `GET /crops/market/listings`. |
 | **12. Farmer Community (Farmers Forum)** | ✅ Complete and tested | `pages/community/Community.jsx`, `PostCard.jsx` | Full LinkedIn-style discussion experience with single post detail view (`PostDetailsScreen.js`), full post opening on tap without accidental trigger of action buttons, nested inline replies with tree indentation, expand/collapse toggles, optimistic comments & replies with temporary IDs and rollback on failure, optimistic like toggles on posts, comments & replies, web-aligned 9 categories, search bar, forum/my_posts tabs, native Share sheet (`Share.share`), post editing & reporting modals. Endpoints: `GET /community/fetchall`, `GET /community/post/:id`, `POST /community/comment/:id`, `POST /community/reply/:id/:commentId`, `PUT /community/like/:id`, `PUT /community/like-comment/:id/:commentId`, `PUT /community/like-reply/:id/:commentId/:replyId`, `PUT /community/post/:id`, `DELETE /community/post/:id`, `POST /community/report/:id`. |
 | **13. Community Post Creation & Media** | ✅ Complete and tested | `components/community/CreatePostModal.jsx` | Multi-image photo picker from phone gallery (`expo-image-picker`), multipart upload to `POST /community/upload`, topic title, and category selection. |
 | **14. Village Messages & Real-Time Chat** | ✅ Complete and tested | `pages/messages/Messenger.jsx`, `ChatWindow.jsx` | Fixed crash on open. Self-chat ("Message Yourself"), 1-on-1 chats, group chats. Real-time Socket.IO events (`receive_message`, `message_deleted`, `message_updated`, `poll_updated`, `messages_read_update`). Image attachments (`expo-image-picker`), document attachments (`expo-document-picker`), message replying with quote preview, message starring, emoji reactions, and agricultural polls creation & voting. |
-| **15. Cooperative Workgroups** | ✅ Complete and tested | `pages/groups/LaborWorkgroups.jsx` | Mutual labor exchange (Srama Shakthi). Net labor balance banner (Days given vs received), work log feed, member roster with member profile pictures (`Avatar`), financial settlements ledger, and "+ Log Work" modal. Endpoints: `GET /api/groups`, `POST /api/groups/add`. |
-| **16. Weather & AI Spray Advisory** | ✅ Complete and tested | `pages/services/Weather.jsx` | Location search across India, current conditions (temp, humidity, wind, pressure), AI agricultural spray advisory, and 5-day weather forecast. |
-| **17. Live Mandi Rates** | ✅ Complete and tested | `pages/market/MandiRates.jsx` | APMC market prices. Filter by commodity (Paddy, Cotton, Turmeric, Chilli) and market yard chips. Min, Max, and Modal prices per Quintal with price trend indicators. Endpoint: `GET /admin/mandi-rates`. |
+| **15. Cooperative Workgroups** | ✅ Complete and tested | `pages/groups/GroupDashboard.jsx`, `GroupDetails.jsx` | Mutual labor exchange (Srama Shakthi). Net labor balance banner (`GET /api/groups/personal/dashboard`), work log feed, member roster with profile pictures (`Avatar`), financial settlements ledger, and "+ Log Work" modal. Endpoints: `GET /api/groups`, `POST /api/groups`. |
+| **16. Weather & AI Spray Advisory** | ✅ Complete and tested | `pages/core/Weather.jsx` | Location search via Nominatim across India, coordinate-resolved conditions (temp, humidity, wind, dew point, pressure), AI & rule-based agricultural spray advisory (`POST /api/ai/weather-recommendations`), and 24–48h / 5-day forecast. |
+| **17. Live Mandi Rates** | ✅ Complete and tested | `pages/market/MarketPrices.jsx` | APMC market prices. Filter by commodity (Paddy, Cotton, Turmeric, Chilli) and market yard chips. Min, Max, and Modal prices per Quintal with price trend indicators. Endpoint: `GET /admin/mandi-rates`. |
 | **18. Government Schemes** | ✅ Complete and tested | `pages/services/Schemes.jsx` | Central & state schemes (PM-Kisan, Rythu Bandhu, PMFBY, KCC). Category filters, eligibility criteria modal, and official government portal external application links. Endpoint: `GET /admin/schemes`. |
-| **19. GramSathi AI Farming Assistant** | ✅ Complete and tested | `pages/ai/GramSathiFullScreen.jsx` | Multi-session chat drawer (`GET /api/ai/chats`, `POST /api/ai/chats/new`, `DELETE /api/ai/chats/:id`), voice output speech synthesis via `expo-speech` with Play/Stop controls, quick suggestion chips, structured agronomy cards, and language-aware responses (`POST /api/ai/chat`). |
-| **20. Settings & Language Switcher** | ✅ Complete and tested | `components/LanguageSwitcher.jsx` | Multilingual support in English, తెలుగు (Telugu), and हिन्दी (Hindi). Instant application-wide re-render, persisted across restarts in `expo-secure-store`. Accessible from Dashboard, Profile, and Login. |
+| **19. GramSathi AI Farming Assistant** | ✅ Complete and tested | `pages/ai/GramSathiFullScreen.jsx` | Multi-session chat drawer (`GET /api/ai/chats`, `POST /api/ai/chats/new`, `PUT/DELETE /api/ai/chats/:id`), native voice recording via `expo-audio` (`POST /api/ai/transcribe` Groq Whisper), TTS via `expo-speech` with Play/Stop controls, quick suggestion chips, persistent conversation context, and Human-in-the-Loop Confirmation Cards (`POST /api/ai/actions/confirm`, `POST /api/ai/actions/cancel`). |
+| **20. Settings & Language Switcher** | ✅ Complete and tested | `components/LanguageSwitcher.jsx` | Multilingual support in English, తెలుగు (Telugu), and हिन्दी (Hindi). Instant application-wide re-render, persisted across restarts in `expo-secure-store` (`agrispine_selected_language`). Accessible from Dashboard, Profile, and Login. |
 
 ---
 
@@ -138,7 +138,7 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 
 ## 4. Verification & Health Check
 
-- **Mobile App Syntax Check:** 68 files in `app/src/` checked with `@babel/parser` — **0 syntax errors**.
+- **Mobile App Syntax Check:** 74 files in `app/src/` checked with `@babel/parser` — **0 syntax errors**.
 - **Backend Health Check:** Node.js syntax check passed (`node -c backend/index.js`) — **0 syntax errors**.
 - **Web Frontend Production Build:** `npm --prefix frontend run build` completed cleanly — **0 build errors**.
 
@@ -262,7 +262,7 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 
 ---
 
-## 5. Community & Farmers Forum Full Web Parity Upgrade (Phase 6)
+## 8. Community & Farmers Forum Full Web Parity Upgrade
 
 ### 1. Root Causes Addressed
 - **Post Card Opening Issue:** In `CommunityScreen.js`, posts previously opened an inline comments modal rather than a dedicated full post details screen, and card taps were swallowed or unhandled when clicking post body text or empty space.
@@ -273,7 +273,7 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 
 ---
 
-## 4. GramSathi AI, Community & Village Chat Enhancements (Phase 5)
+## 9. GramSathi AI, Community & Village Chat Enhancements
 
 ### 1. GramSathi AI – ChatGPT-Style Interface & Voice System
 - **Default Empty Chat:** When GramSathi AI opens, `sessionId` defaults to `null`. It never auto-opens the previous conversation, providing a fresh consultation prompt by default while preserving all previous sessions.
@@ -285,18 +285,17 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
   - Cross-platform Rename modal with text input and validation (`PUT /api/ai/chats/:id`).
   - Safe session deletion with confirmation dialog (`DELETE /api/ai/chats/:id`).
 - **Voice System with Backend Parity:**
-  - Integrated `expo-av` audio recording and `expo-speech` text-to-speech.
+  - Integrated `expo-audio` (primary for Expo SDK 58) with `expo-av` fallback (`app/src/utils/audioRecorder.js`) and `expo-speech` text-to-speech.
   - In-bar voice recorder with pulsing red indicator, live timer, cancel button, and send button.
-  - Audio streamed to backend `/api/ai/voice` with `audio_file`, `session_id`, and `language`.
-  - AI response automatically read aloud in the farmer's preferred language (Telugu, Hindi, English).
+  - Audio uploaded to backend `/api/ai/transcribe` (Groq Whisper `whisper-large-v3` with Google Speech fallback) returning recognized text in `en`, `te`, or `hi`.
+  - AI response automatically read aloud in the farmer's preferred language (`te-IN`, `hi-IN`, `en-IN`).
   - Speaker playback / stop toggle on all AI message bubbles.
 
 ### 2. Community Media Picker & Publishing Fix
 - **Separate Attachment Options:** Distinct triggers for Camera (`launchCameraAsync`), Gallery (`launchImageLibraryAsync`), and Files (`DocumentPicker.getDocumentAsync`).
 - **FormData Upload Fix (`Unsupported FormDataPart implementation`):**
   - Modern Expo strict fetch rejects React Native's legacy `{ uri, name, type }` FormData objects.
-  - Implemented `uploadWithProgress` in `app/src/services/api.js` using native `XMLHttpRequest` which delegates directly to React Native's native C++/Java networking module (`RCTNetworking`).
-  - Added `EXPO_PUBLIC_USE_RN_FETCH=true` in `app/.env`.
+  - Implemented `uploadWithProgress` and `upload` in `app/src/services/api.js` using native `XMLHttpRequest` which delegates directly to React Native's native C++/Java networking module (`RCTNetworking`), superseding the earlier `EXPO_PUBLIC_USE_RN_FETCH` toggle.
 - **Media Previews & Progress:** Thumbnail cards with removal buttons, upload progress indicator, duplicate submission guards (`disabled={uploading}`), and draft preservation if network fails.
 - **Backend Schema Parity:** Updated `backend/models/Post.js` enum to `['image', 'video', 'document', 'file']` and updated `backend/controllers/postController.js` to correctly categorize documents.
 - **Back Navigation Fix:** Clean navigation back via `navigation.goBack()` and `useFocusEffect` post reload in `CommunityScreen.js`.
@@ -314,7 +313,7 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 
 ---
 
-## 5. Workgroups Full-Stack Parity & Loading Fix (Phase 6)
+## 10. Workgroups Full-Stack Parity & Loading Fix
 
 ### 1. Root Cause of Missing Existing Groups
 - **The Problem:** The user's account (`Palle Vinay Reddy`, phone `9848118740`, `_id: 693ed010551b3fc7bf3abe3e`) belonged to 2 active workgroups:
@@ -386,7 +385,7 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 
 ---
 
-## 6. GramSathi AI Architecture & Groq Provider Integration
+## 11. GramSathi AI Architecture & Groq Provider Integration
 
 ### 1. Root Cause Analysis
 - **Hugging Face Serverless Deprecation / Payment Block:**
@@ -396,7 +395,7 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 ### 2. Provider-Independent Architecture & Groq Integration
 - **Groq API URL Resolution (Fixed):**
   - Resolved `Unknown request URL: POST /openai/v1/openai/v1/chat/completions` caused by the Groq SDK appending `/openai/v1/chat/completions` to a base_url already ending in `/openai/v1`.
-  - Built automatic base URL sanitization in `GroqEngine.__init__` normalizing endpoints to `https://api.groq.com`, ensuring exact request URL `https://api.groq.com/openai/v1/chat/completions`.
+  - Built automatic base URL sanitization in `GroqEngine.__init__` normalizing endpoints to `https://api.groq.com`, ensuring exact request URL `https://api.groq.com/openai/v1/chat/completions`. Passed explicit `httpx.Client` to avoid `proxies` keyword incompatibility on `httpx >= 0.28`.
 - **Model Verification & Real Production Models:**
   - Audited models on the active Groq account: identified that legacy `mixtral-8x7b-32768` and `gemma2-9b-it` were decommissioned by Groq (400), and `llama-3.3-70b-versatile` / `llama-3.1-8b-instant` returned 404 access restrictions.
   - Configured verified active production models: Primary `qwen/qwen3.8-27b` (exceptional multilingual Telugu, Hindi, and English accuracy) with verified fallbacks `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, and `allam-2-7b`, all verified with native JSON mode (`response_format={"type": "json_object"}`).
@@ -405,27 +404,27 @@ Following a comprehensive system audit comparing the mobile codebase (`app/`) ag
 - **Greeting & General Conversation Support:**
   - Added dedicated first-class `GREETING` and `GENERAL_CONVERSATION` intent classifications.
   - Supports "Hi", "Hello", "How are you?", "Namaste", "నమస్కారం", "What can you do?", "Help me", and contextual follow-ups ("My previous question was about rice. Tell me more.") without misclassifying into farming task actions.
-  - Verified 10/10 test cases in automated test suite across English, Telugu, and Hindi.
 
 ---
 
-## 7. Full Multilingual Translation Audit & Parity (Web & Mobile)
+## 12. Full Multilingual Translation Audit & Parity (Web & Mobile)
 
 ### 1. Translation Parity Audit
 - Audited `frontend/public/locales/` (`en`, `te`, `hi`) and `app/src/i18n/translations/` (`en.json`, `te.json`, `hi.json`).
-- Discovered and resolved:
-  - 156 missing `landing.*` English strings in `frontend/public/locales/en/translation.json` (extracted from defaults in `Landing.jsx`).
-  - 35 missing `village.*` keys (clipboard, starring, message actions, themes, audio recording).
-  - 6 missing `schemes.*` keys (`financial_benefit`, `about`, `important_timeline`, `application_window`, `disbursement_window`, `apply_official`).
-  - Missing `dashboard.work_groups` in Hindi translation.
-  - Missing `crop.new_exp`, `crop.remove`, `date.today`, `date.yesterday`.
-  - Missing `crops_list.nuvvlu` in English ("Sesame").
-  - Mobile missing keys: `gramsathi_ai.welcome`, `gramsathi_ai.voice_error`, `rent.calendar`.
-- Mobile screens refactored with `useTranslation()`:
-  - `app/src/screens/groups/CreateGroupScreen.js`: Group Name, Village, Daily Labor Rate, Objective, validation alerts, and completion actions fully localized.
-  - `app/src/screens/machinery/AddMachineScreen.js`: Category selector, Name & Model, Rate, Price Unit, Year, Specs, Terms, and success feedback fully localized.
-  - `app/src/screens/groups/GroupDetailsScreen.js`: Subtabs (Overview, Members, Work, Settlements, Reports), Analytics cards, Daily Work and Settlement actions, and Member Balance cards fully localized.
-- Both Web and Mobile have achieved **100% translation key parity** (0 missing keys across English, Telugu, and Hindi).
+- Automated parity & key synchronization via `scripts/i18n-tool.js` and `scripts/inject_screen_translations.js`.
+- Mobile screens refactored with `useTranslation()` (`app/src/hooks/useTranslation.js` backed by `app/src/context/I18nContext.js` and `expo-secure-store`).
+- Both Web and Mobile maintain synchronized translation dictionaries across English (`en`), Telugu (`te`), and Hindi (`hi`).
+
+---
+
+## 13. Human-in-the-Loop Confirmation & Conversation Context (Web & Mobile)
+
+- **Mandatory Parameter Validation (`ai/core/action_validator.py`)**: All data-modifying actions (`CROP_ADD`, `CROP_ADD_EXPENSE`, `CROP_SELL`, `MACHINERY_BOOK`, `COMMUNITY_CREATE_POST`, `GROUP_RECORD_WORK`, etc.) are validated before execution. Missing fields trigger `needs_info` follow-up questions while preserving already-extracted parameters.
+- **Persistent Context (`backend/models/AIChat.js`, `backend/controllers/aiController.js`)**: Chat sessions store `pending_action`, rolling `summary`, `context_facts`, and message-level `action` objects, passing the latest 15 messages as a token-aware context window.
+- **Confirmation Card UI (`GramSathiScreen.js` & `GramSathiFullScreen.jsx`)**:
+  - When all mandatory parameters are collected, AI returns `action.type === 'CONFIRMATION_REQUIRED'` with `pending_action`.
+  - Mobile renders a native Confirmation Card with `[Confirm]`, `[Edit]`, and `[Cancel]` buttons wired to `aiService.confirmAction` (`POST /api/ai/actions/confirm`) and `aiService.cancelAction` (`POST /api/ai/actions/cancel`).
+
 
 
 

@@ -226,12 +226,39 @@ const WeatherScreen = ({ navigation }) => {
     : null;
   const weatherIcon = currentWeather?.weather?.[0]?.icon || '01d';
 
+  const getWeatherConditionLabel = (condition, desc) => {
+    if (!condition) return desc || 'CLEAR SKY';
+    const c = String(condition).toLowerCase();
+    if (c.includes('clear')) return t('weather_ui.cond_clear', desc || 'Clear Sky');
+    if (c.includes('cloud')) return t('weather_ui.cond_clouds', desc || 'Cloudy');
+    if (c.includes('rain')) return t('weather_ui.cond_rain', desc || 'Rainy');
+    if (c.includes('thunder')) return t('weather_ui.cond_thunderstorm', desc || 'Thunderstorm');
+    if (c.includes('drizzle')) return t('weather_ui.cond_drizzle', desc || 'Light Drizzle');
+    if (c.includes('mist') || c.includes('fog')) return t('weather_ui.cond_mist', desc || 'Mist / Fog');
+    if (c.includes('haze')) return t('weather_ui.cond_haze', desc || 'Hazy');
+    return desc || condition;
+  };
+
+  const getStatusLabel = (status, defaultLabel) => {
+    if (status === 'favorable') return t('weather_ui.favorable', 'Favorable');
+    if (status === 'caution') return t('weather_ui.caution', 'Caution');
+    if (status === 'unfavorable') return t('weather_ui.unfavorable', 'Unfavorable');
+    return defaultLabel || status;
+  };
+
+  const formatDayHeaderLocalized = (header) => {
+    if (!header) return '';
+    return header
+      .replace(/TODAY/i, t('weather_ui.today', 'Today').toUpperCase())
+      .replace(/TOMORROW/i, t('weather_ui.tomorrow', 'Tomorrow').toUpperCase());
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor="#0284C7" />
       <Header
         title={t('dashboard.weather', 'Agri Weather')}
-        subtitle="Microclimate Observations & Agricultural Field Advisories"
+        subtitle={t('weather_ui.microclimate_subtitle', 'Microclimate Observations & Agricultural Field Advisories')}
         onBack={() => navigation.goBack()}
         style={{ backgroundColor: '#0284C7' }}
       />
@@ -280,7 +307,7 @@ const WeatherScreen = ({ navigation }) => {
                       : styles.previewPillText,
                   ]}
                 >
-                  {currentLocation.isFarmLocation ? 'My Farm' : 'Selected Location'}
+                  {currentLocation.isFarmLocation ? t('weather_ui.my_farm', 'My Farm') : t('weather_ui.selected_location', 'Selected Location')}
                 </Text>
               </View>
             </View>
@@ -299,7 +326,7 @@ const WeatherScreen = ({ navigation }) => {
               onPress={handleResetToFarmLocation}
             >
               <MaterialCommunityIcons name="home-outline" size={14} color="#15803D" />
-              <Text style={styles.resetToFarmText}>Reset to My Farm</Text>
+              <Text style={styles.resetToFarmText}>{t('weather_ui.reset_to_farm', 'Reset to My Farm')}</Text>
             </TouchableOpacity>
           ) : null}
 
@@ -309,7 +336,7 @@ const WeatherScreen = ({ navigation }) => {
           >
             <MaterialCommunityIcons name="magnify" size={15} color="#0369A1" />
             <Text style={styles.changeLocText}>
-              {searchOpen ? 'Close Search' : 'Change Location'}
+              {searchOpen ? t('weather_ui.close_search', 'Close Search') : t('weather_ui.change_location', 'Change Location')}
             </Text>
           </TouchableOpacity>
 
@@ -330,13 +357,13 @@ const WeatherScreen = ({ navigation }) => {
         {searchOpen ? (
           <View style={styles.searchPanel}>
             <Text style={styles.searchPanelHeading}>
-              Search Any Village, Town, Mandal or District
+              {t('weather_ui.search_location_heading', 'Search Any Village, Town, Mandal or District')}
             </Text>
             <View style={styles.searchInputRow}>
               <MaterialCommunityIcons name="magnify" size={18} color={colors.textSecondary} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Type village (e.g. Lingamvarigudem, Miryalaguda)..."
+                placeholder={t('weather_ui.search_location_placeholder', 'Type village (e.g. Lingamvarigudem, Miryalaguda)...')}
                 placeholderTextColor={colors.textMuted}
                 value={searchQuery}
                 onChangeText={handleLocationQueryChange}
@@ -361,7 +388,7 @@ const WeatherScreen = ({ navigation }) => {
             {searching ? (
               <View style={styles.searchingRow}>
                 <ActivityIndicator size="small" color="#059669" />
-                <Text style={styles.searchingText}>Finding matching villages & areas...</Text>
+                <Text style={styles.searchingText}>{t('weather_ui.finding_villages', 'Finding matching villages & areas...')}</Text>
               </View>
             ) : null}
 
@@ -388,7 +415,7 @@ const WeatherScreen = ({ navigation }) => {
                       </Text>
                     </View>
                     <View style={styles.viewWeatherBadge}>
-                      <Text style={styles.viewWeatherText}>View Weather</Text>
+                      <Text style={styles.viewWeatherText}>{t('weather_ui.view_weather', 'View Weather')}</Text>
                       <MaterialCommunityIcons name="chevron-right" size={14} color="#059669" />
                     </View>
                   </TouchableOpacity>
@@ -400,13 +427,13 @@ const WeatherScreen = ({ navigation }) => {
             {!searching && hasSearched && searchQuery.trim().length >= 2 && searchResults.length === 0 ? (
               <View style={styles.noResultsBox}>
                 <Text style={styles.noResultsText}>
-                  No locations found matching "{searchQuery}". Try typing your mandal, district or nearby town.
+                  {t('ui.no_results', 'No results found')} "{searchQuery}".
                 </Text>
               </View>
             ) : null}
 
             <Text style={styles.searchNote}>
-              Previewing another location is temporary and never changes your saved farm profile.
+              {t('weather_ui.search_preview_note', 'Previewing another location is temporary and never changes your saved farm profile.')}
             </Text>
           </View>
         ) : null}
@@ -425,7 +452,7 @@ const WeatherScreen = ({ navigation }) => {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
               <MaterialCommunityIcons name="alert-circle" size={22} color="#DC2626" />
               <View style={{ flex: 1 }}>
-                <Text style={styles.errorAlertTitle}>Weather Unavailable for this Location</Text>
+                <Text style={styles.errorAlertTitle}>{t('weather_ui.weather_unavailable_title', 'Weather Unavailable for this Location')}</Text>
                 <Text style={styles.errorAlertSubtitle}>{errorMessage}</Text>
               </View>
             </View>
@@ -433,7 +460,7 @@ const WeatherScreen = ({ navigation }) => {
               style={styles.errorResetBtn}
               onPress={handleResetToFarmLocation}
             >
-              <Text style={styles.errorResetText}>Reset to Farm</Text>
+              <Text style={styles.errorResetText}>{t('weather_ui.reset_to_farm', 'Reset to Farm')}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -451,11 +478,11 @@ const WeatherScreen = ({ navigation }) => {
               <View style={styles.heroTopRow}>
                 <View style={styles.liveStationBadge}>
                   <View style={styles.livePulseDot} />
-                  <Text style={styles.liveStationText}>Station Live Observation</Text>
+                  <Text style={styles.liveStationText}>{t('weather_ui.station_live_obs', 'Station Live Observation')}</Text>
                 </View>
 
                 {observationTime ? (
-                  <Text style={styles.heroTimeText}>Updated {observationTime}</Text>
+                  <Text style={styles.heroTimeText}>{t('weather_ui.updated', 'Updated')} {observationTime}</Text>
                 ) : null}
 
                 {currentWeather.coord?.lat ? (
@@ -470,10 +497,10 @@ const WeatherScreen = ({ navigation }) => {
                 <View>
                   <Text style={styles.heroTemp}>{currentTemp}°C</Text>
                   <Text style={styles.heroCondition}>
-                    {currentWeather.weather?.[0]?.description?.toUpperCase() || 'CLEAR SKY'}
+                    {getWeatherConditionLabel(currentWeather.weather?.[0]?.main, currentWeather.weather?.[0]?.description?.toUpperCase())}
                   </Text>
                   <Text style={styles.heroFeelsLike}>
-                    Feels like {feelsLikeTemp}°C • Min: {Math.round(currentWeather.main.temp_min)}° • Max: {Math.round(currentWeather.main.temp_max)}°
+                    {t('weather_ui.feels_like', 'Feels like')} {feelsLikeTemp}°C • {t('weather_ui.min_temp', 'Min')}: {Math.round(currentWeather.main.temp_min)}° • {t('weather_ui.max_temp', 'Max')}: {Math.round(currentWeather.main.temp_max)}°
                   </Text>
                 </View>
 
@@ -488,18 +515,18 @@ const WeatherScreen = ({ navigation }) => {
                 <View style={styles.quadrantBox}>
                   <View style={styles.quadrantHeader}>
                     <MaterialCommunityIcons name="water-percent" size={16} color="#6EE7B7" />
-                    <Text style={styles.quadrantLabel}>Humidity</Text>
+                    <Text style={styles.quadrantLabel}>{t('weather_ui.humidity', 'Humidity')}</Text>
                   </View>
                   <Text style={styles.quadrantValue}>{humidityVal}%</Text>
                   {dewPointVal !== null ? (
-                    <Text style={styles.quadrantSub}>Dew Pt: {dewPointVal}°C</Text>
+                    <Text style={styles.quadrantSub}>{t('weather_ui.dew_point', 'Dew Pt')}: {dewPointVal}°C</Text>
                   ) : null}
                 </View>
 
                 <View style={styles.quadrantBox}>
                   <View style={styles.quadrantHeader}>
                     <MaterialCommunityIcons name="weather-windy" size={16} color="#6EE7B7" />
-                    <Text style={styles.quadrantLabel}>Wind</Text>
+                    <Text style={styles.quadrantLabel}>{t('weather_ui.wind', 'Wind')}</Text>
                   </View>
                   <Text style={styles.quadrantValue}>{windSpeedVal} m/s</Text>
                   <Text style={styles.quadrantSub}>{windCompass} ({windKmH} km/h)</Text>
@@ -508,19 +535,19 @@ const WeatherScreen = ({ navigation }) => {
                 <View style={styles.quadrantBox}>
                   <View style={styles.quadrantHeader}>
                     <MaterialCommunityIcons name="weather-sunset-up" size={16} color="#FDE047" />
-                    <Text style={styles.quadrantLabel}>Sunrise</Text>
+                    <Text style={styles.quadrantLabel}>{t('weather_ui.sunrise', 'Sunrise')}</Text>
                   </View>
                   <Text style={styles.quadrantValue}>{sunriseTime}</Text>
-                  <Text style={styles.quadrantSub}>Local Dawn</Text>
+                  <Text style={styles.quadrantSub}>{t('weather_ui.local_dawn', 'Local Dawn')}</Text>
                 </View>
 
                 <View style={styles.quadrantBox}>
                   <View style={styles.quadrantHeader}>
                     <MaterialCommunityIcons name="weather-sunset-down" size={16} color="#FDBA74" />
-                    <Text style={styles.quadrantLabel}>Sunset</Text>
+                    <Text style={styles.quadrantLabel}>{t('weather_ui.sunset', 'Sunset')}</Text>
                   </View>
                   <Text style={styles.quadrantValue}>{sunsetTime}</Text>
-                  <Text style={styles.quadrantSub}>Local Dusk</Text>
+                  <Text style={styles.quadrantSub}>{t('weather_ui.local_dusk', 'Local Dusk')}</Text>
                 </View>
               </View>
             </View>
@@ -530,7 +557,7 @@ const WeatherScreen = ({ navigation }) => {
               <View style={styles.sectionHeaderRow}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View style={styles.sectionBar} />
-                  <Text style={styles.sectionTitle}>Field Operations Advisory</Text>
+                  <Text style={styles.sectionTitle}>{t('weather_ui.field_advisory_title', 'Field Operations Advisory')}</Text>
                 </View>
                 <View style={styles.recomSourceBadge}>
                   <MaterialCommunityIcons
@@ -544,7 +571,7 @@ const WeatherScreen = ({ navigation }) => {
                       { color: recomSource === 'gemini' ? '#7C3AED' : '#059669' },
                     ]}
                   >
-                    {recomSource === 'gemini' ? 'AI Optimized' : 'Agrometeorological Rules'}
+                    {recomSource === 'gemini' ? t('weather_ui.ai_optimized', 'AI Optimized') : t('weather_ui.agro_rules', 'Agrometeorological Rules')}
                   </Text>
                 </View>
               </View>
@@ -573,14 +600,14 @@ const WeatherScreen = ({ navigation }) => {
                         </View>
                         <View style={[styles.statusBadge, { backgroundColor: isFav ? '#DCFCE7' : isCaution ? '#FEF3C7' : '#FEE2E2' }]}>
                           <Text style={[styles.statusBadgeText, { color: statusColor }]}>
-                            {rec.statusLabel || rec.status}
+                            {getStatusLabel(rec.status, rec.statusLabel)}
                           </Text>
                         </View>
                       </View>
 
                       <Text style={styles.recomAdvice}>{rec.advice}</Text>
                       <Text style={styles.recomReason}>
-                        <Text style={{ fontWeight: '700' }}>Why: </Text>
+                        <Text style={{ fontWeight: '700' }}>{t('weather_ui.why', 'Why')}: </Text>
                         {rec.reason}
                       </Text>
 
@@ -588,19 +615,19 @@ const WeatherScreen = ({ navigation }) => {
                         <View style={styles.recomMetricsRow}>
                           {rec.metrics?.wind ? (
                             <View style={styles.metricPill}>
-                              <Text style={styles.metricPillText}>Wind: {rec.metrics.wind}</Text>
+                              <Text style={styles.metricPillText}>{t('weather_ui.wind', 'Wind')}: {rec.metrics.wind}</Text>
                             </View>
                           ) : null}
                           {rec.metrics?.rainChance || rec.metrics?.rainChance12h ? (
                             <View style={[styles.metricPill, { backgroundColor: '#EFF6FF' }]}>
                               <Text style={[styles.metricPillText, { color: '#1D4ED8' }]}>
-                                Rain: {rec.metrics.rainChance || rec.metrics.rainChance12h}
+                                {t('weather_ui.rain', 'Rain')}: {rec.metrics.rainChance || rec.metrics.rainChance12h}
                               </Text>
                             </View>
                           ) : null}
                           {rec.metrics?.temp ? (
                             <View style={styles.metricPill}>
-                              <Text style={styles.metricPillText}>Temp: {rec.metrics.temp}</Text>
+                              <Text style={styles.metricPillText}>{t('weather_ui.temp', 'Temp')}: {rec.metrics.temp}</Text>
                             </View>
                           ) : null}
                         </View>
@@ -623,16 +650,16 @@ const WeatherScreen = ({ navigation }) => {
               <View style={styles.sectionHeaderRow}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <MaterialCommunityIcons name="clock-time-four-outline" size={18} color="#0284C7" />
-                  <Text style={styles.sectionTitle}>Hourly Forecast Timeline</Text>
+                  <Text style={styles.sectionTitle}>{t('weather_ui.timeline_title', 'Hourly Forecast Timeline')}</Text>
                 </View>
-                <Text style={styles.timelineNote}>Local 24-Hour Format</Text>
+                <Text style={styles.timelineNote}>{t('weather_ui.local_24h', 'Local 24-Hour Format')}</Text>
               </View>
 
               {forecastGroups.map((group) => (
                 <View key={group.dateKey} style={styles.dayGroupContainer}>
                   <View style={styles.dayTransitionHeader}>
                     <MaterialCommunityIcons name="calendar-month-outline" size={14} color="#059669" />
-                    <Text style={styles.dayTransitionTitle}>{group.dayHeader}</Text>
+                    <Text style={styles.dayTransitionTitle}>{formatDayHeaderLocalized(group.dayHeader)}</Text>
                   </View>
 
                   <ScrollView
@@ -676,43 +703,43 @@ const WeatherScreen = ({ navigation }) => {
             <Card style={styles.atmosphericsCard}>
               <View style={styles.atmosphericsHeader}>
                 <MaterialCommunityIcons name="gauge" size={20} color="#0284C7" />
-                <Text style={styles.atmosphericsTitle}>Atmospherics & Air Observations</Text>
+                <Text style={styles.atmosphericsTitle}>{t('weather_ui.atmospherics_title', 'Atmospherics & Air Observations')}</Text>
               </View>
 
               <View style={styles.atmosphericsRow}>
-                <Text style={styles.atmosphericsLabel}>Wind Velocity</Text>
+                <Text style={styles.atmosphericsLabel}>{t('weather_ui.wind_velocity', 'Wind Velocity')}</Text>
                 <Text style={styles.atmosphericsVal}>{windSpeedVal} m/s ({windKmH} km/h)</Text>
               </View>
 
               <View style={styles.atmosphericsRow}>
-                <Text style={styles.atmosphericsLabel}>Wind Direction</Text>
+                <Text style={styles.atmosphericsLabel}>{t('weather_ui.wind_direction', 'Wind Direction')}</Text>
                 <Text style={styles.atmosphericsVal}>{windCompass} {windDeg !== undefined ? `(${windDeg}°)` : ''}</Text>
               </View>
 
               {windGustVal !== null ? (
                 <View style={styles.atmosphericsRow}>
-                  <Text style={styles.atmosphericsLabel}>Wind Gusts</Text>
+                  <Text style={styles.atmosphericsLabel}>{t('weather_ui.wind_gusts', 'Wind Gusts')}</Text>
                   <Text style={styles.atmosphericsVal}>{windGustVal} m/s</Text>
                 </View>
               ) : null}
 
               <View style={styles.atmosphericsRow}>
-                <Text style={styles.atmosphericsLabel}>Dew Point</Text>
+                <Text style={styles.atmosphericsLabel}>{t('weather_ui.dew_point', 'Dew Point')}</Text>
                 <Text style={styles.atmosphericsVal}>{dewPointVal !== null ? `${dewPointVal}°C` : '--'}</Text>
               </View>
 
               <View style={styles.atmosphericsRow}>
-                <Text style={styles.atmosphericsLabel}>Visibility</Text>
+                <Text style={styles.atmosphericsLabel}>{t('weather_ui.visibility', 'Visibility')}</Text>
                 <Text style={styles.atmosphericsVal}>{visibilityKm ? `${visibilityKm} km` : 'Clear'}</Text>
               </View>
 
               <View style={styles.atmosphericsRow}>
-                <Text style={styles.atmosphericsLabel}>Barometric Pressure</Text>
+                <Text style={styles.atmosphericsLabel}>{t('weather_ui.barometric_pressure', 'Barometric Pressure')}</Text>
                 <Text style={styles.atmosphericsVal}>{pressureVal} hPa</Text>
               </View>
 
               <View style={[styles.atmosphericsRow, { borderBottomWidth: 0 }]}>
-                <Text style={styles.atmosphericsLabel}>Cloud Coverage</Text>
+                <Text style={styles.atmosphericsLabel}>{t('weather_ui.cloud_coverage', 'Cloud Coverage')}</Text>
                 <Text style={styles.atmosphericsVal}>{cloudCoverVal}%</Text>
               </View>
             </Card>

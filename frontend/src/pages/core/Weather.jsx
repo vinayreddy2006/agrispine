@@ -777,11 +777,11 @@ const Weather = () => {
                                 {/* Visual Distinction: Farm vs Selected Location */}
                                 {currentLocation.isFarmLocation ? (
                                     <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full">
-                                        <Sparkles className="w-3 h-3 text-emerald-600" /> {t('dashboard.location', 'My Farm Location')}
+                                        <Sparkles className="w-3 h-3 text-emerald-600" /> {t('weather_ui.my_farm', 'My Farm')}
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded-full">
-                                        {t('dashboard.location', 'Selected Location')}
+                                        {t('weather_ui.selected_location', 'Selected Location')}
                                     </span>
                                 )}
                             </div>
@@ -800,7 +800,7 @@ const Weather = () => {
                                 className="px-3 py-2 text-xs font-bold rounded-xl text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-1.5 shadow-sm"
                                 title="Reset to your saved farm location"
                             >
-                                <Home className="w-3.5 h-3.5" /> {t('common.reset', 'Reset to My Farm')}
+                                <Home className="w-3.5 h-3.5" /> {t('weather_ui.reset_to_farm', 'Reset to My Farm')}
                             </button>
                         )}
 
@@ -809,7 +809,7 @@ const Weather = () => {
                             className="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5 shadow-sm"
                         >
                             <Search className="w-3.5 h-3.5 text-slate-500" />
-                            {searchOpen ? t('common.close', 'Close Search') : t('dashboard.location', 'Change Location')}
+                            {searchOpen ? t('weather_ui.close_search', 'Close Search') : t('weather_ui.change_location', 'Change Location')}
                         </button>
 
                         <button
@@ -828,7 +828,7 @@ const Weather = () => {
                     <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-200 dark:border-slate-700 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                <Search className="w-4 h-4 text-emerald-600" /> Search Any Village, Town, City, or District
+                                <Search className="w-4 h-4 text-emerald-600" /> {t('weather_ui.search_location_heading', 'Search Any Village, Town, City, or District')}
                             </h4>
                             <button onClick={() => setSearchOpen(false)} className="text-slate-400 hover:text-slate-600 p-1">
                                 <X className="w-4 h-4" />
@@ -843,7 +843,7 @@ const Weather = () => {
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => handleLocationQueryChange(e.target.value)}
-                                    placeholder="Type village, mandal or district (e.g. Lingamvarigudem, Miryalaguda, Warangal)..."
+                                    placeholder={t('weather_ui.search_location_placeholder', 'Type village, mandal or district (e.g. Lingamvarigudem, Miryalaguda, Warangal)...')}
                                     className="w-full !pl-11 pr-10 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition min-h-[44px]"
                                     autoFocus
                                 />
@@ -866,14 +866,14 @@ const Weather = () => {
                             {searching && (
                                 <div className="flex items-center gap-2 p-3 text-xs text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl">
                                     <div className="w-3.5 h-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Finding matching villages & areas...</span>
+                                    <span>{t('weather_ui.finding_villages', 'Finding matching villages & areas...')}</span>
                                 </div>
                             )}
 
                             {/* No results message */}
                             {!searching && searchHasSearched && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
                                 <div className="p-4 text-center text-xs text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
-                                    No locations found matching "{searchQuery}". Try typing your mandal, district or nearby town.
+                                    {t('ui.no_results', 'No results found')} "{searchQuery}".
                                 </div>
                             )}
 
@@ -898,7 +898,7 @@ const Weather = () => {
                                                 </div>
                                             </div>
                                             <span className="text-xs text-emerald-600 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5 flex-shrink-0">
-                                                <span>View Weather</span>
+                                                <span>{t('weather_ui.view_weather', 'View Weather')}</span>
                                                 <ChevronRight className="w-3.5 h-3.5" />
                                             </span>
                                         </button>
@@ -907,12 +907,12 @@ const Weather = () => {
                             )}
 
                             <div className="flex items-center justify-between pt-2 text-xs text-slate-500">
-                                <span className="italic text-[11px]">Previewing another location is temporary and never changes your saved farm profile.</span>
+                                <span className="italic text-[11px]">{t('weather_ui.search_preview_note', 'Previewing another location is temporary and never changes your saved farm profile.')}</span>
                                 <button
                                     onClick={handleUseDeviceLocation}
                                     className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 flex-shrink-0"
                                 >
-                                    <Navigation className="w-3.5 h-3.5" /> Use Current Device GPS
+                                    <Navigation className="w-3.5 h-3.5" /> {t('weather_ui.device_gps', 'Use Current Device GPS')}
                                 </button>
                             </div>
                         </div>
@@ -926,7 +926,7 @@ const Weather = () => {
                     <div className="flex items-center gap-3">
                         <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-500" />
                         <div>
-                            <p className="font-bold">Weather Unavailable for this Location</p>
+                            <p className="font-bold">{t('weather_ui.weather_unavailable_title', 'Weather Unavailable for this Location')}</p>
                             <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{errorMessage}</p>
                         </div>
                     </div>
@@ -934,7 +934,7 @@ const Weather = () => {
                         onClick={handleResetToFarmLocation}
                         className="px-3 py-1.5 bg-red-100 dark:bg-red-900 hover:bg-red-200 text-red-800 dark:text-red-200 rounded-lg text-xs font-bold transition whitespace-nowrap"
                     >
-                        Reset to Farm
+                        {t('weather_ui.reset_to_farm', 'Reset to Farm')}
                     </button>
                 </div>
             )}
@@ -950,11 +950,11 @@ const Weather = () => {
                             <div className="flex items-center gap-2">
                                 <span className="bg-black/25 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 border border-white/10">
                                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                                    Station Live Observation
+                                    {t('weather_ui.station_live_obs', 'Station Live Observation')}
                                 </span>
                                 {observationTime && (
                                     <span className="text-xs text-emerald-100/90 font-medium bg-black/20 px-2.5 py-1 rounded-full border border-white/5">
-                                        Updated {observationTime}
+                                        {t('weather_ui.updated', 'Updated')} {observationTime}
                                     </span>
                                 )}
                             </div>
@@ -977,10 +977,10 @@ const Weather = () => {
                                     {currentWeather.weather?.[0]?.description || 'Clear Sky'}
                                 </p>
                                 <p className="text-sm text-emerald-100/90 mt-1 font-medium">
-                                    Feels like <span className="font-bold text-white">{feelsLikeTemp}°C</span>
+                                    {t('weather_ui.feels_like', 'Feels like')} <span className="font-bold text-white">{feelsLikeTemp}°C</span>
                                     {currentWeather.main.temp_min !== currentWeather.main.temp_max && (
                                         <span className="ml-2 text-xs opacity-75">
-                                            ({t('weather_ui.low_temp', 'Min')}: {Math.round(currentWeather.main.temp_min)}° • {t('weather_ui.high_temp', 'Max')}: {Math.round(currentWeather.main.temp_max)}°)
+                                            ({t('weather_ui.min_temp', 'Min')}: {Math.round(currentWeather.main.temp_min)}° • {t('weather_ui.max_temp', 'Max')}: {Math.round(currentWeather.main.temp_max)}°)
                                         </span>
                                     )}
                                 </p>
@@ -994,7 +994,7 @@ const Weather = () => {
                                     </span>
                                     <span className="font-extrabold text-xl mt-1">{humidityVal}%</span>
                                     {dewPointVal !== null && (
-                                        <span className="text-[10px] text-emerald-200/80 font-medium mt-0.5">Dew Pt: {dewPointVal}°C</span>
+                                        <span className="text-[10px] text-emerald-200/80 font-medium mt-0.5">{t('weather_ui.dew_point', 'Dew Pt')}: {dewPointVal}°C</span>
                                     )}
                                 </div>
 
@@ -1008,18 +1008,18 @@ const Weather = () => {
 
                                 <div className="bg-black/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 flex flex-col justify-between min-w-[130px]">
                                     <span className="text-emerald-100/80 text-xs font-medium flex items-center gap-1.5">
-                                        <Sunrise className="w-3.5 h-3.5 text-amber-300" /> {t('weather_ui.high_temp', 'Sunrise')}
+                                        <Sunrise className="w-3.5 h-3.5 text-amber-300" /> {t('weather_ui.sunrise', 'Sunrise')}
                                     </span>
                                     <span className="font-extrabold text-xl mt-1">{sunriseTime}</span>
-                                    <span className="text-[10px] text-emerald-200/80 font-medium mt-0.5">Local Dawn</span>
+                                    <span className="text-[10px] text-emerald-200/80 font-medium mt-0.5">{t('weather_ui.local_dawn', 'Local Dawn')}</span>
                                 </div>
 
                                 <div className="bg-black/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 flex flex-col justify-between min-w-[130px]">
                                     <span className="text-emerald-100/80 text-xs font-medium flex items-center gap-1.5">
-                                        <Sunset className="w-3.5 h-3.5 text-orange-300" /> {t('weather_ui.low_temp', 'Sunset')}
+                                        <Sunset className="w-3.5 h-3.5 text-orange-300" /> {t('weather_ui.sunset', 'Sunset')}
                                     </span>
                                     <span className="font-extrabold text-xl mt-1">{sunsetTime}</span>
-                                    <span className="text-[10px] text-emerald-200/80 font-medium mt-0.5">Local Dusk</span>
+                                    <span className="text-[10px] text-emerald-200/80 font-medium mt-0.5">{t('weather_ui.local_dusk', 'Local Dusk')}</span>
                                 </div>
                             </div>
                         </div>
@@ -1041,11 +1041,11 @@ const Weather = () => {
                     <div className="flex items-center gap-2 text-xs">
                         {recomSource === 'gemini' ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                                <Sparkles className="w-3.5 h-3.5 text-purple-600" /> AI-Optimized (Gemini)
+                                <Sparkles className="w-3.5 h-3.5 text-purple-600" /> {t('weather_ui.ai_optimized', 'AI-Optimized (Gemini)')}
                             </span>
                         ) : (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Agrometeorological Rules Engine
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> {t('weather_ui.agro_rules', 'Agrometeorological Rules Engine')}
                             </span>
                         )}
                     </div>
@@ -1096,7 +1096,7 @@ const Weather = () => {
                                                 {rec.activity}
                                             </h4>
                                             <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${badgeClass} uppercase tracking-wider`}>
-                                                {rec.statusLabel || rec.status}
+                                                {rec.status === 'favorable' ? t('weather_ui.favorable', 'Favorable') : rec.status === 'caution' ? t('weather_ui.caution', 'Caution') : rec.status === 'unfavorable' ? t('weather_ui.unfavorable', 'Unfavorable') : (rec.statusLabel || rec.status)}
                                             </span>
                                         </div>
 
@@ -1107,7 +1107,7 @@ const Weather = () => {
 
                                         {/* Underlying Reason */}
                                         <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                                            <span className="font-semibold text-slate-700 dark:text-slate-300">Why:</span> {rec.reason}
+                                            <span className="font-semibold text-slate-700 dark:text-slate-300">{t('weather_ui.why', 'Why')}:</span> {rec.reason}
                                         </p>
                                     </div>
 
@@ -1116,17 +1116,17 @@ const Weather = () => {
                                         <div className="flex items-center gap-2 flex-wrap">
                                             {rec.metrics?.wind && (
                                                 <span className="bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                                                    Wind: {rec.metrics.wind}
+                                                    {t('weather_ui.wind', 'Wind')}: {rec.metrics.wind}
                                                 </span>
                                             )}
-                                            {rec.metrics?.rainChance12h && (
-                                                <span className="bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 font-semibold">
-                                                    Rain: {rec.metrics.rainChance12h}
+                                            {(rec.metrics?.rainChance || rec.metrics?.rainChance12h) && (
+                                                <span className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
+                                                    {t('weather_ui.rain', 'Rain')}: {rec.metrics?.rainChance || rec.metrics?.rainChance12h}
                                                 </span>
                                             )}
                                             {rec.metrics?.temp && (
                                                 <span className="bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                                                    Temp: {rec.metrics.temp}
+                                                    {t('weather_ui.temp', 'Temp')}: {rec.metrics.temp}
                                                 </span>
                                             )}
                                         </div>
@@ -1150,14 +1150,14 @@ const Weather = () => {
                     <div className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-emerald-600" />
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                            Forecast Timeline (24–48 Hours)
+                            {t('weather_ui.timeline_title', 'Forecast Timeline (24–48 Hours)')}
                         </h3>
                     </div>
-                    <span className="text-xs text-slate-500 font-medium">Local 24-Hour Format</span>
+                    <span className="text-xs text-slate-500 font-medium">{t('weather_ui.local_24h', 'Local 24-Hour Format')}</span>
                 </div>
 
                 {forecastGroups.length === 0 ? (
-                    <Card className="p-8 text-center text-slate-500">No forecast data available.</Card>
+                    <Card className="p-8 text-center text-slate-500">{t('ui.no_records_found', 'No forecast data available.')}</Card>
                 ) : (
                     <div className="space-y-5">
                         {forecastGroups.map((group, groupIdx) => (
@@ -1166,7 +1166,7 @@ const Weather = () => {
                                 <div className="flex items-center gap-3">
                                     <div className="px-3.5 py-1 rounded-full text-xs font-bold bg-slate-900 text-white dark:bg-slate-700 shadow-sm flex items-center gap-1.5">
                                         <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-                                        {group.dayHeader}
+                                        {group.dayHeader.replace(/TODAY/i, t('weather_ui.today', 'Today').toUpperCase()).replace(/TOMORROW/i, t('weather_ui.tomorrow', 'Tomorrow').toUpperCase())}
                                     </div>
                                     <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
                                 </div>
@@ -1269,7 +1269,7 @@ const Weather = () => {
                     <div>
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                <Gauge className="w-5 h-5 text-emerald-600" /> Atmospherics & Air
+                                <Gauge className="w-5 h-5 text-emerald-600" /> {t('weather_ui.atmospherics_title', 'Atmospherics & Air Observations')}
                             </h3>
                             <span className="text-[11px] font-semibold text-slate-400">Current Plan</span>
                         </div>
@@ -1277,7 +1277,7 @@ const Weather = () => {
                         <div className="space-y-3.5 text-sm">
                             <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-700">
                                 <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                    <Wind className="w-4 h-4 text-emerald-600" /> Wind Velocity
+                                    <Wind className="w-4 h-4 text-emerald-600" /> {t('weather_ui.wind_velocity', 'Wind Velocity')}
                                 </span>
                                 <span className="font-bold text-slate-800 dark:text-white">
                                     {windSpeedVal} m/s ({windKmH} km/h)
@@ -1286,7 +1286,7 @@ const Weather = () => {
 
                             <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-700">
                                 <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                    <Compass className="w-4 h-4 text-emerald-600" /> Wind Direction
+                                    <Compass className="w-4 h-4 text-emerald-600" /> {t('weather_ui.wind_direction', 'Wind Direction')}
                                 </span>
                                 <span className="font-bold text-slate-800 dark:text-white">
                                     {windCompass} {windDeg !== undefined ? `(${windDeg}°)` : ''}
@@ -1296,7 +1296,7 @@ const Weather = () => {
                             {windGustVal !== null && (
                                 <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-700">
                                     <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                        <Wind className="w-4 h-4 text-amber-500" /> Wind Gusts
+                                        <Wind className="w-4 h-4 text-amber-500" /> {t('weather_ui.wind_gusts', 'Wind Gusts')}
                                     </span>
                                     <span className="font-bold text-slate-800 dark:text-white">
                                         {windGustVal} m/s
@@ -1306,7 +1306,7 @@ const Weather = () => {
 
                             <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-700">
                                 <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                    <Droplets className="w-4 h-4 text-emerald-600" /> Dew Point
+                                    <Droplets className="w-4 h-4 text-emerald-600" /> {t('weather_ui.dew_point', 'Dew Point')}
                                 </span>
                                 <span className="font-bold text-slate-800 dark:text-white">
                                     {dewPointVal !== null ? `${dewPointVal}°C` : '--'}
@@ -1315,7 +1315,7 @@ const Weather = () => {
 
                             <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-700">
                                 <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                    <Eye className="w-4 h-4 text-emerald-600" /> Visibility
+                                    <Eye className="w-4 h-4 text-emerald-600" /> {t('weather_ui.visibility', 'Visibility')}
                                 </span>
                                 <span className="font-bold text-slate-800 dark:text-white">
                                     {visibilityKm ? `${visibilityKm} km` : 'Standard'}
@@ -1324,7 +1324,7 @@ const Weather = () => {
 
                             <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-700">
                                 <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                    <Gauge className="w-4 h-4 text-emerald-600" /> Barometric Pressure
+                                    <Gauge className="w-4 h-4 text-emerald-600" /> {t('weather_ui.barometric_pressure', 'Barometric Pressure')}
                                 </span>
                                 <span className="font-bold text-slate-800 dark:text-white">
                                     {pressureVal} hPa
@@ -1333,7 +1333,7 @@ const Weather = () => {
 
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                    <CloudSun className="w-4 h-4 text-emerald-600" /> Cloud Coverage
+                                    <CloudSun className="w-4 h-4 text-emerald-600" /> {t('weather_ui.cloud_coverage', 'Cloud Coverage')}
                                 </span>
                                 <span className="font-bold text-slate-800 dark:text-white">
                                     {cloudCoverVal}%

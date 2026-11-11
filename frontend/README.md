@@ -1,16 +1,31 @@
-# React + Vite
+# AgriSpine Web Application (`frontend/`)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 + Vite SPA serving Farmers, Machinery Providers, and Commodity Buyers on desktop and mobile browsers.
 
-Currently, two official plugins are available:
+## Tech Stack
+- **Framework**: React 19 (`^19.2.0`) + Vite 7 (`^7.2.4`)
+- **Routing**: `react-router-dom` v7 (`src/App.jsx`)
+- **Styling**: Tailwind CSS (`tailwind.config.js`) with Dark Mode (`ThemeContext.jsx`)
+- **Networking**: Axios (`src/utils/api.js` with `auth-token` injection, 25s timeout, 401 draft preservation) + Socket.IO Client (`src/utils/socket.js`)
+- **Localization (i18n)**: `i18next` + `react-i18next` supporting `en`, `hi`, and `te` (`public/locales/{en,hi,te}/translation.json`)
+- **Charts & Exports**: Recharts, `jspdf` / `jspdf-autotable`, `xlsx`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Environment Variables (`frontend/.env`)
+```env
+VITE_API_BASE_URL=http://localhost:5000
+VITE_WEATHER_API_KEY=your_openweathermap_api_key
+```
+*(Note: `VITE_API_BASE_URL` defaults to `http://localhost:5000` in `src/utils/api.js`; `VITE_WEATHER_API_KEY` falls back to a configured key in `src/pages/core/Weather.jsx` if unset.)*
 
-## React Compiler
+## Scripts
+```bash
+npm install
+npm run dev      # Starts Vite dev server at http://localhost:5173
+npm run build    # Builds production bundle into dist/
+npm run lint     # Runs ESLint across src/
+npm run preview  # Previews the production build locally
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Key Standards & Guidelines
+- UI/UX compliance must follow `../docs/UX_STANDARDS.md` using reusable primitives in `src/components/ui/`.
+- Translation dictionaries are synchronized with mobile (`../app/src/i18n/translations/`) via `../scripts/i18n-tool.js`.

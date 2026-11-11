@@ -3,6 +3,7 @@ import FormData from "form-data";
 import User from "../models/User.js";
 import CropCycle from "../models/CropCycle.js";
 import Machine from "../models/Machine.js";
+import WorkGroup from "../models/WorkGroup.js";
 import Conversation from "../models/Conversation.js";
 import AIChat from "../models/AIChat.js";
 
@@ -43,6 +44,23 @@ export const getUserContext = async (userId) => {
         
         const cropCount = await CropCycle.countDocuments({ user: userId });
         const machineCount = await Machine.countDocuments({ owner: userId });
+        const activeGroups = await WorkGroup.find({
+            $or: [
+                { createdBy: userId },
+                { admins: userId },
+                { "members.user": userId }
+            ],
+            status: "active"
+        }).select("name village members");
+
+        const workGroups = activeGroups.map((g) => ({
+            id: g._id,
+            name: g.name,
+            village: g.village || "",
+            memberCount: Array.isArray(g.members)
+                ? g.members.filter((m) => m.status === "active").length
+                : 0
+        }));
 
         return {
             _id: user._id,
@@ -56,9 +74,11 @@ export const getUserContext = async (userId) => {
             mainCrops: user.mainCrops,
             farmingStyle: user.farmingStyle,
             preferredLanguage: user.preferredLanguage,
+            workGroups,
             stats: {
                 totalCrops: cropCount,
-                totalMachines: machineCount
+                totalMachines: machineCount,
+                totalWorkGroups: workGroups.length
             }
         };
     } catch (e) {
@@ -242,4 +262,35 @@ export const findMessengerConversations = async (userId, name, type) => {
         }
     }
     return matches;
+};
+
+// Forward Confirmed Action Execution to FastAPI
+export const forwardActionExecuteToFastAPI = async (payload, authToken) => {
+    const candidateEndpoints = [
+        `${cleanAiUrl}/api/ai/action/execute`,
+        `http://127.0.0.1:8000/api/ai/action/execute`,
+        `http://localhost:8000/api/ai/action/execute`
+    ];
+    const uniqueEndpoints = [...new Set(candidateEndpoints)];
+    let lastError = null;
+
+    for (const endpoint of uniqueEndpoints) {
+        try {
+            console.log(`[AI-SERVICE] Executing confirmed action via AI Service at: ${endpoint}`);
+            const response = await axios.post(endpoint, payload, {
+                headers: { "auth-token": authToken },
+                timeout: 10000
+            });
+            return { success: true, data: response.data };
+        } catch (err) {
+            lastError = err;
+        }
+    }
+    return {
+        success: false,
+        error: lastError?.message || "ExecutionFailed",
+        data: {
+            reply: `Failed to execute action on AI service: ${lastError?.message}`
+        }
+    };
 };

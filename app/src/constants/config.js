@@ -108,6 +108,8 @@ export const API_ENDPOINTS = {
   AI_CHAT_SEND: '/api/ai/chat',
   AI_VOICE: '/api/ai/voice',
   AI_TRANSCRIBE: '/api/ai/transcribe',
+  AI_CONFIRM_ACTION: '/api/ai/actions/confirm',
+  AI_CANCEL_ACTION: '/api/ai/actions/cancel',
   AI_WEATHER_ADVISORY: '/api/ai/weather-recommendations',
 
   // Notifications

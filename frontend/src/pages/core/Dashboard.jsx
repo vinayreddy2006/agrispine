@@ -234,7 +234,7 @@ const Dashboard = () => {
   return (
     <div className="w-full">
       <PageHeader 
-        title="AgriSpine"
+        title={t('common.agrispine', 'AgriSpine')}
         icon={Sprout}
         showBack={false}
         rightActions={

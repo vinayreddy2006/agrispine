@@ -3,6 +3,7 @@ import json
 import time
 import random
 import logging
+import httpx
 from typing import List
 from schemas.chat import ChatMessage
 from core.config import settings
@@ -47,10 +48,14 @@ class GroqEngine(AIEngine):
         self.temperature = temperature if temperature is not None else float(settings.AI_TEMPERATURE)
         self.max_retries = int(settings.AI_MAX_RETRIES)
 
+        # Pass custom httpx client to bypass httpx >=0.28 'proxies' incompatibility in older groq SDK
+        http_client = httpx.Client(timeout=self.timeout)
+
         self.client = Groq(
             api_key=api_key,
             base_url=clean_base_url,
-            timeout=self.timeout
+            timeout=self.timeout,
+            http_client=http_client
         )
 
         # Assemble unique ordered list of models (Primary followed by Fallbacks)

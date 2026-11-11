@@ -114,6 +114,25 @@ export const aiService = {
     }
   },
 
+  // Confirm pending action
+  confirmAction: async ({ sessionId, actionId, overrides, language = 'en' }) => {
+    return await api.post(API_ENDPOINTS.AI_CONFIRM_ACTION, {
+      session_id: sessionId,
+      action_id: actionId,
+      overrides,
+      language,
+    });
+  },
+
+  // Cancel pending action
+  cancelAction: async ({ sessionId, actionId, language = 'en' }) => {
+    return await api.post(API_ENDPOINTS.AI_CANCEL_ACTION, {
+      session_id: sessionId,
+      action_id: actionId,
+      language,
+    });
+  },
+
   // Get agricultural weather recommendations
   getWeatherAdvisory: async (weatherData) => {
     return await api.post(API_ENDPOINTS.AI_WEATHER_ADVISORY, weatherData);

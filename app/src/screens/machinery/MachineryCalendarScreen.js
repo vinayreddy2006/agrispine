@@ -183,35 +183,35 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
       case 'accepted':
       case 'confirmed':
         return {
-          label: 'Confirmed',
+          label: t('calendar.confirmed', 'Confirmed'),
           color: '#10B981',
           bg: '#DCFCE7',
           dot: '#10B981',
         };
       case 'completed':
         return {
-          label: 'Completed',
+          label: t('calendar.completed', 'Completed'),
           color: '#3B82F6',
           bg: '#DBEAFE',
           dot: '#3B82F6',
         };
       case 'rejected':
         return {
-          label: 'Rejected',
+          label: t('calendar.rejected', 'Rejected'),
           color: '#EF4444',
           bg: '#FEE2E2',
           dot: '#EF4444',
         };
       case 'cancelled':
         return {
-          label: 'Cancelled',
+          label: t('calendar.cancelled', 'Cancelled'),
           color: '#64748B',
           bg: '#F1F5F9',
           dot: '#94A3B8',
         };
       default:
         return {
-          label: 'Pending',
+          label: t('calendar.pending', 'Pending'),
           color: '#D97706',
           bg: '#FEF3C7',
           dot: '#F59E0B',
@@ -233,8 +233,8 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
       <Header
-        title={t('rent.calendar', 'Machinery Calendar')}
-        subtitle="Manage Fleet Rentals & Operational Schedules"
+        title={t('machinery_ui.calendar_title', 'Machinery Rental Calendar')}
+        subtitle={t('calendar.equipment_schedule', 'Manage Fleet Rentals & Operational Schedules')}
         onBack={() => navigation.goBack()}
       />
 
@@ -255,7 +255,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
               activeTab === 'renter' && styles.tabTextActive,
             ]}
           >
-            My Bookings ({renterBookings.length})
+            {t('machinery_ui.my_bookings_title', 'My Bookings')} ({renterBookings.length})
           </Text>
         </TouchableOpacity>
 
@@ -274,7 +274,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
               activeTab === 'owner' && styles.tabTextActive,
             ]}
           >
-            Owner Requests ({ownerBookings.length})
+            {t('machinery_ui.my_fleet_title', 'Owner Requests')} ({ownerBookings.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -310,12 +310,12 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                   </View>
                   <View>
                     <Text style={styles.monthYearTitle}>
-                      {MONTH_NAMES[month]} {year}
+                      {t('months.' + MONTH_NAMES[month].toLowerCase(), MONTH_NAMES[month])} {year}
                     </Text>
                     <Text style={styles.scheduleSubtitle}>
                       {activeTab === 'owner'
-                        ? 'Equipment bookings on your fleet'
-                        : 'Your farm machinery schedule'}
+                        ? t('calendar.equipment_schedule', 'Equipment bookings on your fleet')
+                        : t('calendar.personal_schedule', 'Your farm machinery schedule')}
                     </Text>
                   </View>
                 </View>
@@ -337,7 +337,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                     style={styles.todayBtn}
                     onPress={handleGoToday}
                   >
-                    <Text style={styles.todayBtnText}>Today</Text>
+                    <Text style={styles.todayBtnText}>{t('calendar.today', 'Today')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -357,7 +357,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
               <View style={styles.weekdaysRow}>
                 {WEEKDAYS.map((day) => (
                   <Text key={day} style={styles.weekdayLabel}>
-                    {day}
+                    {t('calendar.' + day.toLowerCase(), day)}
                   </Text>
                 ))}
               </View>
@@ -438,15 +438,19 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
               <View style={styles.legendRow}>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-                  <Text style={styles.legendText}>Pending</Text>
+                  <Text style={styles.legendText}>{t('calendar.pending', 'Pending')}</Text>
                 </View>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
-                  <Text style={styles.legendText}>Confirmed</Text>
+                  <Text style={styles.legendText}>{t('calendar.confirmed', 'Confirmed')}</Text>
                 </View>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-                  <Text style={styles.legendText}>Completed</Text>
+                  <Text style={styles.legendText}>{t('calendar.completed', 'Completed')}</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#64748B' }]} />
+                  <Text style={styles.legendText}>{t('calendar.cancelled', 'Cancelled')}</Text>
                 </View>
               </View>
             </Card>
@@ -457,7 +461,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                 <Text style={styles.dateHeading}>{selectedDateFormatted}</Text>
                 <Text style={styles.dateSubheading}>
                   {selectedDayBookings.length}{' '}
-                  {selectedDayBookings.length === 1 ? 'booking' : 'bookings'} on this date
+                  {selectedDayBookings.length === 1 ? t('calendar.booking_scheduled', 'booking') : t('calendar.bookings_scheduled', 'bookings')}
                 </Text>
               </View>
             </View>
@@ -466,13 +470,13 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
             {selectedDayBookings.length === 0 ? (
               <EmptyState
                 icon="calendar-blank-outline"
-                title="No Bookings on this Date"
+                title={t('calendar.no_bookings_date', 'No Bookings on this Date')}
                 description={
                   activeTab === 'owner'
-                    ? 'None of your farm equipment has bookings scheduled for this date.'
-                    : 'You do not have any machine rental bookings on this date.'
+                    ? t('calendar.equipment_schedule', 'None of your farm equipment has bookings scheduled for this date.')
+                    : t('calendar.no_bookings_date', 'You do not have any machine rental bookings on this date.')
                 }
-                actionTitle={activeTab === 'renter' ? 'Browse Machinery' : undefined}
+                actionTitle={activeTab === 'renter' ? t('machinery_ui.title', 'Browse Machinery') : undefined}
                 onAction={
                   activeTab === 'renter'
                     ? () => navigation.navigate('MachineryBrowse')
@@ -525,10 +529,10 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                         </View>
 
                         <Text style={styles.taskLabel}>
-                          🌾 Service: {taskName}
+                          🌾 {t('calendar.service_label', 'Service')}: {taskName}
                         </Text>
                         <Text style={styles.rateLabel}>
-                          Rate: {formatCurrency(taskPrice)}/{taskUnit} • {booking.duration || 1} {taskUnit}(s)
+                          {t('calendar.rate', 'Rate')}: {formatCurrency(taskPrice)}/{taskUnit} • {booking.duration || 1} {taskUnit}(s)
                         </Text>
                       </View>
                     </View>
@@ -543,8 +547,8 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                         />
                         <View>
                           <Text style={styles.otherPartyName}>
-                            {activeTab === 'owner' ? 'Renter:' : 'Owner:'}{' '}
-                            {otherParty.name || 'Local Farmer'}
+                            {activeTab === 'owner' ? `${t('calendar.renter_label', 'Renter')}: ` : `${t('calendar.owner_label', 'Owner')}: `}
+                            {otherParty.name || t('common.farmer', 'Local Farmer')}
                           </Text>
                           <Text style={styles.otherPartyLocation}>
                             {otherParty.village ? `📍 ${otherParty.village}` : 'Telangana'}
@@ -553,7 +557,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                       </View>
 
                       <View style={styles.totalCol}>
-                        <Text style={styles.totalLabel}>Total Cost</Text>
+                        <Text style={styles.totalLabel}>{t('calendar.total', 'Total Cost')}</Text>
                         <Text style={styles.totalValue}>
                           {formatCurrency(booking.totalAmount || taskPrice * (booking.duration || 1))}
                         </Text>
@@ -573,7 +577,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                             size={16}
                             color={colors.primary}
                           />
-                          <Text style={styles.actionContactText}>Call</Text>
+                          <Text style={styles.actionContactText}>{t('machinery_ui.call_owner', 'Call')}</Text>
                         </TouchableOpacity>
                       ) : null}
 
@@ -592,7 +596,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                           size={16}
                           color={colors.primary}
                         />
-                        <Text style={styles.actionContactText}>Message</Text>
+                        <Text style={styles.actionContactText}>{t('machinery_ui.message_owner', 'Message')}</Text>
                       </TouchableOpacity>
 
                       {/* Owner Status Actions */}
@@ -605,7 +609,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                             }
                             disabled={updatingId === booking._id}
                           >
-                            <Text style={styles.acceptBtnText}>Accept</Text>
+                            <Text style={styles.acceptBtnText}>{t('calendar.accept_request', 'Accept')}</Text>
                           </TouchableOpacity>
 
                           <TouchableOpacity
@@ -615,7 +619,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                             }
                             disabled={updatingId === booking._id}
                           >
-                            <Text style={styles.rejectBtnText}>Reject</Text>
+                            <Text style={styles.rejectBtnText}>{t('calendar.reject_request', 'Reject')}</Text>
                           </TouchableOpacity>
                         </View>
                       ) : null}
@@ -630,7 +634,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                             }
                             disabled={updatingId === booking._id}
                           >
-                            <Text style={styles.completeBtnText}>Mark Completed</Text>
+                            <Text style={styles.completeBtnText}>{t('calendar.mark_completed', 'Mark Completed')}</Text>
                           </TouchableOpacity>
                         ) : null}
 
@@ -642,7 +646,7 @@ const MachineryCalendarScreen = ({ navigation, route }) => {
                             onPress={() => handleCancelBooking(booking._id)}
                             disabled={updatingId === booking._id}
                           >
-                            <Text style={styles.cancelBtnText}>Cancel</Text>
+                            <Text style={styles.cancelBtnText}>{t('common.cancel', 'Cancel')}</Text>
                           </TouchableOpacity>
                         ) : null}
                     </View>

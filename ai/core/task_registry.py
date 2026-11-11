@@ -3,10 +3,10 @@ from typing import Dict, Callable
 # Import Modular Agents
 from .agents.crop_agent import execute_add_crop, execute_update_crop, execute_delete_crop, execute_open_crop, execute_sell_crop
 from .agents.expense_agent import execute_add_expense, execute_delete_expense
-from .agents.machinery_agent import execute_search_machinery, execute_open_machinery, execute_book_machinery, execute_cancel_booking
+from .agents.machinery_agent import execute_search_machinery, execute_open_machinery, execute_book_machinery, execute_cancel_booking, execute_my_bookings
 from .agents.messenger_agent import execute_messenger_send, execute_messenger_open, execute_clear_chat
 from .agents.community_agent import execute_create_post, execute_reply_post, execute_create_poll, execute_vote_poll
-from .agents.market_agent import execute_market_toggle_listing, execute_market_view_listings
+from .agents.market_agent import execute_market_toggle_listing, execute_market_view_listings, execute_get_mandi_rates, execute_get_schemes
 from .agents.weather_agent import execute_get_weather
 from .agents.group_agent import (
     execute_group_create,
@@ -42,6 +42,7 @@ TASK_REGISTRY: Dict[str, Callable] = {
     "MACHINERY_OPEN": execute_open_machinery,
     "MACHINERY_BOOK": execute_book_machinery,
     "MACHINERY_CANCEL_BOOKING": execute_cancel_booking,
+    "MACHINERY_MY_BOOKINGS": execute_my_bookings,
     
     # Messenger Operations
     "MESSENGER_SEND": execute_messenger_send,
@@ -54,9 +55,11 @@ TASK_REGISTRY: Dict[str, Callable] = {
     "POLL_CREATE": execute_create_poll,
     "POLL_VOTE": execute_vote_poll,
     
-    # Market Operations
+    # Market & Schemes Operations
     "MARKET_TOGGLE_LISTING": execute_market_toggle_listing,
     "MARKET_VIEW_LISTINGS": execute_market_view_listings,
+    "MARKET_MANDI_RATES": execute_get_mandi_rates,
+    "SCHEMES_LIST": execute_get_schemes,
     
     # Weather
     "WEATHER_GET": execute_get_weather,

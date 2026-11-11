@@ -361,12 +361,12 @@ const MachineDetailsScreen = ({ route, navigation }) => {
         )}
 
         {/* Farmer Reviews & Ratings */}
-        <Text style={[styles.sectionHeading, { marginTop: 24 }]}>Farmer Reviews</Text>
+        <Text style={[styles.sectionHeading, { marginTop: 24 }]}>{t('machinery_ui.farmer_reviews', 'Farmer Reviews')}</Text>
         {reviews.length === 0 ? (
           <Card style={styles.noServicesCard}>
             <MaterialCommunityIcons name="star-outline" size={28} color={colors.textMuted} />
             <Text style={styles.noServicesText}>
-              No reviews yet for this equipment. Be the first farmer to review after booking!
+              {t('machinery_ui.no_reviews', 'No reviews yet for this equipment. Be the first farmer to review after booking!')}
             </Text>
           </Card>
         ) : (
@@ -398,7 +398,7 @@ const MachineDetailsScreen = ({ route, navigation }) => {
       {/* Sticky Bottom Booking Bar */}
       <View style={styles.bottomBar}>
         <View style={styles.bottomPriceBox}>
-          <Text style={styles.bottomPriceLabel}>Selected Service</Text>
+          <Text style={styles.bottomPriceLabel}>{t('tasks.selected_service', 'Selected Service')}</Text>
           <Text style={styles.bottomPriceVal}>
             {formatCurrency(selectedTask?.price || selectedTask?.rate || machine.price || 800)}
             <Text style={styles.bottomPriceUnit}> /{selectedTask?.priceUnit || selectedTask?.unit || machine.priceUnit || 'hour'}</Text>

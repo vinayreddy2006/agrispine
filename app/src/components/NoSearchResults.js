@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import Button from './Button';
+import { useTranslation } from '../hooks/useTranslation';
 
 /**
  * Standardized NoSearchResults Component
@@ -13,28 +14,33 @@ const NoSearchResults = ({
   query = '',
   onReset = null,
   onClear = null,
-  resetText = 'Clear Search & Filters',
+  resetText = null,
   title = null,
   description = null,
-  suggestions = [
-    'Check for spelling mistakes in names or keywords',
-    'Try searching with broader or fewer keywords',
-    'Clear active role or category filters to see all records',
-  ],
+  suggestions = null,
   icon = 'magnify-remove-outline',
   style,
 }) => {
+  const { t } = useTranslation();
   const handleReset = onReset || onClear;
+
+  const defaultSuggestions = suggestions || [
+    t('ui.tip_spelling', 'Check for spelling mistakes in names or keywords'),
+    t('ui.tip_broader', 'Try searching with broader or fewer keywords'),
+    t('ui.tip_filters', 'Clear active role or category filters to see all records'),
+  ];
 
   const displayTitle =
     title ||
     (query
-      ? `No matches found for "${query}"`
-      : 'No matching results found');
+      ? `${t('ui.no_results_desc', 'No matches found for')} "${query}"`
+      : t('ui.no_results_title', 'No matching results found'));
 
   const displayDescription =
     description ||
-    "We couldn't find any records matching your search criteria or active filters.";
+    t('ui.no_results_desc', "We couldn't find any records matching your search criteria or active filters.");
+
+  const displayResetText = resetText || t('ui.reset_search', 'Clear Search & Filters');
 
   return (
     <View style={[styles.container, style]}>
@@ -50,7 +56,7 @@ const NoSearchResults = ({
       <Text style={styles.description}>{displayDescription}</Text>
 
       {/* Search Tips Box */}
-      {suggestions && suggestions.length > 0 && (
+      {defaultSuggestions && defaultSuggestions.length > 0 && (
         <View style={styles.tipsBox}>
           <View style={styles.tipsHeaderRow}>
             <MaterialCommunityIcons
@@ -59,9 +65,9 @@ const NoSearchResults = ({
               color="#B45309"
               style={{ marginRight: 6 }}
             />
-            <Text style={styles.tipsHeaderText}>SEARCH SUGGESTIONS</Text>
+            <Text style={styles.tipsHeaderText}>{t('ui.search_suggestions', 'SEARCH SUGGESTIONS').toUpperCase()}</Text>
           </View>
-          {suggestions.map((tip, idx) => (
+          {defaultSuggestions.map((tip, idx) => (
             <View key={idx} style={styles.tipRow}>
               <Text style={styles.tipBullet}>•</Text>
               <Text style={styles.tipText}>{tip}</Text>

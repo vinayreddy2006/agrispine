@@ -217,6 +217,37 @@ const Profile = () => {
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-green-600" /></div>;
 
+    const getFarmingStyleLabel = (style) => {
+        if (!style) return t('farming.style_conventional', 'Conventional Farming');
+        const s = style.toLowerCase();
+        if (s.includes('organic') || s.includes('natural')) return t('farming.style_organic', 'Organic / Natural Farming');
+        if (s.includes('mixed')) return t('farming.style_mixed', 'Mixed Integrated Farming');
+        return t('farming.style_conventional', 'Conventional Farming');
+    };
+
+    const getSoilTypeLabel = (soil) => {
+        if (!soil) return t('farming.soil_black', 'Black Soil');
+        const s = soil.toLowerCase();
+        if (s.includes('black') || s.includes('regur') || s.includes('cotton')) return t('farming.soil_black', 'Black Soil (Regur / Cotton)');
+        if (s.includes('red')) return t('farming.soil_red', 'Red Soil');
+        if (s.includes('alluvial')) return t('farming.soil_alluvial', 'Alluvial Soil');
+        if (s.includes('clay')) return t('farming.soil_clay', 'Clay Soil');
+        if (s.includes('sandy')) return t('farming.soil_sandy', 'Sandy Soil');
+        if (s.includes('loam')) return t('farming.soil_loamy', 'Loamy Soil');
+        return soil;
+    };
+
+    const getIrrigationLabel = (irr) => {
+        if (!irr) return t('farming.irrigation_borewell', 'Borewell & Canal');
+        const s = irr.toLowerCase();
+        if (s.includes('borewell')) return t('farming.irrigation_borewell', 'Borewell & Canal');
+        if (s.includes('drip')) return t('farming.irrigation_drip', 'Drip Irrigation');
+        if (s.includes('sprinkler')) return t('farming.irrigation_sprinkler', 'Sprinkler System');
+        if (s.includes('rain')) return t('farming.irrigation_rainfed', 'Rainfed (Monsoon Dependent)');
+        if (s.includes('canal')) return t('farming.irrigation_canal', 'Canal Irrigation');
+        return irr;
+    };
+
     const fullLocationDisplay = [userData.village, userData.mandal, userData.district, userData.state].filter(Boolean).join(", ");
 
     return (
@@ -325,30 +356,30 @@ const Profile = () => {
                 {isEditing ? (
                     <form onSubmit={handleUpdate} className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 space-y-6 animate-in fade-in">
                         <div>
-                            <h3 className="font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">Personal & Location Information</h3>
+                            <h3 className="font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">{t('profile_extra.personal_tab', 'Personal & Location Information')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label><input value={userData.name} onChange={(e) => setUserData({ ...userData, name: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" required /></div>
-                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Village / Town</label><input value={userData.village} onChange={(e) => setUserData({ ...userData, village: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
-                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Mandal / Taluk</label><input value={userData.mandal} onChange={(e) => setUserData({ ...userData, mandal: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
-                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">District</label><input value={userData.district} onChange={(e) => setUserData({ ...userData, district: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
-                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">State</label><input value={userData.state} onChange={(e) => setUserData({ ...userData, state: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
-                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone (Login ID)</label><input disabled value={userData.phone} className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm opacity-70 cursor-not-allowed" /></div>
-                                <div className="md:col-span-2"><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Bio / Farm Description</label><textarea value={userData.bio} onChange={(e) => setUserData({ ...userData, bio: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" rows="2" /></div>
+                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('common.name', 'Full Name')}</label><input value={userData.name} onChange={(e) => setUserData({ ...userData, name: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" required /></div>
+                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('auth.village', 'Village / Town')}</label><input value={userData.village} onChange={(e) => setUserData({ ...userData, village: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('profile_ui.mandal', 'Mandal / Taluk')}</label><input value={userData.mandal} onChange={(e) => setUserData({ ...userData, mandal: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('auth.district', 'District')}</label><input value={userData.district} onChange={(e) => setUserData({ ...userData, district: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('location_modal.state_placeholder', 'State')}</label><input value={userData.state} onChange={(e) => setUserData({ ...userData, state: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('auth.phone', 'Phone Number')}</label><input disabled value={userData.phone} className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm opacity-70 cursor-not-allowed" /></div>
+                                <div className="md:col-span-2"><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('farming.bio_description', 'Bio / Farm Description')}</label><textarea value={userData.bio} onChange={(e) => setUserData({ ...userData, bio: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" rows="2" /></div>
                             </div>
                         </div>
                         
                         <div>
-                            <h3 className="font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">Farming Details</h3>
+                            <h3 className="font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">{t('profile_ui.agri_details', 'Farming Details')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Farming Start Year</label><input type="number" value={userData.farmingStartYear} onChange={(e) => setUserData({ ...userData, farmingStartYear: e.target.value })} placeholder="e.g. 2012" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
-                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Main Crops (comma separated)</label><input value={userData.mainCrops} onChange={(e) => setUserData({ ...userData, mainCrops: e.target.value })} placeholder="Cotton, Paddy, Red Gram" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('farming.farming_start_year', 'Farming Start Year')}</label><input type="number" value={userData.farmingStartYear} onChange={(e) => setUserData({ ...userData, farmingStartYear: e.target.value })} placeholder="e.g. 2012" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('farming.main_crops', 'Main Crops (comma separated)')}</label><input value={userData.mainCrops} onChange={(e) => setUserData({ ...userData, mainCrops: e.target.value })} placeholder="Cotton, Paddy, Red Gram" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Farming Style</label>
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('farming.farming_style', 'Farming Style')}</label>
                                     <select value={userData.farmingStyle} onChange={(e) => setUserData({ ...userData, farmingStyle: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                                        <option value="">Select Style...</option>
-                                        <option value="organic">Organic / Natural Farming</option>
-                                        <option value="conventional">Conventional Farming</option>
-                                        <option value="mixed">Mixed Integrated Farming</option>
+                                        <option value="">{t('common.select', 'Select Style...')}</option>
+                                        <option value="organic">{t('farming.style_organic', 'Organic / Natural Farming')}</option>
+                                        <option value="conventional">{t('farming.style_conventional', 'Conventional Farming')}</option>
+                                        <option value="mixed">{t('farming.style_mixed', 'Mixed Integrated Farming')}</option>
                                     </select>
                                 </div>
                             </div>
@@ -356,9 +387,9 @@ const Profile = () => {
                             {/* Land Plots Edit */}
                             <div className="mt-6">
                                 <div className="flex justify-between items-center mb-3">
-                                    <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Land Plots</h4>
+                                    <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">{t('farming.land_plots', 'Land Plots')}</h4>
                                     <button type="button" onClick={handleAddPlot} className="text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
-                                        <Plus className="w-3.5 h-3.5" /> Add Plot
+                                        <Plus className="w-3.5 h-3.5" /> {t('farming.add_plot', 'Add Plot')}
                                     </button>
                                 </div>
                                 <div className="space-y-3">
@@ -368,10 +399,10 @@ const Profile = () => {
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mt-1">
-                                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1">Plot Name</label><input value={plot.name} onChange={(e) => handleUpdatePlot(index, 'name', e.target.value)} placeholder="Main Field" className="w-full px-3 py-1.5 text-xs border rounded-lg bg-white dark:bg-slate-900" /></div>
-                                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1">Size (Acres)</label><input type="number" step="0.1" value={plot.size} onChange={(e) => handleUpdatePlot(index, 'size', e.target.value)} placeholder="3.5" className="w-full px-3 py-1.5 text-xs border rounded-lg bg-white dark:bg-slate-900" /></div>
-                                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1">Soil Type</label><input value={plot.soilType} onChange={(e) => handleUpdatePlot(index, 'soilType', e.target.value)} placeholder="Black Cotton" className="w-full px-3 py-1.5 text-xs border rounded-lg bg-white dark:bg-slate-900" /></div>
-                                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1">Irrigation</label><input value={plot.irrigationMethod} onChange={(e) => handleUpdatePlot(index, 'irrigationMethod', e.target.value)} placeholder="Borewell Drip" className="w-full px-3 py-1.5 text-xs border rounded-lg bg-white dark:bg-slate-900" /></div>
+                                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1">{t('farming.plot_name', 'Plot Name')}</label><input value={plot.name} onChange={(e) => handleUpdatePlot(index, 'name', e.target.value)} placeholder="Main Field" className="w-full px-3 py-1.5 text-xs border rounded-lg bg-white dark:bg-slate-900" /></div>
+                                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1">{t('farming.plot_size', 'Size (Acres)')}</label><input type="number" step="0.1" value={plot.size} onChange={(e) => handleUpdatePlot(index, 'size', e.target.value)} placeholder="3.5" className="w-full px-3 py-1.5 text-xs border rounded-lg bg-white dark:bg-slate-900" /></div>
+                                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1">{t('farming.soil_type', 'Soil Type')}</label><input value={plot.soilType} onChange={(e) => handleUpdatePlot(index, 'soilType', e.target.value)} placeholder="Black Cotton" className="w-full px-3 py-1.5 text-xs border rounded-lg bg-white dark:bg-slate-900" /></div>
+                                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1">{t('farming.irrigation_method', 'Irrigation')}</label><input value={plot.irrigationMethod} onChange={(e) => handleUpdatePlot(index, 'irrigationMethod', e.target.value)} placeholder="Borewell Drip" className="w-full px-3 py-1.5 text-xs border rounded-lg bg-white dark:bg-slate-900" /></div>
                                             </div>
                                         </div>
                                     ))}
@@ -380,9 +411,9 @@ const Profile = () => {
                         </div>
 
                         <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-                            <button type="button" onClick={() => { setIsEditing(false); setPreview(null); setImageFile(null); }} className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50">Cancel</button>
+                            <button type="button" onClick={() => { setIsEditing(false); setPreview(null); setImageFile(null); }} className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50">{t('common.cancel', 'Cancel')}</button>
                             <button type="submit" disabled={updating} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
-                                {updating ? <Loader2 className="animate-spin w-4 h-4" /> : <><Save className="w-4 h-4" /> Save Changes</>}
+                                {updating ? <Loader2 className="animate-spin w-4 h-4" /> : <><Save className="w-4 h-4" /> {t('common.save', 'Save Changes')}</>}
                             </button>
                         </div>
                     </form>
@@ -396,7 +427,7 @@ const Profile = () => {
                                     <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-3">
                                         <Phone className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                                         <div>
-                                            <span className="text-[10px] text-slate-400 font-bold uppercase block">Phone Number</span>
+                                            <span className="text-[10px] text-slate-400 font-bold uppercase block">{t('auth.phone', 'Phone Number')}</span>
                                             <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{userData.phone}</span>
                                         </div>
                                     </div>
@@ -405,9 +436,9 @@ const Profile = () => {
                                         <div className="flex items-center gap-3">
                                             <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                                             <div>
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase block">Confirmed Farm Location</span>
+                                                <span className="text-[10px] text-slate-400 font-bold uppercase block">{t('profile_ui.verified_location', 'Confirmed Farm Location')}</span>
                                                 <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                                                    {fullLocationDisplay || "Not confirmed yet"}
+                                                    {fullLocationDisplay || t('location_modal.address', "Not confirmed yet")}
                                                 </span>
                                             </div>
                                         </div>
@@ -415,15 +446,15 @@ const Profile = () => {
                                             onClick={() => setShowLocationModal(true)}
                                             className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition"
                                         >
-                                            {userData.isLocationConfirmed ? "Update" : "Confirm"}
+                                            {userData.isLocationConfirmed ? t('common.edit', "Update") : t('common.confirm', "Confirm")}
                                         </button>
                                     </div>
                                 </div>
 
                                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-1">
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Farmer Bio</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">{t('farming.bio_description', 'Farmer Bio')}</span>
                                     <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
-                                        "{translatedData.bio || userData.bio || "No biography added yet. Click 'Edit Profile' to share details about your farm and experience."}"
+                                        "{translatedData.bio || userData.bio || t('profile_ui.bio_placeholder', "No biography added yet. Click 'Edit Profile' to share details about your farm and experience.")}"
                                     </p>
                                 </div>
                             </div>
@@ -434,52 +465,52 @@ const Profile = () => {
                             <div className="space-y-6 animate-in fade-in">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Experience</span>
+                                        <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">{t('farming.experience', 'Experience')}</span>
                                         <span className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                             <Activity className="w-4 h-4 text-emerald-600" />
-                                            <span>{userData.farmingStartYear ? `${new Date().getFullYear() - parseInt(userData.farmingStartYear)} Years (Since ${userData.farmingStartYear})` : "Not specified"}</span>
+                                            <span>{userData.farmingStartYear ? `${new Date().getFullYear() - parseInt(userData.farmingStartYear)} ${t('farming.years_experience', 'Years')} (${t('farming.since_year', 'Since')} ${userData.farmingStartYear})` : t('farming.not_specified', "Not specified")}</span>
                                         </span>
                                     </div>
 
                                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Farming Style</span>
+                                        <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">{t('farming.farming_style', 'Farming Style')}</span>
                                         <span className="text-sm font-bold text-slate-800 dark:text-slate-200 capitalize">
-                                            {userData.farmingStyle || "Conventional"}
+                                            {getFarmingStyleLabel(userData.farmingStyle)}
                                         </span>
                                     </div>
 
                                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 md:col-span-2">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold block mb-2">Main Crops Cultivated</span>
+                                        <span className="text-[10px] text-slate-400 uppercase font-bold block mb-2">{t('farming.main_crops', 'Main Crops Cultivated')}</span>
                                         <div className="flex flex-wrap gap-2">
                                             {userData.mainCrops ? userData.mainCrops.split(",").map((crop, i) => (
                                                 <span key={i} className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200/50 flex items-center gap-1">
                                                     <Leaf className="w-3 h-3 text-emerald-600" />
-                                                    <span>{crop.trim()}</span>
+                                                    <span>{t(`crops_list.${crop.trim().toLowerCase()}`, crop.trim())}</span>
                                                 </span>
-                                            )) : <span className="text-xs text-slate-400">No crops specified</span>}
+                                            )) : <span className="text-xs text-slate-400">{t('farming.not_specified', 'No crops specified')}</span>}
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white mb-3">Configured Land Plots</h4>
+                                    <h4 className="font-bold text-slate-900 dark:text-white mb-3">{t('farming.land_plots', 'Configured Land Plots')}</h4>
                                     {userData.landPlots && userData.landPlots.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {userData.landPlots.map((plot, i) => (
                                                 <div key={i} className="p-4 border border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
                                                     <div className="flex items-center justify-between mb-2 pb-1 border-b border-slate-200 dark:border-slate-700">
-                                                        <span className="font-bold text-sm text-slate-900 dark:text-white">{plot.name || `Plot ${i + 1}`}</span>
-                                                        <span className="text-xs font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">{plot.size ? `${plot.size} Acres` : 'N/A'}</span>
+                                                        <span className="font-bold text-sm text-slate-900 dark:text-white">{plot.name || `${t('farming.plot_name', 'Plot')} ${i + 1}`}</span>
+                                                        <span className="text-xs font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">{plot.size ? `${plot.size} ${t('crops_ui.acres', 'Acres')}` : 'N/A'}</span>
                                                     </div>
                                                     <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                                                        <p>Soil: <strong className="text-slate-800 dark:text-slate-200">{plot.soilType || 'N/A'}</strong></p>
-                                                        <p>Irrigation: <strong className="text-slate-800 dark:text-slate-200">{plot.irrigationMethod || 'N/A'}</strong></p>
+                                                        <p>{t('farming.soil_type', 'Soil')}: <strong className="text-slate-800 dark:text-slate-200">{getSoilTypeLabel(plot.soilType)}</strong></p>
+                                                        <p>{t('farming.irrigation_method', 'Irrigation')}: <strong className="text-slate-800 dark:text-slate-200">{getIrrigationLabel(plot.irrigationMethod)}</strong></p>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-slate-400 italic">No land plots configured yet.</p>
+                                        <p className="text-xs text-slate-400 italic">{t('farming.no_plots_configured', 'No land plots configured yet.')}</p>
                                     )}
                                 </div>
                             </div>
@@ -489,27 +520,27 @@ const Profile = () => {
                         {activeTab === 'machinery' && (
                             <div className="space-y-4 animate-in fade-in">
                                 <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                                    <h4 className="font-bold text-slate-900 dark:text-white">Machinery Listed for Rent</h4>
+                                    <h4 className="font-bold text-slate-900 dark:text-white">{t('machinery_ui.my_fleet_title', 'Machinery Listed for Rent')}</h4>
                                     <button 
                                         onClick={() => navigate("/add-machine")}
                                         className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1"
                                     >
                                         <Plus className="w-3.5 h-3.5" />
-                                        <span>Add Machinery</span>
+                                        <span>{t('machinery_ui.add_machine', 'Add Machinery')}</span>
                                     </button>
                                 </div>
 
                                 {loadingMachines ? (
-                                    <div className="text-center py-10 text-xs text-slate-400">Loading your machinery...</div>
+                                    <div className="text-center py-10 text-xs text-slate-400">{t('common.loading', 'Loading your machinery...')}</div>
                                 ) : myMachines.length === 0 ? (
                                     <div className="text-center py-12 rounded-2xl bg-slate-50 dark:bg-slate-800/40 p-6 space-y-3">
                                         <Tractor className="w-10 h-10 text-slate-400 mx-auto" />
-                                        <p className="text-xs text-slate-500 font-semibold">You have not listed any machinery yet.</p>
+                                        <p className="text-xs text-slate-500 font-semibold">{t('machinery_ui.no_fleet_desc', 'You have not listed any farm equipment for rent yet.')}</p>
                                         <button 
                                             onClick={() => navigate("/add-machine")}
                                             className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold"
                                         >
-                                            List Your Tractor or Machinery
+                                            {t('machinery_ui.add_machine', 'List Your Tractor or Machinery')}
                                         </button>
                                     </div>
                                 ) : (

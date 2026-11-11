@@ -179,6 +179,38 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
+  const getFarmingStyleLabel = (style) => {
+    if (!style) return t('farming.style_mixed', 'Mixed Integrated Farming');
+    const s = String(style).toLowerCase();
+    if (s.includes('organic') || s.includes('natural')) return t('farming.style_organic', 'Organic / Natural Farming');
+    if (s.includes('mixed')) return t('farming.style_mixed', 'Mixed Integrated Farming');
+    if (s.includes('conventional')) return t('farming.style_conventional', 'Conventional Farming');
+    return style;
+  };
+
+  const getSoilTypeLabel = (soil) => {
+    if (!soil) return t('farming.soil_black', 'Black Soil (Regur / Cotton)');
+    const s = String(soil).toLowerCase();
+    if (s.includes('black') || s.includes('regur') || s.includes('cotton')) return t('farming.soil_black', 'Black Soil (Regur / Cotton)');
+    if (s.includes('red')) return t('farming.soil_red', 'Red Soil');
+    if (s.includes('alluvial')) return t('farming.soil_alluvial', 'Alluvial Soil');
+    if (s.includes('clay')) return t('farming.soil_clay', 'Clay Soil');
+    if (s.includes('sandy')) return t('farming.soil_sandy', 'Sandy Soil');
+    if (s.includes('loam')) return t('farming.soil_loamy', 'Loamy Soil');
+    return soil;
+  };
+
+  const getIrrigationLabel = (irr) => {
+    if (!irr) return t('farming.irrigation_borewell', 'Borewell & Canal');
+    const s = String(irr).toLowerCase();
+    if (s.includes('borewell')) return t('farming.irrigation_borewell', 'Borewell & Canal');
+    if (s.includes('drip')) return t('farming.irrigation_drip', 'Drip Irrigation');
+    if (s.includes('sprinkler')) return t('farming.irrigation_sprinkler', 'Sprinkler System');
+    if (s.includes('rain')) return t('farming.irrigation_rainfed', 'Rainfed (Monsoon Dependent)');
+    if (s.includes('canal')) return t('farming.irrigation_canal', 'Canal Irrigation');
+    return irr;
+  };
+
   const displayName = user?.name || t('common.farmer', 'Farmer');
   const locationString =
     [user?.village, user?.mandal, user?.district, user?.state].filter(Boolean).join(', ') ||
@@ -337,7 +369,7 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.detailCol}>
                   <Text style={styles.detailLabel}>{t('profile_ui.cultivation_style', 'Cultivation Style')}</Text>
-                  <Text style={styles.detailVal}>{user?.farmingStyle || 'Mixed (Organic & Modern)'}</Text>
+                  <Text style={styles.detailVal}>{getFarmingStyleLabel(user?.farmingStyle)}</Text>
                 </View>
               </View>
 
@@ -347,7 +379,7 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.detailCol}>
                   <Text style={styles.detailLabel}>{t('profile_ui.irrigation_source', 'Irrigation Source')}</Text>
-                  <Text style={styles.detailVal}>{user?.irrigationType || 'Borewell & Canal'}</Text>
+                  <Text style={styles.detailVal}>{getIrrigationLabel(user?.irrigationType)}</Text>
                 </View>
               </View>
 
@@ -357,7 +389,7 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.detailCol}>
                   <Text style={styles.detailLabel}>{t('profile_ui.soil_type', 'Soil Type')}</Text>
-                  <Text style={styles.detailVal}>{user?.soilType || 'Black Soil (Regur)'}</Text>
+                  <Text style={styles.detailVal}>{getSoilTypeLabel(user?.soilType)}</Text>
                 </View>
               </View>
             </Card>

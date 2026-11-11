@@ -11,6 +11,8 @@ import {
     processChat,
     processVoice,
     transcribeAudio,
+    confirmAction,
+    cancelAction,
     getAllMessengerConversations,
     getMessengerConversationByName,
     getWeatherRecommendations
@@ -33,6 +35,8 @@ router.delete("/chats/:id", fetchuser, deleteChat);
 router.post("/chat", fetchuser, processChat);
 router.post("/voice", fetchuser, upload.single("audio_file"), processVoice);
 router.post("/transcribe", fetchuser, upload.single("audio_file"), transcribeAudio);
+router.post("/actions/confirm", fetchuser, confirmAction);
+router.post("/actions/cancel", fetchuser, cancelAction);
 
 // Messenger AI Endpoints
 router.get("/messenger/conversations", fetchuser, getAllMessengerConversations);

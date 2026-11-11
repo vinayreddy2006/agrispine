@@ -51,6 +51,32 @@ const GramSathiScreen = ({ navigation }) => {
   const [renameTitleInput, setRenameTitleInput] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
 
+  const navigateFromActionPath = (path) => {
+    if (!path) return;
+    if (path.includes('booking')) {
+      navigation.navigate('MyBookings');
+    } else if (path.includes('market-prices') || path.includes('mandi')) {
+      navigation.navigate('MandiRates');
+    } else if (path.includes('rent') || path.includes('machine')) {
+      navigation.navigate('Machinery');
+    } else if (path.includes('market')) {
+      navigation.navigate('BuyerMarket');
+    } else if (path.includes('crop')) {
+      navigation.navigate('Crops');
+    } else if (path.includes('scheme')) {
+      navigation.navigate('Schemes');
+    } else if (path.includes('groups/')) {
+      const slug = path.split('groups/')[1]?.split('/')[0];
+      if (slug && slug !== 'personal' && slug !== 'create') {
+        navigation.navigate('GroupDetails', { groupId: slug });
+      } else {
+        navigation.navigate('Groups');
+      }
+    } else if (path.includes('group')) {
+      navigation.navigate('Groups');
+    }
+  };
+
   // Initial welcome message
   const getWelcomeMessage = () => ({
     sender: 'ai',
@@ -64,6 +90,8 @@ const GramSathiScreen = ({ navigation }) => {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [speakingMessageIndex, setSpeakingMessageIndex] = useState(null);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [actionStatusMap, setActionStatusMap] = useState({});
 
   // Audio Voice Recording State
   const [isRecording, setIsRecording] = useState(false);
@@ -271,6 +299,76 @@ const GramSathiScreen = ({ navigation }) => {
         },
       ]
     );
+  };
+
+  // Human-in-the-Loop Confirmation Handlers
+  const handleConfirmAction = async (pendingAction) => {
+    if (!pendingAction || !pendingAction.action_id || actionLoadingId) return;
+    setActionLoadingId(pendingAction.action_id);
+    if (Speech && Speech.stop) Speech.stop();
+
+    try {
+      const res = await aiService.confirmAction({
+        sessionId,
+        actionId: pendingAction.action_id,
+        language: language || 'en',
+      });
+
+      setActionStatusMap((prev) => ({ ...prev, [pendingAction.action_id]: 'confirmed' }));
+
+      const successAiReply = {
+        sender: 'ai',
+        text: res.reply || 'Task confirmed and completed successfully.',
+        action: res.action,
+      };
+
+      setMessages((prev) => [...prev, successAiReply]);
+
+      if (res.action?.intent === 'NAVIGATE' && res.action?.path) {
+        const path = res.action.path;
+        setTimeout(() => {
+          navigateFromActionPath(path);
+        }, 1200);
+      }
+    } catch (err) {
+      Alert.alert(
+        'Action Error',
+        err?.data?.reply || err?.data?.error || err?.message || 'Failed to confirm action.'
+      );
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleCancelAction = async (pendingAction) => {
+    if (!pendingAction || !pendingAction.action_id || actionLoadingId) return;
+    setActionLoadingId(pendingAction.action_id);
+    if (Speech && Speech.stop) Speech.stop();
+
+    try {
+      const res = await aiService.cancelAction({
+        sessionId,
+        actionId: pendingAction.action_id,
+        language: language || 'en',
+      });
+
+      setActionStatusMap((prev) => ({ ...prev, [pendingAction.action_id]: 'cancelled' }));
+
+      const cancelReply = {
+        sender: 'ai',
+        text: res.reply || 'Action cancelled.',
+      };
+
+      setMessages((prev) => [...prev, cancelReply]);
+    } catch (err) {
+      console.log('Error cancelling action:', err);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleEditAction = (pendingAction) => {
+    setInputText(`${pendingAction.title || 'Action'}: `);
   };
 
   // Send message (typed = text only with manual TTS; voice = auto-speaks AI response)
@@ -547,17 +645,123 @@ const GramSathiScreen = ({ navigation }) => {
               </View>
             )}
 
+            {/* Structured Confirmation Card for Human-in-the-Loop Operations */}
+            {item.action?.type === 'CONFIRMATION_REQUIRED' && item.action?.pending_action && (() => {
+              const pending = item.action.pending_action;
+              const actionId = pending.action_id;
+              const currentStatus = actionStatusMap[actionId] || pending.status || 'pending_confirmation';
+              const isExecuting = actionLoadingId === actionId;
+
+              return (
+                <View style={styles.confirmationCard}>
+                  {/* Header */}
+                  <View style={styles.confirmHeader}>
+                    <View style={styles.confirmTitleRow}>
+                      <MaterialCommunityIcons name="check-circle-outline" size={18} color={colors.primary} />
+                      <Text style={styles.confirmTitle}>{pending.title || 'Confirm Action'}</Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        currentStatus === 'confirmed'
+                          ? styles.statusBadgeConfirmed
+                          : currentStatus === 'cancelled'
+                          ? styles.statusBadgeCancelled
+                          : styles.statusBadgePending,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.statusBadgeText,
+                          currentStatus === 'confirmed'
+                            ? styles.statusTextConfirmed
+                            : currentStatus === 'cancelled'
+                            ? styles.statusTextCancelled
+                            : styles.statusTextPending,
+                        ]}
+                      >
+                        {currentStatus === 'confirmed'
+                          ? '✓ Confirmed'
+                          : currentStatus === 'cancelled'
+                          ? '✕ Cancelled'
+                          : '● Awaiting Confirmation'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Summary */}
+                  {pending.summary ? (
+                    <Text style={styles.confirmSummary}>{pending.summary}</Text>
+                  ) : null}
+
+                  {/* Field Details */}
+                  {pending.display_fields && pending.display_fields.length > 0 && (
+                    <View style={styles.confirmFieldsContainer}>
+                      {pending.display_fields.map((f, fIdx) => (
+                        <View key={fIdx} style={styles.confirmFieldRow}>
+                          <Text style={styles.confirmFieldLabel}>{f.label}:</Text>
+                          <Text style={styles.confirmFieldValue}>{f.value}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Action Buttons */}
+                  {currentStatus === 'confirmed' ? (
+                    <View style={styles.confirmedDoneRow}>
+                      <MaterialCommunityIcons name="check-circle" size={16} color={colors.primary} />
+                      <Text style={styles.confirmedDoneText}>Executed & saved to AgriSpine.</Text>
+                    </View>
+                  ) : currentStatus === 'cancelled' ? (
+                    <View style={styles.cancelledDoneRow}>
+                      <MaterialCommunityIcons name="close-circle" size={16} color={colors.error} />
+                      <Text style={styles.cancelledDoneText}>Action was cancelled.</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.confirmButtonsRow}>
+                      <TouchableOpacity
+                        style={[styles.btnConfirm, isExecuting && { opacity: 0.6 }]}
+                        onPress={() => handleConfirmAction(pending)}
+                        disabled={isExecuting}
+                      >
+                        {isExecuting ? (
+                          <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                          <>
+                            <MaterialCommunityIcons name="check" size={16} color="#FFFFFF" />
+                            <Text style={styles.btnConfirmText}>{pending.buttons?.confirm || 'Confirm'}</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.btnEdit}
+                        onPress={() => handleEditAction(pending)}
+                        disabled={isExecuting}
+                      >
+                        <MaterialCommunityIcons name="pencil-outline" size={14} color="#334155" />
+                        <Text style={styles.btnEditText}>{pending.buttons?.edit || 'Edit'}</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.btnCancel}
+                        onPress={() => handleCancelAction(pending)}
+                        disabled={isExecuting}
+                      >
+                        <MaterialCommunityIcons name="close" size={14} color={colors.error} />
+                        <Text style={styles.btnCancelText}>{pending.buttons?.cancel || 'Cancel'}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              );
+            })()}
+
             {/* Action Direct Navigation Button */}
             {item.action && item.action.path && (
               <TouchableOpacity
                 style={styles.actionNavBtn}
-                onPress={() => {
-                  if (item.action.path.includes('rent')) navigation.navigate('Machinery');
-                  else if (item.action.path.includes('market')) navigation.navigate('BuyerMarket');
-                  else if (item.action.path.includes('crop')) navigation.navigate('Crops');
-                  else if (item.action.path.includes('mandi')) navigation.navigate('MandiRates');
-                  else if (item.action.path.includes('scheme')) navigation.navigate('Schemes');
-                }}
+                onPress={() => navigateFromActionPath(item.action.path)}
               >
                 <MaterialCommunityIcons name="arrow-right-circle" size={16} color="#FFFFFF" />
                 <Text style={styles.actionNavText}>
@@ -620,13 +824,13 @@ const GramSathiScreen = ({ navigation }) => {
 
           <View style={styles.headerTitles}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.headerTitleText}>GramSathi AI</Text>
+              <Text style={styles.headerTitleText}>{t('gramsathi_ai.title', 'GramSathi AI')}</Text>
               <View style={styles.onlineBadge}>
                 <View style={styles.onlineDot} />
-                <Text style={styles.onlineText}>Online</Text>
+                <Text style={styles.onlineText}>{t('common.online', 'Online')}</Text>
               </View>
             </View>
-            <Text style={styles.headerSubtitleText}>Digital Agricultural Expert</Text>
+            <Text style={styles.headerSubtitleText}>{t('gramsathi_ai.subtitle', 'Digital Agricultural Expert')}</Text>
           </View>
         </View>
 
@@ -697,7 +901,7 @@ const GramSathiScreen = ({ navigation }) => {
               <Text style={styles.recordingTimeText}>
                 {formatDuration(recordingDuration)}
               </Text>
-              <Text style={styles.recordingStatusText}>Listening...</Text>
+              <Text style={styles.recordingStatusText}>{t('gramsathi_ai.listening', 'Listening...')}</Text>
             </View>
 
             <View style={styles.recordingRight}>
@@ -808,7 +1012,7 @@ const GramSathiScreen = ({ navigation }) => {
                     <MaterialCommunityIcons name="sprout" size={20} color="#FFFFFF" />
                   </View>
                   <View>
-                    <Text style={styles.sidebarBrandTitle}>GramSathi AI</Text>
+                    <Text style={styles.sidebarBrandTitle}>{t('gramsathi_ai.title', 'GramSathi AI')}</Text>
                     <Text style={styles.sidebarBrandSub}>AgriSpine Expert</Text>
                   </View>
                 </View>
@@ -824,14 +1028,14 @@ const GramSathiScreen = ({ navigation }) => {
               {/* "+ New Chat" Action Button */}
               <TouchableOpacity style={styles.sidebarNewChatBtn} onPress={handleNewChat}>
                 <MaterialCommunityIcons name="plus-circle" size={20} color={colors.primary} />
-                <Text style={styles.sidebarNewChatBtnText}>+ Start New Consultation</Text>
+                <Text style={styles.sidebarNewChatBtnText}>{t('gramsathi_ai.new_chat', '+ Start New Consultation')}</Text>
               </TouchableOpacity>
 
               <View style={styles.sidebarDivider} />
 
               {/* Consultation History Section Header */}
               <View style={styles.sidebarSectionHeader}>
-                <Text style={styles.sidebarSectionTitle}>Recent Consultations</Text>
+                <Text style={styles.sidebarSectionTitle}>{t('gramsathi_ai.chat_history', 'Recent Consultations')}</Text>
                 <Text style={styles.sidebarSectionCount}>{chatList.length}</Text>
               </View>
 
@@ -849,7 +1053,7 @@ const GramSathiScreen = ({ navigation }) => {
                       color="rgba(255,255,255,0.3)"
                     />
                     <Text style={styles.sidebarEmptyText}>
-                      No previous consultations yet.{'\n'}Ask your first farming question!
+                      {t('gramsathi_ai.no_chats', 'No previous consultations yet.')}
                     </Text>
                   </View>
                 ) : (
@@ -1520,6 +1724,170 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  // Confirmation Card Styles
+  confirmationCard: {
+    marginTop: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#10B98140',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  confirmHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    marginBottom: 8,
+  },
+  confirmTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  confirmTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  statusBadgePending: {
+    backgroundColor: '#FEF3C7',
+  },
+  statusBadgeConfirmed: {
+    backgroundColor: '#D1FAE5',
+  },
+  statusBadgeCancelled: {
+    backgroundColor: '#FFE4E6',
+  },
+  statusBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+  },
+  statusTextPending: {
+    color: '#B45309',
+  },
+  statusTextConfirmed: {
+    color: '#047857',
+  },
+  statusTextCancelled: {
+    color: '#BE123C',
+  },
+  confirmSummary: {
+    fontSize: 12,
+    color: '#475569',
+    lineHeight: 17,
+    marginBottom: 8,
+  },
+  confirmFieldsContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  confirmFieldRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 2.5,
+  },
+  confirmFieldLabel: {
+    fontSize: 11.5,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  confirmFieldValue: {
+    fontSize: 11.5,
+    color: '#0F172A',
+    fontWeight: '800',
+  },
+  confirmButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingTop: 4,
+  },
+  btnConfirm: {
+    flex: 1.4,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 7,
+    borderRadius: 8,
+  },
+  btnConfirmText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '800',
+  },
+  btnEdit: {
+    flex: 0.9,
+    backgroundColor: '#F1F5F9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 7,
+    borderRadius: 8,
+  },
+  btnEditText: {
+    color: '#334155',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  btnCancel: {
+    flex: 0.9,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 7,
+    borderRadius: 8,
+  },
+  btnCancelText: {
+    color: '#BE123C',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  confirmedDoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 4,
+  },
+  confirmedDoneText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#047857',
+  },
+  cancelledDoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 4,
+  },
+  cancelledDoneText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#BE123C',
   },
 });
 

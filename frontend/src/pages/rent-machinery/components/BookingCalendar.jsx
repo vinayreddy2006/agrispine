@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, 
   Clock, CheckCircle2, AlertCircle, XCircle, User, MapPin, 
@@ -7,6 +8,7 @@ import {
 } from "lucide-react";
 
 const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onStartChat }) => {
+  const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDateKey, setSelectedDateKey] = useState(
     new Date().toISOString().split("T")[0]
@@ -55,7 +57,7 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
       case "accepted":
       case "confirmed":
         return { 
-          label: "Confirmed", 
+          label: t('calendar.confirmed', 'Confirmed'), 
           pillBg: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800",
           badgeBg: "bg-emerald-600 text-white",
           dotBg: "bg-emerald-500",
@@ -63,7 +65,7 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
         };
       case "completed":
         return { 
-          label: "Completed", 
+          label: t('calendar.completed', 'Completed'), 
           pillBg: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-800",
           badgeBg: "bg-blue-600 text-white",
           dotBg: "bg-blue-500",
@@ -71,7 +73,7 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
         };
       case "rejected":
         return { 
-          label: "Rejected", 
+          label: t('calendar.rejected', 'Rejected'), 
           pillBg: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300 dark:border-rose-800",
           badgeBg: "bg-rose-600 text-white",
           dotBg: "bg-rose-500",
@@ -79,7 +81,7 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
         };
       case "cancelled":
         return { 
-          label: "Cancelled", 
+          label: t('calendar.cancelled', 'Cancelled'), 
           pillBg: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700",
           badgeBg: "bg-slate-500 text-white",
           dotBg: "bg-slate-400",
@@ -87,7 +89,7 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
         };
       default:
         return { 
-          label: "Pending", 
+          label: t('calendar.pending', 'Pending'), 
           pillBg: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-800",
           badgeBg: "bg-amber-500 text-white",
           dotBg: "bg-amber-400",
@@ -118,12 +120,12 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
           </div>
           <div>
             <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-              {monthNames[month]} {year}
+              {t('months.' + monthNames[month].toLowerCase(), monthNames[month])} {year}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
               {role === "owner" 
-                ? "Equipment schedule & incoming bookings" 
-                : "Your personal machinery bookings schedule"}
+                ? t('calendar.equipment_schedule', "Equipment schedule & incoming bookings") 
+                : t('calendar.personal_schedule', "Your personal machinery bookings schedule")}
             </p>
           </div>
         </div>
@@ -135,10 +137,10 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
             type="button"
             onClick={handlePrevMonth}
             className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-xs font-extrabold transition shadow-xs flex items-center justify-center gap-1.5 active:scale-95"
-            title="Previous Month"
+            title={t('calendar.prev_month', 'Previous Month')}
           >
             <ArrowLeft className="w-4 h-4 text-emerald-700 dark:text-emerald-400 stroke-[2.5]" />
-            <span>Previous</span>
+            <span>{t('calendar.previous', 'Previous')}</span>
           </button>
 
           {/* Today Button */}
@@ -146,10 +148,10 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
             type="button"
             onClick={handleGoToday}
             className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition shadow-sm flex items-center justify-center gap-1.5 border border-emerald-600 active:scale-95"
-            title="Jump to Today"
+            title={t('calendar.jump_today', 'Jump to Today')}
           >
             <CalendarIcon className="w-4 h-4 stroke-[2.5]" />
-            <span>Today</span>
+            <span>{t('calendar.today', 'Today')}</span>
           </button>
 
           {/* Next Month */}
@@ -157,9 +159,9 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
             type="button"
             onClick={handleNextMonth}
             className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-xs font-extrabold transition shadow-xs flex items-center justify-center gap-1.5 active:scale-95"
-            title="Next Month"
+            title={t('calendar.next_month', 'Next Month')}
           >
-            <span>Next</span>
+            <span>{t('calendar.next', 'Next')}</span>
             <ArrowRight className="w-4 h-4 text-emerald-700 dark:text-emerald-400 stroke-[2.5]" />
           </button>
         </div>
@@ -167,7 +169,13 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
 
       {/* Weekday Column Headers */}
       <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider py-1">
-        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        <span>{t('calendar.sun', 'Sun')}</span>
+        <span>{t('calendar.mon', 'Mon')}</span>
+        <span>{t('calendar.tue', 'Tue')}</span>
+        <span>{t('calendar.wed', 'Wed')}</span>
+        <span>{t('calendar.thu', 'Thu')}</span>
+        <span>{t('calendar.fri', 'Fri')}</span>
+        <span>{t('calendar.sat', 'Sat')}</span>
       </div>
 
       {/* ============================================================== */}
@@ -262,7 +270,7 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-              Schedule Details
+              {t('calendar.schedule_details', 'Schedule Details')}
             </span>
             <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
               <CalendarIcon className="w-4 h-4 text-emerald-600" />
@@ -271,13 +279,13 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
           </div>
 
           <span className="px-3 py-1 rounded-xl bg-white dark:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-600">
-            {selectedDayBookings.length} {selectedDayBookings.length === 1 ? 'Booking Scheduled' : 'Bookings Scheduled'}
+            {selectedDayBookings.length} {selectedDayBookings.length === 1 ? t('calendar.booking_scheduled', 'Booking Scheduled') : t('calendar.bookings_scheduled', 'Bookings Scheduled')}
           </span>
         </div>
 
         {selectedDayBookings.length === 0 ? (
           <div className="p-6 text-center rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 text-xs text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 font-medium">
-            No machinery bookings scheduled for this date.
+            {t('calendar.no_bookings_date', 'No machinery bookings scheduled for this date.')}
           </div>
         ) : (
           <div className="space-y-3">
@@ -312,11 +320,11 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
                           {b.task?.name || "General Operation"}
                         </span>
                         <span>•</span>
-                        <span>Duration: {b.duration || 1} {b.task?.priceUnit || 'hr'}s</span>
+                        <span>{t('calendar.duration', 'Duration')}: {b.duration || 1} {b.task?.priceUnit || t('calendar.hours', 'hr')}</span>
                         {b.totalAmount && (
                           <>
                             <span>•</span>
-                            <span className="font-black text-slate-900 dark:text-white">Total: ₹{b.totalAmount}</span>
+                            <span className="font-black text-slate-900 dark:text-white">{t('calendar.total', 'Total')}: ₹{b.totalAmount}</span>
                           </>
                         )}
                       </div>
@@ -325,8 +333,8 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
                       <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
                         <User className="w-3.5 h-3.5 text-emerald-600" />
                         <span>
-                          {role === "owner" ? "Renter: " : "Equipment Owner: "}
-                          <strong className="text-slate-700 dark:text-slate-300">{otherParty?.name || "User"}</strong>
+                          {role === "owner" ? `${t('calendar.renter_label', 'Renter')}: ` : `${t('calendar.owner_label', 'Equipment Owner')}: `}
+                          <strong className="text-slate-700 dark:text-slate-300">{otherParty?.name || t('common.farmer', 'Farmer')}</strong>
                         </span>
                         {otherParty?.village && (
                           <span>({otherParty.village}, {otherParty.district || ""})</span>
@@ -354,14 +362,14 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
                               className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95"
                             >
                               <Check className="w-4 h-4 stroke-[2.5]" />
-                              <span>Accept Request</span>
+                              <span>{t('calendar.accept_request', 'Accept Request')}</span>
                             </button>
                             <button
                               onClick={() => onStatusUpdate(b._id, "rejected")}
                               className="px-3.5 py-2 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 hover:bg-rose-50 text-xs font-bold transition flex items-center gap-1.5 active:scale-95"
                             >
                               <X className="w-4 h-4 stroke-[2.5]" />
-                              <span>Reject</span>
+                              <span>{t('calendar.reject_request', 'Reject')}</span>
                             </button>
                           </>
                         )}
@@ -372,7 +380,7 @@ const BookingCalendar = ({ bookings = [], role = "renter", onStatusUpdate, onSta
                             className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95"
                           >
                             <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-                            <span>Mark Completed</span>
+                            <span>{t('calendar.mark_completed', 'Mark Completed')}</span>
                           </button>
                         )}
                       </>

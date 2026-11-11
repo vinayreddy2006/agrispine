@@ -12,7 +12,7 @@ This guide walks you through running, testing, and verifying the **AgriSpine And
 2. **Wi-Fi Connection**:
    - **Crucial**: Your Windows PC and Android phone **MUST** be connected to the exact same Wi-Fi network (or connect your PC to your phone's Wi-Fi hotspot).
 3. **Node.js**:
-   - Node.js v18+ or v22+ installed on your computer (`node -v`).
+   - Node.js v20+ or v22+ installed on your computer (`node -v`).
 
 ---
 
@@ -36,9 +36,9 @@ Because the app runs on a physical device, `localhost` or `127.0.0.1` will not w
 1. Open `app/.env` (or verify `app/src/constants/config.js`).
 2. Verify or update `EXPO_PUBLIC_API_URL` to match your PC's IP and backend port `5000`:
    ```env
-   EXPO_PUBLIC_API_URL=http://192.168.1.43:5000
+   EXPO_PUBLIC_API_URL=http://<YOUR_PC_LAN_IP>:5000
    ```
-   *(Note: The app is pre-configured with fallback to `http://192.168.1.43:5000` in `app/src/constants/config.js`)*.
+   *(Note: If `EXPO_PUBLIC_API_URL` is unset, `app/src/constants/config.js` falls back to `DEFAULT_LAN_URL = 'http://10.85.213.163:5000'`. Update this to match your current Wi-Fi IPv4 address.)*
 
 ---
 
@@ -85,7 +85,7 @@ Before testing the mobile app, make sure your AgriSpine backend is running:
 
 ## 6. Complete Feature-by-Feature Testing Walkthrough
 
-The mobile app includes 22 native screens organized under Bottom Tab Navigation and Native Stack Navigation. Here is how to test each module:
+The mobile app (`Expo SDK 58`, React Native `0.88.1`) includes 28 routed screens (2 auth screens in `AuthNavigator.js` + 26 screens in `MainNavigator.js`, backed by 30 files in `app/src/screens/`) organized under Bottom Tab Navigation and Native Stack Navigation.
 
 ### A. Authentication (Login & Registration)
 1. **Registration**:
@@ -94,157 +94,130 @@ The mobile app includes 22 native screens organized under Bottom Tab Navigation 
    - Fill in Name, 10-digit Phone, Password, and Village/District.
    - Tap **"Create Account"** → Receive confirmation alert → Redirects to Login.
 2. **Login**:
-   - Enter your registered phone number and password.
+   - Enter your registered phone number and password (or switch app language between English, తెలుగు, and हिन्दी right from the login screen).
    - Tap **"Log In to AgriSpine"**.
-   - Session JWT token is securely saved in `expo-secure-store`. The app auto-logs in on future app launches.
+   - Session JWT token is securely saved in `expo-secure-store`. The app auto-logs in on future launches.
 
 ---
 
 ### B. Dashboard (Home Hub)
-- **Top Header**: Shows user greeting, role badge, village location, and unread notifications icon button.
-- **Live Weather Card**: Displays current temperature, weather conditions, humidity, wind, and Kharif agronomy tips.
-- **Quick Actions**: 4 shortcut cards to jump to Add Crop, Rent Machine, Mandi Rates, or GramSathi AI.
-- **My Farm Crops**: Displays active crop cards with flowering stage status and financial overview.
-- **Machinery Rental Preview**: Quick browse cards for tractors, harvesters, etc.
-- **Buyer Wholesale Market**: Produce demand listings with verified buyers.
-- **Live Mandi Rates**: Warangal APMC modal price ticker.
-- **Government Schemes**: PM-Kisan Samman Nidhi and subsidy cards.
+- **Top Header**: Shows user greeting, role badge, village location, language switcher modal, and unread notifications icon button.
+- **Location Confirmation Banner**: Prompts unconfirmed farmers to confirm their farm village/mandal/district using OpenStreetMap Nominatim autocomplete (`LocationConfirmationModal`).
+- **Live Weather Card**: Displays current temperature, weather conditions, humidity, wind, pressure, and coordinate-resolved village weather.
+- **Quick Actions**: Shortcut cards to jump to Add Crop, Rent Machine, Mandi Rates, Workgroups, Schemes, or GramSathi AI.
+- **My Farm Crops**: Displays active crop cards and financial overview.
+- **Live Mandi Rates & Schemes**: Quick market rate ticker and government scheme highlights.
 
 ---
 
-### C. My Crops (Crop Lifecycle & Expense Management)
+### C. My Crops (Crop Lifecycle, Expenses & Market Listing)
 1. Tap the **My Crops** tab in the bottom bar.
 2. View **Active** and **Harvested** crops tabs.
 3. Tap **"+ Add Crop"**:
-   - Enter Crop Name (e.g. Cotton, Paddy), Variety, Sowing Date, Acreage, and Season.
-   - Select or type Region suggestions.
+   - Enter Crop Name, Sowing Date, Acreage, and Variety/Season.
    - Tap **"Save Crop"**.
 4. Tap any Crop card to open **Crop Details**:
    - **Financial Summary**: Total expenses, estimated yield, revenue, net profit.
-   - **Expense Tracker**: Tap **"+ Add"** to log seeds, fertilizer, labor, or machinery expenses. Delete expenses with real-time recalculation.
-   - **Buyer Marketplace Toggle**: Toggle **"List on Buyer Market"** to expose harvested produce to buyers in the Buyer Market.
-   - **Sell / Harvest Produce**: Open the Sell modal to record sold quantity and revenue.
+   - **Expense Tracker**: Tap **"+ Add"** to log seeds, fertilizer, pesticide, labor, or machinery expenses. Delete expenses with real-time recalculation.
+   - **Single-Listing Market Toggle**: Tap **"List on Market"** with expected price per quintal and available quantity (`PUT /crops/market/toggle/:id`). Once listed, a **Listed on Market (`ACTIVE`)** card appears with an **Unlist** action.
+   - **Sell / Harvest Produce**: Record sold quantity and revenue (`PUT /crops/sell/:id`), automatically delisting from the marketplace.
 
 ---
 
-### D. Machinery Rental & Equipment Fleet
+### D. Machinery Rental, Calendar & Equipment Fleet
 1. Tap the **Rent Machine** tab in the bottom bar.
 2. **Browse Equipment**:
-   - Category filter carousel (All, Tractor, Harvester, Rotavator, Drone, JCB, Rice Planter, etc.).
+   - Category filter carousel (`All`, `Tractor`, `Harvester`, `Rotavator`, `Drone`, `JCB`, `Rice Planter`, `Dozer`, `Baler`, `Ridger`) with local artwork fallbacks (`app/assets/machines/`).
    - Search by machine name, model, or location.
-   - Equipment cards show rental rate, owner name, ratings, and location.
-3. **Machine Details**:
-   - Tap any machine card to view detailed specifications, owner contact, and verified farmer reviews.
-   - View **Task-Specific Rates** (e.g. Plowing ₹1,200/acre, Harrowing ₹900/acre).
+3. **Machine Details & Reviews**:
+   - Tap any machine card for full specifications, tap-to-expand photo lightbox (`AppImage`), owner contact/chat, verified farmer reviews (`ReviewModal`), and **Task-Specific Rates**.
 4. **Book Machine**:
-   - Tap **"Book This Machine"**.
-   - Select task/service, start date, end date, and estimated duration.
-   - Review live calculated estimated total.
-   - Tap **"Confirm Booking Request"**.
-5. **My Bookings & Owner Requests**:
-   - Tap **"My Bookings"** in the top-right header of Rent Machine.
-   - **Renter Tab**: View your outgoing bookings (Pending, Accepted, In-Progress, Completed). Cancel or leave a star rating review.
-   - **Owner Requests Tab**: If you own machinery, accept or reject incoming booking requests.
+   - Tap **"Book This Machine"**, select task/service, date, and duration, review total cost, and submit (`POST /bookings/book`).
+5. **My Bookings, Owner Requests & Machinery Calendar**:
+   - Open **My Bookings** or **Machinery Calendar** (`MachineryCalendarScreen.js`) from the Rent Machine header.
+   - Inspect monthly booking dots (Pending, Confirmed/Accepted, Completed, Rejected) and switch between **Renter** and **Owner** views.
 6. **Owner Fleet Management**:
-   - Tap **"My Fleet"** in the top header.
-   - View your listed machines, toggle availability switch (Available / Busy).
-   - Tap **"+ List Equipment"** to add a new tractor, harvester, or implement.
-   - Tap **"Manage Tasks & Schedule"** to add custom task rates (e.g. Tilling ₹1,500/day) and inspect the booked dates calendar.
+   - Open **My Fleet** to toggle availability, add new equipment (`POST /machines/add`), or manage custom service tasks (`ManageMachineScreen.js`).
 
 ---
 
 ### E. Buyer Produce Market
-1. Open from the Dashboard **"Buyer Market"** card or More menu.
-2. Browse fresh crops listed directly by local farmers with crop variety, quantity available, and expected price per quintal.
-3. Tap **"Call Seller"** to open your phone's native dialer with the farmer's phone number.
-4. Tap **"Chat"** to start a direct message thread in Village Chat.
+1. Open from the Dashboard **"Buyer Market"** card.
+2. Browse active produce listings populated with seller farmer details, crop, quantity available, and expected price per quintal (`GET /crops/market/listings`).
+3. Tap **"Call"** to open the native phone dialer or **"Chat"** to open a direct conversation in Village Chat.
 
 ---
 
 ### F. Farmer Community
 1. Tap the **Community** tab in the bottom bar.
-2. Scroll through posts shared by fellow farmers across Telangana and India.
-3. Tap the **Heart icon** to like/unlike posts in real time.
-4. Tap the **Comment icon** to open the discussion modal and post replies.
-5. Tap **"+ Share Post"**:
-   - Write your query, harvest achievement, or pest inquiry.
-   - Tap **"Add Photos"** to pick multiple images from your phone's gallery using `expo-image-picker`.
-   - Tap **"Post to Community"**.
-6. Tap the flag icon on any post to submit a moderation report.
+2. Filter across 9 aligned categories (`All`, `Crop Management`, `Pest & Disease`, `Irrigation`, `Fertilizers`, `Weather`, `Equipment`, `Market Prices`, `Others`) or toggle between **All Forum** and **My Posts**.
+3. Tap any post card to open **Post Details** (`PostDetailsScreen.js`) with inline nested comment replies, optimistic comment/reply submission, and post/comment/reply likes.
+4. Tap **"+ Share Post"** (`CreatePostScreen.js`) to pick photos, camera shots, or documents (`POST /community/upload`), and share posts natively via `Share.share` or flag posts via report moderation.
 
 ---
 
-### G. Village Chat (Real-Time Socket.IO)
-1. Open Village Chat from the Community header chat icon or from any Seller/Farmer profile.
-2. View **Conversations List** with farmer names, avatar badges, last message previews, and unread counts.
-3. Tap **"+ New Chat"** to search any farmer in the database by name or village and start a chat.
-4. Open a conversation to enter the **Real-Time Chat Screen**:
-   - Powered by **Socket.IO**: Messages sent and received instantly without manual refresh.
-   - Read receipts (double checkmarks) update in real time.
-   - Tap the camera icon to pick and send image attachments.
-   - Long press or tap delete on your own messages to recall them across both devices.
+### G. Village Chat (Real-Time Socket.IO & Polls)
+1. Open Village Chat from the Community header chat icon or from any Farmer/Owner card.
+2. View **Conversations List** (including self-chat `"Message Yourself"` notes) and tap **"+ New Chat"** (`GET /auth/search-users?q=...`).
+3. Inside **ChatScreen**:
+   - Real-time messaging via **Socket.IO** (`receive_message`, `message_deleted`, `message_updated`, `poll_updated`, `messages_read_update`).
+   - Send images (Camera/Gallery with media review & crop), documents (`expo-document-picker`), replies with quote preview, stars, emoji reactions, and create/vote on **Village Polls** (`POST /poll/create`).
 
 ---
 
 ### H. Cooperative Labor Workgroups (Srama Shakthi)
 1. Open **"Workgroups"** from Dashboard or Profile.
-2. View joined farming cooperatives with your personal net labor balance (Days Given vs Days Received).
-3. Tap **"+ Create Group"** to set up a new cooperative team with daily labor wage rates.
-4. Tap any group to open **Group Details**:
-   - **Work Logs Feed**: View who worked on whose farm and for how many hours/days.
-   - **Members List**: View group members and their contact numbers.
-   - **Financial Settlements**: View ledger balances and log cash/crop settlements.
-   - Tap **"+ Log Work"** to record mutual labor exchange.
+2. View Personal Labor & Earnings Summary (`GET /api/groups/personal/dashboard`), switch between **My Workgroups** and **Admin Dashboard**, and filter by role (`All`, `Owner`, `Admin`, `Member`).
+3. Tap **"+ Create Group"** to set up a cooperative team (`POST /api/groups`).
+4. Inside **Group Details**:
+   - **Member View**: `Overview`, `Work Records`, `Settlements`, `Members`.
+   - **Admin View**: Record daily work (`POST /api/groups/:id/work`), manage registered/offline members, promote/demote roles, process net/selective settlements (`POST /api/groups/:id/settlements`), transfer ownership, or close/delete group.
 
 ---
 
 ### I. Weather Forecast & AI Advisory
 1. Open **Weather** from the Dashboard weather card.
-2. View live temperature, humidity, wind speed, pressure, and cloudiness.
-3. Read the **AI Crop Advisory**: Guidance for chemical spraying suitability and irrigation recommendations.
-4. Review the **5-Day Agricultural Weather Forecast** cards with rain probabilities and wind trends.
+2. Displays coordinate-based hyperlocal weather (Magnus-Tetens dew point, 16-point wind direction, sunrise/sunset, 24–48h timeline) and **Agricultural Field Operations Advisory** (`POST /api/ai/weather-recommendations`) covering Spraying, Irrigation, Harvesting, and Field Work.
+3. Search locations dynamically using OpenStreetMap Nominatim autocomplete without overwriting your saved farm profile.
 
 ---
 
 ### J. Live Mandi Rates
 1. Open **Mandi Rates** from the Dashboard or Quick Actions.
-2. Search by commodity (Cotton, Paddy, Red Gram, Turmeric, Maize, Chilli, etc.).
-3. Filter by market yard (Warangal, Khammam, Nizamabad, Suryapet, Adilabad).
-4. Inspect Min Price, Max Price, and **Modal Price** per Quintal with daily trend indicators (+₹50, -₹20).
+2. Search by commodity and filter by market yard to view Min, Max, and Modal prices per Quintal (`GET /admin/mandi-rates`).
 
 ---
 
 ### K. Government Schemes
-1. Open **Government Schemes** from the Dashboard card.
-2. Filter by category (All, Subsidies, Insurance, Financial Support, Irrigation).
-3. Tap **"View Scheme Details"** to view financial benefits, eligibility criteria, and required documents.
-4. Tap **"Apply on Official Portal"** to open the external DBT portal in your phone's mobile browser.
+1. Open **Government Schemes** from the Dashboard card (`GET /admin/schemes`).
+2. Filter by category, view benefits/eligibility details, and launch external application portals.
 
 ---
 
-### L. GramSathi AI Farming Assistant
+### L. GramSathi AI Farming Assistant (Voice + Human-in-the-Loop)
 1. Open **GramSathi AI** from the Dashboard or Quick Actions.
-2. Tap any suggestion chip (e.g., *"How to control pink bollworm in cotton?"*, *"Best fertilizer dose for paddy?"*).
-3. Type custom agronomy questions in English or Hinglish/Telugu transliteration.
-4. Receives intelligent, structured farming advice cards.
-5. Tap **"New Chat"** to clear and start a fresh session.
+2. Ensure both the **Backend (`port 5000`)** and **AI FastAPI (`port 8000`)** servers are running.
+3. **Chat History Drawer**: Swipe or tap the sidebar menu for a sliding dark-green drawer to start new consultations, switch sessions, rename (`PUT /api/ai/chats/:id`), or delete (`DELETE /api/ai/chats/:id`).
+4. **Voice Input & Speech Output**:
+   - Tap the microphone to record natively using `expo-audio` (`app/src/utils/audioRecorder.js`).
+   - Audio is transcribed via `POST /api/ai/transcribe` (Groq Whisper `whisper-large-v3` with Google fallback) into Telugu, Hindi, or English and can be reviewed or sent.
+   - AI responses support voice queries with automatic TTS playback via `expo-speech` (`te-IN`, `hi-IN`, `en-IN`) plus per-message Listen/Stop buttons.
+5. **Human-in-the-Loop Confirmation Cards**:
+   - Whenever GramSathi AI detects a data-modifying request (adding a crop, recording an expense, booking machinery, etc.), it asks targeted clarification questions for any missing mandatory details across turns.
+   - Once complete, it displays an interactive **Confirmation Card** with **`[Confirm]`**, **`[Edit]`**, and **`[Cancel]`** buttons (`POST /api/ai/actions/confirm` and `/cancel`) — never modifying database records until you confirm.
 
 ---
 
 ### M. In-App Notifications
-1. Tap the **Bell icon** in the top-right header of the Dashboard.
-2. View booking requests, machine approvals, chat alerts, and community replies.
-3. Tap **"Mark All Read"** or tap any notification to navigate directly to the relevant screen.
+1. Tap the **Bell icon** in the Dashboard header (`GET /api/notifications`).
+2. View group additions, work log alerts, and settlement receipts, and tap **"Mark All Read"** (`PUT /api/notifications/mark-all-read`).
 
 ---
 
-### N. Farmer Profile & Farm Settings
+### N. Farmer Profile, Location & Language Settings
 1. Tap the **Profile** tab in the bottom bar.
-2. View user details, role badge, phone number, village, and district.
-3. View **Farming Details**: Total farm size, primary crops grown, irrigation type.
-4. View **Farm Analytics**: Active crops count, machinery owned, community posts count.
-5. Tap **"Edit Profile"** to update name, village, farm size, or soil type.
-6. Tap **"Logout"** to securely log out and clear stored tokens.
+2. Edit personal & farming details (`PUT /auth/updateprofile`), confirm village GPS coordinates (`PUT /auth/confirm-location`), or switch language (`English`, `తెలుగు`, `हिन्दी`) persisted securely in `expo-secure-store`.
+3. Tap **"Logout"** to clear stored JWT credentials while preserving your chosen language.
 
 ---
 

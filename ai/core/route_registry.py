@@ -18,13 +18,17 @@ FRONTEND_ROUTES = {
     "profile": "/profile",
     "schemes": "/schemes",
     "market": "/market",
+    "mandi_rates": "/market-prices",
     "reports": "/reports",
     "doctor": "/doctor",
     "buyer_market": "/buyer-market",
     "my_bookings": "/my-bookings",
     "messages": "/messages",
     "weather": "/weather",
-    "ai_chat": "/ai-chat"
+    "ai_chat": "/ai-chat",
+    "groups": "/groups",
+    "group_details": "/groups/{id}",
+    "groups_personal": "/groups/personal"
 }
 
 def get_frontend_route(key: str, **kwargs) -> str:

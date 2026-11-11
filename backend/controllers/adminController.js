@@ -84,31 +84,33 @@ export const seedData = async (req, res) => {
         await Scheme.insertMany([
             {
                 name: "Rythu Bandhu",
-                state: "Telangana",
-                type: "Financial Support",
+                provider: "Telangana State Govt",
+                providerColor: "bg-green-100 text-green-700",
+                amount: "₹10,000 / Acre / Year",
                 description: "Financial assistance of ₹10,000 per acre per year for agricultural and horticultural crops.",
-                benefit: "₹10,000 / Acre / Year",
-                targetBeneficiary: "All eligible land-owning farmers",
-                applicationDeadline: "Kharif: June 15, Rabi: Nov 15",
-                applicationProcess: "Apply online or via Village Agriculture Officer"
+                eligibility: "All eligible land-owning farmers in Telangana",
+                applyDate: "Kharif: June 15, Rabi: Nov 15",
+                paymentDate: "Before Sowing Season",
+                link: "https://rythubandhu.telangana.gov.in/"
             },
             {
                 name: "PM-KISAN",
-                state: "All India",
-                type: "Income Support",
+                provider: "Central Govt",
+                providerColor: "bg-blue-100 text-blue-700",
+                amount: "₹6,000 / Year",
                 description: "Direct income support of ₹6,000 per year in three equal installments.",
-                benefit: "₹6,000 / Year",
-                targetBeneficiary: "Small and marginal farmers",
-                applicationDeadline: "Open year-round",
-                applicationProcess: "Direct registration via pmkisan.gov.in"
+                eligibility: "Small and marginal landholder farmer families",
+                applyDate: "Open year-round",
+                paymentDate: "Quarterly Installments",
+                link: "https://pmkisan.gov.in/"
             }
         ]);
 
         await MandiRate.deleteMany();
         await MandiRate.insertMany([
-            { crop: "Cotton", market: "Warangal", state: "Telangana", modalPrice: 7200, minPrice: 6800, maxPrice: 7500, date: new Date() },
-            { crop: "Paddy (Common)", market: "Nalgonda", state: "Telangana", modalPrice: 2200, minPrice: 2183, maxPrice: 2250, date: new Date() },
-            { crop: "Chilli (Dry)", market: "Khammam", state: "Telangana", modalPrice: 18500, minPrice: 16000, maxPrice: 21000, date: new Date() }
+            { crop: "Cotton", market: "Warangal", type: "Long Staple (MCU-5)", min: 6800, max: 7500, modal: 7200, trend: "up", date: new Date() },
+            { crop: "Paddy (Common)", market: "Nalgonda", type: "Grade A", min: 2183, max: 2250, modal: 2200, trend: "stable", date: new Date() },
+            { crop: "Chilli (Dry)", market: "Khammam", type: "Teja S17", min: 16000, max: 21000, modal: 18500, trend: "up", date: new Date() }
         ]);
 
         res.json({ message: "Seed data injected successfully!" });
